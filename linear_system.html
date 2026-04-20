@@ -44,9 +44,18 @@
         <section class="equation-display-band" aria-label="連立一次方程式">
           <div class="equation-display-header">
             <h2>方程式</h2>
-            <span>行列と同じ行基本変形で更新</span>
+            <span>元の式と変形後を比較</span>
           </div>
-          <div id="equationSystem" class="equation-system" aria-label="方程式の表示"></div>
+          <div class="equation-compare">
+            <div class="equation-group">
+              <div class="equation-group-title">元の方程式</div>
+              <div id="originalEquationSystem" class="equation-system" aria-label="元の方程式"></div>
+            </div>
+            <div class="equation-group">
+              <div class="equation-group-title">変形中</div>
+              <div id="equationSystem" class="equation-system" aria-label="変形中の方程式"></div>
+            </div>
+          </div>
         </section>
 
         <section class="matrix-stage method-stage" aria-label="連立一次方程式の入力と結果">

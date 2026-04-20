@@ -11,6 +11,7 @@ const elements = {
   methodMatrix: document.querySelector("#methodMatrix"),
   resultMatrix: document.querySelector("#resultMatrix"),
   equationSystem: document.querySelector("#equationSystem"),
+  originalEquationSystem: document.querySelector("#originalEquationSystem"),
   labelA: document.querySelector("#labelA"),
   labelR: document.querySelector("#labelR"),
   message: document.querySelector("#message"),
@@ -471,9 +472,12 @@ function createSignCell(coefficient, isFirstTerm) {
 }
 
 function renderEquationSystem(matrix, step = {}) {
-  if (pageType !== "linear-system" || !elements.equationSystem) return;
+  if (pageType !== "linear-system") return;
 
-  elements.equationSystem.innerHTML = "";
+  const container = step.container || elements.equationSystem;
+  if (!container) return;
+
+  container.innerHTML = "";
   const aligned = step.aligned !== false;
 
   matrix.forEach((row, rowIndex) => {
@@ -510,7 +514,7 @@ function renderEquationSystem(matrix, step = {}) {
     right.textContent = formatNumber(row[state.n]);
 
     line.append(equals, right);
-    elements.equationSystem.append(line);
+    container.append(line);
   });
 }
 
@@ -628,11 +632,13 @@ function syncLayout() {
   try {
     const emptyAugmented = buildAugmented(readInputMatrix());
     renderMethodMatrix(emptyAugmented);
-    renderEquationSystem(emptyAugmented, { aligned: false });
+    renderEquationSystem(emptyAugmented, { aligned: false, container: elements.originalEquationSystem });
+    renderEquationSystem(emptyAugmented, { aligned: true });
     elements.message.textContent = "";
   } catch (error) {
     elements.methodMatrix.innerHTML = "";
     if (elements.equationSystem) elements.equationSystem.innerHTML = "";
+    if (elements.originalEquationSystem) elements.originalEquationSystem.innerHTML = "";
     elements.message.textContent = error.message;
   }
   elements.resultMatrix.innerHTML = "";
