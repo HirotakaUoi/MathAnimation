@@ -12,6 +12,8 @@ const elements = {
   resultMatrix: document.querySelector("#resultMatrix"),
   equationSystem: document.querySelector("#equationSystem"),
   originalEquationSystem: document.querySelector("#originalEquationSystem"),
+  mathMatrixA: document.querySelector("#mathMatrixA"),
+  mathMatrixInverse: document.querySelector("#mathMatrixInverse"),
   labelA: document.querySelector("#labelA"),
   labelR: document.querySelector("#labelR"),
   message: document.querySelector("#message"),
@@ -29,6 +31,10 @@ const state = {
 
 if (pageType === "linear-system") {
   document.querySelector(".workspace")?.classList.add("has-equation-band");
+}
+
+if (pageType === "inverse") {
+  document.querySelector(".workspace")?.classList.add("has-inverse-display");
 }
 
 function formatNumber(value) {
@@ -518,6 +524,30 @@ function renderEquationSystem(matrix, step = {}) {
   });
 }
 
+function renderMathMatrix(container, matrix, options = {}) {
+  if (!container) return;
+
+  container.innerHTML = "";
+  container.style.gridTemplateColumns = `repeat(${matrix[0].length}, minmax(44px, auto))`;
+  container.classList.toggle("pending-math-matrix", Boolean(options.pending));
+
+  matrix.forEach((row) => {
+    row.forEach((value) => {
+      const cell = document.createElement("span");
+      cell.className = "math-matrix-cell";
+      cell.textContent = options.pending ? "?" : formatNumber(value);
+      container.append(cell);
+    });
+  });
+}
+
+function renderInverseDisplay(inputMatrix, inverseMatrix = null) {
+  if (pageType !== "inverse") return;
+
+  renderMathMatrix(elements.mathMatrixA, inputMatrix);
+  renderMathMatrix(elements.mathMatrixInverse, inverseMatrix || identity(state.n), { pending: !inverseMatrix });
+}
+
 function renderSolutionCell(cell, row, valueText) {
   cell.textContent = "";
   appendVariable(cell, row);
@@ -619,6 +649,7 @@ function animate() {
   renderEquationSystem(calculation.steps[0].matrix, calculation.steps[0]);
   if (pageType === "inverse") {
     renderPendingInverse();
+    renderInverseDisplay(readInputMatrix());
   } else {
     renderPendingSolution();
   }
@@ -630,6 +661,10 @@ function animate() {
       renderTrack(step);
       if (index === calculation.steps.length - 1) {
         renderResult(calculation.finalMatrix);
+        if (pageType === "inverse") {
+          const inverse = calculation.finalMatrix.map((row) => row.slice(state.n));
+          renderInverseDisplay(readInputMatrix(), inverse);
+        }
       }
       elements.formulaTitle.textContent = step.title;
       elements.formula.textContent = step.text;
@@ -647,6 +682,7 @@ function syncLayout() {
   try {
     const emptyAugmented = buildAugmented(readInputMatrix());
     renderMethodMatrix(emptyAugmented);
+    if (pageType === "inverse") renderInverseDisplay(readInputMatrix());
     renderEquationSystem(emptyAugmented, { aligned: false, container: elements.originalEquationSystem });
     renderEquationSystem(emptyAugmented, { aligned: true });
     elements.message.textContent = "";

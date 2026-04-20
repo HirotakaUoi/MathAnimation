@@ -41,6 +41,24 @@
 
         <section id="message" class="message" role="status"></section>
 
+        <section class="inverse-display-band" aria-label="元行列と逆行列">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>元行列と求めた逆行列</span>
+          </div>
+          <div class="inverse-equation" aria-label="逆行列の数式表示">
+            <div class="math-matrix-term">
+              <div class="math-matrix-label">A</div>
+              <div id="mathMatrixA" class="math-matrix" aria-label="元行列A"></div>
+            </div>
+            <div class="math-equals">→</div>
+            <div class="math-matrix-term">
+              <div class="math-matrix-label">A<sup>-1</sup></div>
+              <div id="mathMatrixInverse" class="math-matrix pending-math-matrix" aria-label="逆行列"></div>
+            </div>
+          </div>
+        </section>
+
         <section class="matrix-stage method-stage" aria-label="逆行列の入力と結果">
           <article class="matrix-panel">
             <header>
