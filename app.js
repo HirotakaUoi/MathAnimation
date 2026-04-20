@@ -535,7 +535,7 @@ function renderMatrixTerm(label, matrix, options = {}) {
 
   const title = document.createElement("div");
   title.className = "equation-label";
-  title.textContent = label;
+  title.append(renderLabel(label));
   term.append(title, renderMiniMatrix(matrix, options));
 
   if (!options.clickable) return term;
@@ -547,6 +547,23 @@ function renderMatrixTerm(label, matrix, options = {}) {
   button.title = `${label} を確認`;
   button.append(term);
   return button;
+}
+
+function renderLabel(label) {
+  const fragment = document.createDocumentFragment();
+  const inverseSuffix = "^-1";
+  const inverseIndex = label.indexOf(inverseSuffix);
+
+  if (inverseIndex === -1) {
+    fragment.append(document.createTextNode(label));
+    return fragment;
+  }
+
+  fragment.append(document.createTextNode(label.slice(0, inverseIndex)));
+  const superscript = document.createElement("sup");
+  superscript.textContent = "-1";
+  fragment.append(superscript, document.createTextNode(label.slice(inverseIndex + inverseSuffix.length)));
+  return fragment;
 }
 
 function renderEquationRow(parts, className = "") {
@@ -606,7 +623,13 @@ function showInverseProof(calculation, proofSlot) {
   const identityMatrix = identity(calculation.b.length);
   const resultTerm = renderMatrixTerm("I", identityMatrix, { pending: true, className: "proof-result" });
   const proofRow = renderEquationRow(
-    [renderMatrixTerm("B", calculation.b), "x", renderMatrixTerm("B^-1", calculation.inverse), "=", resultTerm],
+    [
+      renderMatrixTerm("B", calculation.b, { className: "proof-b" }),
+      "x",
+      renderMatrixTerm("B^-1", calculation.inverse, { className: "proof-inverse" }),
+      "=",
+      resultTerm,
+    ],
     "inverse-proof",
   );
   proofSlot.append(proofRow);
@@ -648,6 +671,7 @@ function showInverseProof(calculation, proofSlot) {
         elements.animationTrack.append(cell);
       });
       resultCells.forEach((cell) => cell.classList.remove("active"));
+      highlightProofFactors(proofRow, step.row, step.col, calculation.b[0].length);
       const resultCell = resultCells[step.row * product[0].length + step.col];
       resultCell.textContent = formatNumber(product[step.row][step.col]);
       resultCell.classList.add("active");
@@ -657,6 +681,14 @@ function showInverseProof(calculation, proofSlot) {
     }, index * 1150);
     state.timerIds.push(timerId);
   });
+}
+
+function highlightProofFactors(proofRow, row, col, termCount) {
+  clearReferenceHighlights();
+  for (let k = 0; k < termCount; k += 1) {
+    highlightOutputCell(proofRow, ".proof-b", row, k, "referenced-a");
+    highlightOutputCell(proofRow, ".proof-inverse", k, col, "referenced-b");
+  }
 }
 
 function setActiveResult(row, col) {
