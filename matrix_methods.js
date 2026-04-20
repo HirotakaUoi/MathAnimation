@@ -562,6 +562,21 @@ function renderPendingSolution() {
   }
 }
 
+function renderPendingInverse() {
+  if (pageType !== "inverse") return;
+
+  elements.resultMatrix.innerHTML = "";
+  setGrid(elements.resultMatrix, state.n, state.n);
+  for (let row = 0; row < state.n; row += 1) {
+    for (let col = 0; col < state.n; col += 1) {
+      const cell = document.createElement("div");
+      cell.className = "cell-output pending-solution";
+      cell.textContent = "?";
+      elements.resultMatrix.append(cell);
+    }
+  }
+}
+
 function renderTrack(step) {
   elements.animationTrack.innerHTML = "";
   const labels = step.activeRows?.length ? step.activeRows.map((row) => `R${row + 1}`).join(", ") : "全体";
@@ -603,7 +618,7 @@ function animate() {
   renderMethodMatrix(calculation.steps[0].matrix, calculation.steps[0]);
   renderEquationSystem(calculation.steps[0].matrix, calculation.steps[0]);
   if (pageType === "inverse") {
-    renderResult(calculation.finalMatrix);
+    renderPendingInverse();
   } else {
     renderPendingSolution();
   }
@@ -613,7 +628,7 @@ function animate() {
       renderMethodMatrix(step.matrix, step);
       renderEquationSystem(step.matrix, step);
       renderTrack(step);
-      if (pageType === "linear-system" && index === calculation.steps.length - 1) {
+      if (index === calculation.steps.length - 1) {
         renderResult(calculation.finalMatrix);
       }
       elements.formulaTitle.textContent = step.title;
