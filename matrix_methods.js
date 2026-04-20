@@ -474,15 +474,31 @@ function renderEquationSystem(matrix, step = {}) {
   if (pageType !== "linear-system" || !elements.equationSystem) return;
 
   elements.equationSystem.innerHTML = "";
+  const aligned = step.aligned !== false;
 
   matrix.forEach((row, rowIndex) => {
     const line = document.createElement("div");
-    line.className = "equation-line";
+    line.className = `equation-line${aligned ? " aligned-equation" : " natural-equation"}`;
     if (step.activeRows?.includes(rowIndex)) line.classList.add("active-equation");
 
-    line.style.gridTemplateColumns = `repeat(${state.n}, auto minmax(56px, auto)) auto minmax(56px, auto)`;
-    for (let col = 0; col < state.n; col += 1) {
-      line.append(createSignCell(row[col], col === 0), createEquationTerm(row[col], col, col === 0));
+    if (aligned) {
+      line.style.gridTemplateColumns = `repeat(${state.n}, auto minmax(56px, auto)) auto minmax(56px, auto)`;
+      for (let col = 0; col < state.n; col += 1) {
+        line.append(createSignCell(row[col], col === 0), createEquationTerm(row[col], col, col === 0));
+      }
+    } else {
+      let hasVisibleTerm = false;
+      for (let col = 0; col < state.n; col += 1) {
+        if (Math.abs(row[col]) < EPSILON) continue;
+        line.append(createSignCell(row[col], !hasVisibleTerm), createEquationTerm(row[col], col, !hasVisibleTerm));
+        hasVisibleTerm = true;
+      }
+      if (!hasVisibleTerm) {
+        const zero = document.createElement("span");
+        zero.className = "equation-term-text";
+        zero.textContent = "0";
+        line.append(zero);
+      }
     }
 
     const equals = document.createElement("span");
@@ -612,7 +628,7 @@ function syncLayout() {
   try {
     const emptyAugmented = buildAugmented(readInputMatrix());
     renderMethodMatrix(emptyAugmented);
-    renderEquationSystem(emptyAugmented);
+    renderEquationSystem(emptyAugmented, { aligned: false });
     elements.message.textContent = "";
   } catch (error) {
     elements.methodMatrix.innerHTML = "";

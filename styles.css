@@ -415,7 +415,6 @@ select:focus-visible {
 
 .equation-line {
   min-height: 56px;
-  display: grid;
   align-items: center;
   column-gap: 10px;
   padding: 12px 16px;
@@ -427,6 +426,16 @@ select:focus-visible {
   font-weight: 900;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.aligned-equation {
+  display: grid;
+}
+
+.natural-equation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
 }
 
 .equation-line sub,
