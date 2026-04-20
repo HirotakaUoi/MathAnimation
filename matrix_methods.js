@@ -493,7 +493,7 @@ function renderEquationSystem(matrix, step = {}) {
     right.className = "equation-right";
     right.textContent = formatNumber(row[state.n]);
 
-    line.append(left, equals, right);
+    line.append(equals, right);
     elements.equationSystem.append(line);
   });
 }
