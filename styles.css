@@ -903,13 +903,16 @@ select:focus-visible {
 }
 
 .flow-cell {
-  flex: 0 0 168px;
+  width: auto;
+  min-width: 220px;
+  flex: 0 0 max-content;
   background: #fff;
   border: 1px solid var(--line);
   color: var(--muted);
   aspect-ratio: auto;
-  padding: 0 12px;
+  padding: 0 16px;
   white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .flow-cell.source-a {
@@ -923,10 +926,15 @@ select:focus-visible {
 }
 
 .flow-cell.operator {
+  min-width: 54px;
   flex-basis: 54px;
   padding: 0;
   background: var(--ink);
   color: #fff;
+}
+
+.flow-cell.result {
+  min-width: 320px;
 }
 
 .flow-cell.result {
