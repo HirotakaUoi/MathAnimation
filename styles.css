@@ -132,6 +132,10 @@ select {
   grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
 }
 
+.workspace.has-equation-band {
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+}
+
 .workspace > * {
   min-height: 0;
 }
@@ -152,6 +156,14 @@ select {
   grid-row: 4;
 }
 
+.equation-display-band {
+  grid-row: 4;
+}
+
+.workspace.has-equation-band .matrix-stage {
+  grid-row: 5;
+}
+
 .division-detail {
   grid-row: 5;
 }
@@ -160,13 +172,18 @@ select {
   grid-row: 5;
 }
 
+.workspace.has-equation-band .animation-band {
+  grid-row: 6;
+}
+
 .workspace.has-division-detail .animation-band {
   grid-row: 6;
 }
 
 .topbar,
 .control-band,
-.animation-band {
+.animation-band,
+.equation-display-band {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
@@ -361,6 +378,60 @@ select:focus-visible {
 
 .method-wide {
   border-color: rgba(37, 99, 235, 0.34);
+}
+
+.equation-display-band {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.equation-display-header {
+  display: grid;
+  gap: 4px;
+}
+
+.equation-display-header h2 {
+  font-size: 1.28rem;
+}
+
+.equation-display-header span {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.equation-system {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.equation-line {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 850;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.equation-line.active-equation {
+  border-color: rgba(183, 121, 31, 0.78);
+  background: rgba(183, 121, 31, 0.18);
+  color: #7c4a03;
 }
 
 .matrix-panel header {
@@ -782,6 +853,7 @@ select:focus-visible {
 
   .hub-hero,
   .control-band,
+  .equation-display-band,
   .animation-band,
   .matrix-stage,
   .method-stage {

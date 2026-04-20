@@ -10,6 +10,7 @@ const elements = {
   matrixA: document.querySelector("#matrixA"),
   methodMatrix: document.querySelector("#methodMatrix"),
   resultMatrix: document.querySelector("#resultMatrix"),
+  equationSystem: document.querySelector("#equationSystem"),
   labelA: document.querySelector("#labelA"),
   labelR: document.querySelector("#labelR"),
   message: document.querySelector("#message"),
@@ -24,6 +25,10 @@ const state = {
   n: 2,
   timerIds: [],
 };
+
+if (pageType === "linear-system") {
+  document.querySelector(".workspace")?.classList.add("has-equation-band");
+}
 
 function formatNumber(value) {
   if (!Number.isFinite(value)) return "NaN";
@@ -224,6 +229,9 @@ function clearAnimation() {
   elements.methodMatrix.querySelectorAll(".cell-output").forEach((cell) => {
     cell.classList.remove("active", "pivot-cell", "row-cell");
   });
+  elements.equationSystem?.querySelectorAll(".equation-line").forEach((line) => {
+    line.classList.remove("active-equation");
+  });
 }
 
 function createInputGrid() {
@@ -419,6 +427,45 @@ function renderMethodMatrix(matrix, step = {}) {
   });
 }
 
+function variableName(index) {
+  return `x${index + 1}`;
+}
+
+function formatCoefficientTerm(coefficient, index, isFirstTerm) {
+  const rounded = Math.abs(coefficient) < EPSILON ? 0 : coefficient;
+  if (rounded === 0) return "";
+
+  const sign = rounded < 0 ? "-" : "+";
+  const absolute = Math.abs(rounded);
+  const coefficientText = Math.abs(absolute - 1) < EPSILON ? "" : formatNumber(absolute);
+  const term = `${coefficientText}${variableName(index)}`;
+
+  if (isFirstTerm) return sign === "-" ? `-${term}` : term;
+  return `${sign} ${term}`;
+}
+
+function renderEquationSystem(matrix, step = {}) {
+  if (pageType !== "linear-system" || !elements.equationSystem) return;
+
+  elements.equationSystem.innerHTML = "";
+
+  matrix.forEach((row, rowIndex) => {
+    const line = document.createElement("div");
+    line.className = "equation-line";
+    if (step.activeRows?.includes(rowIndex)) line.classList.add("active-equation");
+
+    const terms = [];
+    for (let col = 0; col < state.n; col += 1) {
+      const term = formatCoefficientTerm(row[col], col, terms.length === 0);
+      if (term) terms.push(term);
+    }
+
+    const left = terms.length ? terms.join(" ") : "0";
+    line.textContent = `${left} = ${formatNumber(row[state.n])}`;
+    elements.equationSystem.append(line);
+  });
+}
+
 function renderResult(finalMatrix) {
   elements.resultMatrix.innerHTML = "";
 
@@ -483,11 +530,13 @@ function animate() {
   }
 
   renderMethodMatrix(calculation.steps[0].matrix, calculation.steps[0]);
+  renderEquationSystem(calculation.steps[0].matrix, calculation.steps[0]);
   renderResult(calculation.finalMatrix);
 
   calculation.steps.forEach((step, index) => {
     const timerId = window.setTimeout(() => {
       renderMethodMatrix(step.matrix, step);
+      renderEquationSystem(step.matrix, step);
       renderTrack(step);
       elements.formulaTitle.textContent = step.title;
       elements.formula.textContent = step.text;
@@ -505,9 +554,11 @@ function syncLayout() {
   try {
     const emptyAugmented = buildAugmented(readInputMatrix());
     renderMethodMatrix(emptyAugmented);
+    renderEquationSystem(emptyAugmented);
     elements.message.textContent = "";
   } catch (error) {
     elements.methodMatrix.innerHTML = "";
+    if (elements.equationSystem) elements.equationSystem.innerHTML = "";
     elements.message.textContent = error.message;
   }
   elements.resultMatrix.innerHTML = "";
