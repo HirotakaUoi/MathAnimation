@@ -561,6 +561,12 @@ select:focus-visible {
   padding: 0 14px;
 }
 
+.pending-solution {
+  color: var(--muted);
+  background: var(--paper);
+  border-color: var(--line);
+}
+
 .operator-glyph {
   width: 58px;
   height: 58px;
