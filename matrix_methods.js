@@ -434,25 +434,40 @@ function appendVariable(parent, index) {
   parent.append(subscript);
 }
 
-function createCoefficientTerm(coefficient, index, isFirstTerm) {
+function createEquationTerm(coefficient, index) {
   const rounded = Math.abs(coefficient) < EPSILON ? 0 : coefficient;
-  if (rounded === 0) return null;
-
-  const sign = rounded < 0 ? "-" : "+";
   const absolute = Math.abs(rounded);
   const coefficientText = Math.abs(absolute - 1) < EPSILON ? "" : formatNumber(absolute);
   const term = document.createElement("span");
   term.className = "equation-term-text";
 
-  if (isFirstTerm) {
-    if (sign === "-") term.append(document.createTextNode("-"));
-  } else {
-    term.append(document.createTextNode(`${sign} `));
+  if (rounded === 0) {
+    term.classList.add("zero-term");
   }
 
   if (coefficientText) term.append(document.createTextNode(coefficientText));
   appendVariable(term, index);
   return term;
+}
+
+function createSignCell(coefficient, isFirstTerm) {
+  const rounded = Math.abs(coefficient) < EPSILON ? 0 : coefficient;
+  const sign = document.createElement("span");
+  sign.className = "equation-sign";
+
+  if (rounded === 0) {
+    sign.classList.add("zero-term");
+    sign.textContent = isFirstTerm ? "" : "+";
+    return sign;
+  }
+
+  if (isFirstTerm) {
+    sign.textContent = rounded < 0 ? "-" : "";
+    return sign;
+  }
+
+  sign.textContent = rounded < 0 ? "-" : "+";
+  return sign;
 }
 
 function renderEquationSystem(matrix, step = {}) {
@@ -465,17 +480,10 @@ function renderEquationSystem(matrix, step = {}) {
     line.className = "equation-line";
     if (step.activeRows?.includes(rowIndex)) line.classList.add("active-equation");
 
-    const left = document.createElement("span");
-    left.className = "equation-left";
-    let hasTerms = false;
+    line.style.gridTemplateColumns = `repeat(${state.n}, auto minmax(56px, auto)) auto minmax(56px, auto)`;
     for (let col = 0; col < state.n; col += 1) {
-      const term = createCoefficientTerm(row[col], col, !hasTerms);
-      if (term) {
-        left.append(term);
-        hasTerms = true;
-      }
+      line.append(createSignCell(row[col], col === 0), createEquationTerm(row[col], col));
     }
-    if (!hasTerms) left.textContent = "0";
 
     const equals = document.createElement("span");
     equals.className = "equation-equals";

@@ -407,17 +407,17 @@ select:focus-visible {
 
 .equation-system {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
-  overflow-x: auto;
+  overflow: auto;
 }
 
 .equation-line {
   min-height: 44px;
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 8px;
+  column-gap: 8px;
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -436,18 +436,22 @@ select:focus-visible {
   vertical-align: sub;
 }
 
-.equation-left {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0 8px;
-}
-
 .equation-term-text {
   white-space: nowrap;
 }
 
+.equation-sign,
+.equation-equals {
+  min-width: 16px;
+  text-align: center;
+}
+
 .equation-equals {
   font-weight: 900;
+}
+
+.zero-term {
+  visibility: hidden;
 }
 
 .equation-line.active-equation {
