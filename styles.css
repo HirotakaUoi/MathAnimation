@@ -403,6 +403,9 @@ select:focus-visible {
   font-weight: 800;
   letter-spacing: 0;
   font-size: 1.22rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .cell-input {
@@ -416,7 +419,6 @@ select:focus-visible {
 .matrix-output .cell-output {
   min-height: 64px;
   font-size: 1.75rem;
-  line-height: 1.1;
 }
 
 .matrix-input .cell-input {

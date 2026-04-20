@@ -1,5 +1,6 @@
 const MAX_SIZE = 4;
 const EPSILON = 1e-9;
+const MAX_RATIONAL_DENOMINATOR = 1000;
 
 const state = {
   rowsA: 2,
@@ -46,7 +47,40 @@ function clampSize(value) {
 function formatNumber(value) {
   if (!Number.isFinite(value)) return "NaN";
   const rounded = Math.abs(value) < EPSILON ? 0 : value;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  if (Number.isInteger(rounded)) return String(rounded);
+
+  const rational = approximateRational(rounded);
+  if (rational) {
+    const sign = rational.numerator < 0 ? "-" : "";
+    return `${sign}${Math.abs(rational.numerator)}/${rational.denominator}`;
+  }
+
+  return rounded.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function approximateRational(value) {
+  const sign = value < 0 ? -1 : 1;
+  const absolute = Math.abs(value);
+  let bestNumerator = 0;
+  let bestDenominator = 1;
+  let bestError = Number.POSITIVE_INFINITY;
+
+  for (let denominator = 1; denominator <= MAX_RATIONAL_DENOMINATOR; denominator += 1) {
+    const numerator = Math.round(absolute * denominator);
+    const error = Math.abs(absolute - numerator / denominator);
+    if (error < bestError) {
+      bestNumerator = numerator;
+      bestDenominator = denominator;
+      bestError = error;
+    }
+    if (error < EPSILON) break;
+  }
+
+  if (bestDenominator === 1 || bestError > 1e-8) return null;
+  return {
+    numerator: sign * bestNumerator,
+    denominator: bestDenominator,
+  };
 }
 
 function tokenizeExpression(source) {
