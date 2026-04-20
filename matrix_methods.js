@@ -427,21 +427,32 @@ function renderMethodMatrix(matrix, step = {}) {
   });
 }
 
-function variableName(index) {
-  return `x${index + 1}`;
+function appendVariable(parent, index) {
+  parent.append(document.createTextNode("x"));
+  const subscript = document.createElement("sub");
+  subscript.textContent = index + 1;
+  parent.append(subscript);
 }
 
-function formatCoefficientTerm(coefficient, index, isFirstTerm) {
+function createCoefficientTerm(coefficient, index, isFirstTerm) {
   const rounded = Math.abs(coefficient) < EPSILON ? 0 : coefficient;
-  if (rounded === 0) return "";
+  if (rounded === 0) return null;
 
   const sign = rounded < 0 ? "-" : "+";
   const absolute = Math.abs(rounded);
   const coefficientText = Math.abs(absolute - 1) < EPSILON ? "" : formatNumber(absolute);
-  const term = `${coefficientText}${variableName(index)}`;
+  const term = document.createElement("span");
+  term.className = "equation-term-text";
 
-  if (isFirstTerm) return sign === "-" ? `-${term}` : term;
-  return `${sign} ${term}`;
+  if (isFirstTerm) {
+    if (sign === "-") term.append(document.createTextNode("-"));
+  } else {
+    term.append(document.createTextNode(`${sign} `));
+  }
+
+  if (coefficientText) term.append(document.createTextNode(coefficientText));
+  appendVariable(term, index);
+  return term;
 }
 
 function renderEquationSystem(matrix, step = {}) {
@@ -454,16 +465,35 @@ function renderEquationSystem(matrix, step = {}) {
     line.className = "equation-line";
     if (step.activeRows?.includes(rowIndex)) line.classList.add("active-equation");
 
-    const terms = [];
+    const left = document.createElement("span");
+    left.className = "equation-left";
+    let hasTerms = false;
     for (let col = 0; col < state.n; col += 1) {
-      const term = formatCoefficientTerm(row[col], col, terms.length === 0);
-      if (term) terms.push(term);
+      const term = createCoefficientTerm(row[col], col, !hasTerms);
+      if (term) {
+        left.append(term);
+        hasTerms = true;
+      }
     }
+    if (!hasTerms) left.textContent = "0";
 
-    const left = terms.length ? terms.join(" ") : "0";
-    line.textContent = `${left} = ${formatNumber(row[state.n])}`;
+    const equals = document.createElement("span");
+    equals.className = "equation-equals";
+    equals.textContent = "=";
+
+    const right = document.createElement("span");
+    right.className = "equation-right";
+    right.textContent = formatNumber(row[state.n]);
+
+    line.append(left, equals, right);
     elements.equationSystem.append(line);
   });
+}
+
+function renderSolutionCell(cell, row, valueText) {
+  cell.textContent = "";
+  appendVariable(cell, row);
+  cell.append(document.createTextNode(` = ${valueText}`));
 }
 
 function renderResult(finalMatrix) {
@@ -486,7 +516,7 @@ function renderResult(finalMatrix) {
   for (let row = 0; row < state.n; row += 1) {
     const cell = document.createElement("div");
     cell.className = "cell-output solution-cell";
-    cell.textContent = `x${row + 1} = ${formatNumber(finalMatrix[row][state.n])}`;
+    renderSolutionCell(cell, row, formatNumber(finalMatrix[row][state.n]));
     elements.resultMatrix.append(cell);
   }
 }
@@ -499,7 +529,7 @@ function renderPendingSolution() {
   for (let row = 0; row < state.n; row += 1) {
     const cell = document.createElement("div");
     cell.className = "cell-output solution-cell pending-solution";
-    cell.textContent = `x${row + 1} = ?`;
+    renderSolutionCell(cell, row, "?");
     elements.resultMatrix.append(cell);
   }
 }

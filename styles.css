@@ -417,6 +417,7 @@ select:focus-visible {
   min-height: 44px;
   display: flex;
   align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -426,6 +427,27 @@ select:focus-visible {
   font-weight: 850;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.equation-line sub,
+.solution-cell sub {
+  font-size: 0.68em;
+  line-height: 0;
+  vertical-align: sub;
+}
+
+.equation-left {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+
+.equation-term-text {
+  white-space: nowrap;
+}
+
+.equation-equals {
+  font-weight: 900;
 }
 
 .equation-line.active-equation {
