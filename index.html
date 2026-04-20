@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Math Animation Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="hub-shell">
+      <section class="hub-hero" aria-label="数学アニメーション一覧">
+        <div>
+          <p class="eyebrow">Math Animation Lab</p>
+          <h1>数学アニメーション</h1>
+        </div>
+        <p class="hub-lead">作成した数学アニメーションをここから開けます。</p>
+      </section>
+
+      <section class="animation-grid" aria-label="アニメーション">
+        <a class="animation-card" href="./matrix_operation.html">
+          <span class="card-kicker">Linear Algebra</span>
+          <strong>行列演算アニメーター</strong>
+          <span>加算・減算・乗算・除算を、要素ごとの参照セルと計算履歴つきで表示します。</span>
+        </a>
+
+        <a class="animation-card" href="./inverse_matrix.html">
+          <span class="card-kicker">Gauss-Jordan</span>
+          <strong>逆行列と求め方</strong>
+          <span>[ A | I ] を掃き出して、右側に A^-1 が現れる過程を表示します。</span>
+        </a>
+
+        <a class="animation-card" href="./linear_system.html">
+          <span class="card-kicker">Linear System</span>
+          <strong>掃き出し法で解く連立一次方程式</strong>
+          <span>[ A | b ] を行基本変形し、解 x が出る過程を表示します。</span>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

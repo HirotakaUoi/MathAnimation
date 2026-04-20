@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inverse Matrix Motion</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="逆行列アニメーション">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Matrix Method</p>
+            <h1>逆行列と求め方</h1>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./index.html">一覧へ</a>
+            <span id="dimensionStatus">2 x 2</span>
+            <span>A^-1</span>
+          </div>
+        </header>
+
+        <section class="control-band method-controls" aria-label="設定">
+          <div class="control-group">
+            <label for="sizeN">サイズ</label>
+            <select id="sizeN">
+              <option value="2">2 x 2</option>
+              <option value="3">3 x 3</option>
+              <option value="4">4 x 4</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="matrix-stage method-stage" aria-label="逆行列の入力と結果">
+          <article class="matrix-panel">
+            <header>
+              <h2>A</h2>
+              <span id="labelA">2 x 2</span>
+            </header>
+            <div id="matrixA" class="matrix-input" aria-label="行列A"></div>
+          </article>
+
+          <article class="matrix-panel method-wide">
+            <header>
+              <h2>[ A | I ]</h2>
+              <span>掃き出し</span>
+            </header>
+            <div id="methodMatrix" class="matrix-output method-matrix" aria-label="拡大係数行列"></div>
+          </article>
+
+          <article class="matrix-panel result-panel">
+            <header>
+              <h2>A^-1</h2>
+              <span id="labelR">2 x 2</span>
+            </header>
+            <div id="resultMatrix" class="matrix-output" aria-label="逆行列"></div>
+          </article>
+        </section>
+
+        <section class="animation-band" aria-label="計算状況表示">
+          <div class="timeline">
+            <div id="animationTrack" class="animation-track"></div>
+          </div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">掃き出し法</div>
+            <div id="formula" class="formula">左側を単位行列に変形すると、右側が逆行列になります。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list" aria-label="計算履歴"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./matrix_methods.js"></script>
+  </body>
+</html>
