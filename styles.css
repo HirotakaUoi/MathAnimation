@@ -440,6 +440,10 @@ select:focus-visible {
   white-space: nowrap;
 }
 
+.positive-term {
+  padding-left: 0.08em;
+}
+
 .equation-sign,
 .equation-equals {
   min-width: 20px;

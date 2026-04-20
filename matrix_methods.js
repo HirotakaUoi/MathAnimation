@@ -434,7 +434,7 @@ function appendVariable(parent, index) {
   parent.append(subscript);
 }
 
-function createEquationTerm(coefficient, index) {
+function createEquationTerm(coefficient, index, isFirstTerm) {
   const rounded = Math.abs(coefficient) < EPSILON ? 0 : coefficient;
   const absolute = Math.abs(rounded);
   const coefficientText = Math.abs(absolute - 1) < EPSILON ? "" : formatNumber(absolute);
@@ -445,8 +445,11 @@ function createEquationTerm(coefficient, index) {
     term.classList.add("zero-term");
   }
 
+  if (rounded < 0) term.append(document.createTextNode("-"));
   if (coefficientText) term.append(document.createTextNode(coefficientText));
   appendVariable(term, index);
+
+  if (!isFirstTerm && rounded > 0) term.classList.add("positive-term");
   return term;
 }
 
@@ -461,12 +464,9 @@ function createSignCell(coefficient, isFirstTerm) {
     return sign;
   }
 
-  if (isFirstTerm) {
-    sign.textContent = rounded < 0 ? "-" : "";
-    return sign;
-  }
+  if (isFirstTerm) return sign;
 
-  sign.textContent = rounded < 0 ? "-" : "+";
+  sign.textContent = rounded < 0 ? "" : "+";
   return sign;
 }
 
@@ -482,7 +482,7 @@ function renderEquationSystem(matrix, step = {}) {
 
     line.style.gridTemplateColumns = `repeat(${state.n}, auto minmax(56px, auto)) auto minmax(56px, auto)`;
     for (let col = 0; col < state.n; col += 1) {
-      line.append(createSignCell(row[col], col === 0), createEquationTerm(row[col], col));
+      line.append(createSignCell(row[col], col === 0), createEquationTerm(row[col], col, col === 0));
     }
 
     const equals = document.createElement("span");
