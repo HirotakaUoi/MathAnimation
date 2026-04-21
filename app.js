@@ -601,7 +601,7 @@ function renderDivisionDetail(calculation) {
     clickable: true,
     className: "inverse-matrix",
   });
-  inverseTerm.addEventListener("click", () => showInverseProof(calculation, proofSlot));
+  inverseTerm.addEventListener("click", () => openInversePageWithMatrix(calculation.b));
 
   const multiplyRow = renderEquationRow(
     [renderMatrixTerm("A", calculation.a), "x", inverseTerm, "=", renderMatrixTerm("Result", calculation.result)],
@@ -613,6 +613,13 @@ function renderDivisionDetail(calculation) {
   note.textContent = "A ÷ B = A x B^-1 として、逆行列を表示してから乗算へ進みます。";
 
   elements.divisionDetail.append(note, proofSlot, multiplyRow);
+}
+
+function openInversePageWithMatrix(matrix) {
+  const params = new URLSearchParams();
+  params.set("n", String(matrix.length));
+  params.set("matrix", JSON.stringify(matrix));
+  window.location.href = `./inverse_matrix.html?${params.toString()}`;
 }
 
 function showInverseProof(calculation, proofSlot) {

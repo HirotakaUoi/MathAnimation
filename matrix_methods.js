@@ -33,6 +33,7 @@ const state = {
   timerIds: [],
   lastInputMatrix: null,
   lastInverseMatrix: null,
+  initialMatrix: null,
 };
 
 if (pageType === "linear-system") {
@@ -41,6 +42,7 @@ if (pageType === "linear-system") {
 
 if (pageType === "inverse") {
   document.querySelector(".workspace")?.classList.add("has-inverse-display");
+  loadInitialMatrixFromUrl();
 }
 
 function formatNumber(value) {
@@ -219,6 +221,31 @@ function clampSize(value) {
   return Math.min(MAX_SIZE, Math.max(2, number));
 }
 
+function loadInitialMatrixFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const encodedMatrix = params.get("matrix");
+  if (!encodedMatrix) return;
+
+  try {
+    const matrix = JSON.parse(encodedMatrix);
+    if (!Array.isArray(matrix) || matrix.length < 2 || matrix.length > MAX_SIZE) return;
+    if (!matrix.every((row) => Array.isArray(row) && row.length === matrix.length)) return;
+
+    const normalized = matrix.map((row) =>
+      row.map((value) => {
+        const number = Number(value);
+        if (!Number.isFinite(number)) throw new Error("Invalid matrix value");
+        return formatNumber(number);
+      }),
+    );
+    state.initialMatrix = normalized;
+    state.n = normalized.length;
+    elements.sizeN.value = state.n;
+  } catch {
+    state.initialMatrix = null;
+  }
+}
+
 function setGrid(element, rows, cols) {
   element.style.gridTemplateColumns = `repeat(${cols}, minmax(var(--matrix-cell-min, 0px), 1fr))`;
   element.dataset.rows = rows;
@@ -258,7 +285,8 @@ function resetVerification() {
 }
 
 function createInputGrid() {
-  const previous = readRawInputs();
+  const previous = state.initialMatrix || readRawInputs();
+  state.initialMatrix = null;
   const cols = pageType === "inverse" ? state.n : state.n + 1;
   elements.matrixA.innerHTML = "";
   setGrid(elements.matrixA, state.n, cols);
