@@ -899,13 +899,21 @@ select:focus-visible {
   cursor: pointer;
 }
 
+.equation-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .clickable-term .mini-matrix {
   border-color: var(--violet);
   box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.12);
 }
 
 .equation-button:hover .mini-matrix,
-.equation-button:focus-visible .mini-matrix {
+.equation-button:focus-visible .mini-matrix,
+.equation-link:hover .mini-matrix,
+.equation-link:focus-visible .mini-matrix {
   background: rgba(109, 40, 217, 0.08);
 }
 
