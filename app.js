@@ -531,7 +531,7 @@ function renderMiniMatrix(matrix, options = {}) {
 
 function renderMatrixTerm(label, matrix, options = {}) {
   const term = document.createElement("div");
-  term.className = `equation-term${options.clickable ? " clickable-term" : ""}`;
+  term.className = `equation-term${options.clickable || options.href ? " clickable-term" : ""}`;
 
   const title = document.createElement("div");
   title.className = "equation-label";
@@ -608,9 +608,10 @@ function renderDivisionDetail(calculation) {
   proofSlot.className = "inverse-proof-slot";
 
   const inverseTerm = renderMatrixTerm("B^-1", calculation.inverse, {
-    href: inversePageUrl(calculation.b),
+    clickable: true,
     className: "inverse-matrix",
   });
+  inverseTerm.addEventListener("click", () => showInverseProof(calculation, proofSlot));
 
   const multiplyRow = renderEquationRow(
     [renderMatrixTerm("A", calculation.a), "x", inverseTerm, "=", renderMatrixTerm("Result", calculation.result)],
@@ -619,7 +620,7 @@ function renderDivisionDetail(calculation) {
 
   const note = document.createElement("div");
   note.className = "division-note";
-  note.textContent = "A ÷ B = A x B^-1 として、逆行列を表示してから乗算へ進みます。B^-1 をクリックすると求め方を開きます。";
+  note.textContent = "A ÷ B = A x B^-1 として、逆行列を表示してから乗算へ進みます。B^-1 をクリックすると B x B^-1 = I を確認できます。";
 
   elements.divisionDetail.append(note, proofSlot, multiplyRow);
 }
@@ -642,7 +643,10 @@ function showInverseProof(calculation, proofSlot) {
     [
       renderMatrixTerm("B", calculation.b, { className: "proof-b" }),
       "x",
-      renderMatrixTerm("B^-1", calculation.inverse, { className: "proof-inverse" }),
+      renderMatrixTerm("B^-1", calculation.inverse, {
+        href: inversePageUrl(calculation.b),
+        className: "proof-inverse",
+      }),
       "=",
       resultTerm,
     ],
