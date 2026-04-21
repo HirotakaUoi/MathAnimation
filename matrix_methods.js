@@ -7,9 +7,13 @@ const elements = {
   sizeN: document.querySelector("#sizeN"),
   randomize: document.querySelector("#randomize"),
   animate: document.querySelector("#animate"),
+  verify: document.querySelector("#verify"),
   matrixA: document.querySelector("#matrixA"),
   methodMatrix: document.querySelector("#methodMatrix"),
   resultMatrix: document.querySelector("#resultMatrix"),
+  verifyA: document.querySelector("#verifyA"),
+  verifyInverse: document.querySelector("#verifyInverse"),
+  verifyProduct: document.querySelector("#verifyProduct"),
   equationSystem: document.querySelector("#equationSystem"),
   originalEquationSystem: document.querySelector("#originalEquationSystem"),
   mathMatrixA: document.querySelector("#mathMatrixA"),
@@ -27,6 +31,8 @@ const elements = {
 const state = {
   n: 2,
   timerIds: [],
+  lastInputMatrix: null,
+  lastInverseMatrix: null,
 };
 
 if (pageType === "linear-system") {
@@ -214,7 +220,7 @@ function clampSize(value) {
 }
 
 function setGrid(element, rows, cols) {
-  element.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  element.style.gridTemplateColumns = `repeat(${cols}, minmax(var(--matrix-cell-min, 0px), 1fr))`;
   element.dataset.rows = rows;
   element.dataset.cols = cols;
 }
@@ -238,6 +244,16 @@ function clearAnimation() {
   });
   elements.equationSystem?.querySelectorAll(".equation-line").forEach((line) => {
     line.classList.remove("active-equation");
+  });
+}
+
+function resetVerification() {
+  if (pageType !== "inverse") return;
+  state.lastInputMatrix = null;
+  state.lastInverseMatrix = null;
+  if (elements.verify) elements.verify.disabled = true;
+  [elements.verifyA, elements.verifyInverse, elements.verifyProduct].forEach((container) => {
+    if (container) container.innerHTML = "";
   });
 }
 
@@ -314,22 +330,48 @@ function readInputMatrix() {
 
 function randomizeInputs() {
   const inputs = Array.from(elements.matrixA.querySelectorAll("input"));
+  let fallback = null;
 
-  for (let attempt = 0; attempt < 80; attempt += 1) {
-    inputs.forEach((input) => {
-      input.value = randomInteger();
+  for (let attempt = 0; attempt < 240; attempt += 1) {
+    const values = inputs.map(() => randomInteger());
+    inputs.forEach((input, index) => {
+      input.value = values[index];
     });
 
     try {
-      gaussJordanSteps(buildAugmented(readInputMatrix()));
-      elements.message.textContent = "";
-      return;
+      const calculation = gaussJordanSteps(buildAugmented(readInputMatrix()));
+      if (!fallback) fallback = values;
+      if (pageType !== "inverse" || hasSimpleInverse(calculation.finalMatrix)) {
+        elements.message.textContent = "";
+        return;
+      }
     } catch {
       // Try another random matrix. The animation will show a message if all attempts fail.
     }
   }
 
+  if (fallback) {
+    inputs.forEach((input, index) => {
+      input.value = fallback[index];
+    });
+    elements.message.textContent = "逆行列の分数が少し複雑です。もう一度ランダムを押すと別の問題を作ります。";
+    return;
+  }
+
   elements.message.textContent = "正則なランダム入力を作れませんでした。もう一度ランダムを押してください。";
+}
+
+function hasSimpleInverse(finalMatrix) {
+  for (let row = 0; row < state.n; row += 1) {
+    for (let col = 0; col < state.n; col += 1) {
+      const value = finalMatrix[row][state.n + col];
+      if (Number.isInteger(Math.abs(value) < EPSILON ? 0 : value)) continue;
+      const rational = approximateRational(value);
+      if (!rational || Math.abs(rational.numerator) > 9 || rational.denominator > 9) return false;
+    }
+  }
+
+  return true;
 }
 
 function identity(size) {
@@ -541,6 +583,98 @@ function renderMathMatrix(container, matrix, options = {}) {
   });
 }
 
+function renderPlainMatrix(container, matrix, options = {}) {
+  if (!container) return;
+  container.innerHTML = "";
+  setGrid(container, matrix.length, matrix[0].length);
+
+  matrix.forEach((row, rowIndex) => {
+    row.forEach((value, colIndex) => {
+      const cell = document.createElement("div");
+      cell.className = "cell-output";
+      cell.dataset.row = rowIndex;
+      cell.dataset.col = colIndex;
+      cell.textContent = options.pending ? "?" : formatNumber(value);
+      container.append(cell);
+    });
+  });
+}
+
+function clearVerificationHighlights() {
+  document.querySelectorAll(".verification-band .referenced-a, .verification-band .referenced-b, .verification-band .active").forEach((cell) => {
+    cell.classList.remove("referenced-a", "referenced-b", "active");
+  });
+}
+
+function setVerificationHighlights(row, col) {
+  clearVerificationHighlights();
+  elements.verifyA?.querySelectorAll(`[data-row="${row}"]`).forEach((cell) => cell.classList.add("referenced-a"));
+  elements.verifyInverse?.querySelectorAll(`[data-col="${col}"]`).forEach((cell) => cell.classList.add("referenced-b"));
+  elements.verifyProduct?.querySelector(`[data-row="${row}"][data-col="${col}"]`)?.classList.add("active");
+}
+
+function prepareVerification(inputMatrix, inverseMatrix) {
+  if (pageType !== "inverse") return;
+  state.lastInputMatrix = cloneMatrix(inputMatrix);
+  state.lastInverseMatrix = cloneMatrix(inverseMatrix);
+  renderPlainMatrix(elements.verifyA, state.lastInputMatrix);
+  renderPlainMatrix(elements.verifyInverse, state.lastInverseMatrix);
+  renderPlainMatrix(elements.verifyProduct, identity(state.n), { pending: true });
+  if (elements.verify) elements.verify.disabled = false;
+}
+
+function buildVerificationSteps(inputMatrix, inverseMatrix) {
+  const steps = [];
+  for (let row = 0; row < state.n; row += 1) {
+    for (let col = 0; col < state.n; col += 1) {
+      const terms = [];
+      let value = 0;
+      for (let k = 0; k < state.n; k += 1) {
+        value += inputMatrix[row][k] * inverseMatrix[k][col];
+        terms.push(`${formatNumber(inputMatrix[row][k])} x ${formatNumber(inverseMatrix[k][col])}`);
+      }
+      steps.push({
+        row,
+        col,
+        value,
+        title: `I${row + 1}${col + 1} の検算`,
+        text: `${terms.join(" + ")} = ${formatNumber(value)}`,
+      });
+    }
+  }
+  return steps;
+}
+
+function animateVerification() {
+  if (pageType !== "inverse" || !state.lastInputMatrix || !state.lastInverseMatrix) {
+    elements.message.textContent = "先に逆行列を求めてください。";
+    return;
+  }
+
+  clearTimers();
+  elements.animationTrack.innerHTML = "";
+  elements.historyList.innerHTML = "";
+  elements.formulaTitle.textContent = "検算";
+  elements.formula.textContent = "A の行と A^-1 の列を掛けて、単位行列 I になることを確認します。";
+  renderPlainMatrix(elements.verifyA, state.lastInputMatrix);
+  renderPlainMatrix(elements.verifyInverse, state.lastInverseMatrix);
+  renderPlainMatrix(elements.verifyProduct, identity(state.n), { pending: true });
+
+  const steps = buildVerificationSteps(state.lastInputMatrix, state.lastInverseMatrix);
+  steps.forEach((step, index) => {
+    const timerId = window.setTimeout(() => {
+      setVerificationHighlights(step.row, step.col);
+      const resultCell = elements.verifyProduct.querySelector(`[data-row="${step.row}"][data-col="${step.col}"]`);
+      if (resultCell) resultCell.textContent = formatNumber(step.value);
+      renderTrack({ title: step.title, activeRows: [step.row] });
+      elements.formulaTitle.textContent = step.title;
+      elements.formula.textContent = step.text;
+      appendHistory(step);
+    }, index * 950);
+    state.timerIds.push(timerId);
+  });
+}
+
 function renderInverseDisplay(inputMatrix, inverseMatrix = null) {
   if (pageType !== "inverse") return;
 
@@ -555,6 +689,7 @@ function renderSolutionCell(cell, row, valueText) {
 }
 
 function renderResult(finalMatrix) {
+  if (!elements.resultMatrix) return;
   elements.resultMatrix.innerHTML = "";
 
   if (pageType === "inverse") {
@@ -581,6 +716,7 @@ function renderResult(finalMatrix) {
 
 function renderPendingSolution() {
   if (pageType !== "linear-system") return;
+  if (!elements.resultMatrix) return;
 
   elements.resultMatrix.innerHTML = "";
   setGrid(elements.resultMatrix, state.n, 1);
@@ -594,6 +730,7 @@ function renderPendingSolution() {
 
 function renderPendingInverse() {
   if (pageType !== "inverse") return;
+  if (!elements.resultMatrix) return;
 
   elements.resultMatrix.innerHTML = "";
   setGrid(elements.resultMatrix, state.n, state.n);
@@ -650,6 +787,7 @@ function animate() {
   if (pageType === "inverse") {
     renderPendingInverse();
     renderInverseDisplay(readInputMatrix());
+    resetVerification();
   } else {
     renderPendingSolution();
   }
@@ -663,7 +801,9 @@ function animate() {
         renderResult(calculation.finalMatrix);
         if (pageType === "inverse") {
           const inverse = calculation.finalMatrix.map((row) => row.slice(state.n));
-          renderInverseDisplay(readInputMatrix(), inverse);
+          const inputMatrix = readInputMatrix();
+          renderInverseDisplay(inputMatrix, inverse);
+          prepareVerification(inputMatrix, inverse);
         }
       }
       elements.formulaTitle.textContent = step.title;
@@ -676,6 +816,7 @@ function animate() {
 
 function syncLayout() {
   clearAnimation();
+  resetVerification();
   state.n = clampSize(elements.sizeN.value);
   elements.sizeN.value = state.n;
   createInputGrid();
@@ -692,10 +833,12 @@ function syncLayout() {
     if (elements.originalEquationSystem) elements.originalEquationSystem.innerHTML = "";
     elements.message.textContent = error.message;
   }
-  elements.resultMatrix.innerHTML = "";
-  setGrid(elements.resultMatrix, pageType === "inverse" ? state.n : state.n, pageType === "inverse" ? state.n : 1);
+  if (elements.resultMatrix) {
+    elements.resultMatrix.innerHTML = "";
+    setGrid(elements.resultMatrix, pageType === "inverse" ? state.n : state.n, pageType === "inverse" ? state.n : 1);
+  }
   elements.labelA.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : `${state.n} 元`;
-  elements.labelR.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : "x";
+  if (elements.labelR) elements.labelR.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : "x";
   elements.dimensionStatus.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : `${state.n} 元`;
   elements.formulaTitle.textContent = "掃き出し法";
   elements.formula.textContent = pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。";
@@ -707,5 +850,6 @@ elements.randomize.addEventListener("click", () => {
   animate();
 });
 elements.animate.addEventListener("click", animate);
+elements.verify?.addEventListener("click", animateVerification);
 
 syncLayout();

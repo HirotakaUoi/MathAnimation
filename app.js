@@ -250,7 +250,7 @@ function updateStateFromInputs() {
 }
 
 function setGrid(element, rows, cols) {
-  element.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  element.style.gridTemplateColumns = `repeat(${cols}, minmax(var(--matrix-cell-min, 0px), 1fr))`;
   element.dataset.rows = rows;
   element.dataset.cols = cols;
 }

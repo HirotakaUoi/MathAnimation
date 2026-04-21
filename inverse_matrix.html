@@ -35,6 +35,7 @@
             <div class="button-row">
               <button id="randomize" type="button" class="secondary">ランダム</button>
               <button id="animate" type="button" class="primary">再生</button>
+              <button id="verify" type="button" class="secondary" disabled>検算を再生</button>
             </div>
           </div>
         </section>
@@ -75,14 +76,38 @@
             </header>
             <div id="methodMatrix" class="matrix-output method-matrix" aria-label="拡大係数行列"></div>
           </article>
+        </section>
 
-          <article class="matrix-panel result-panel">
-            <header>
-              <h2>A^-1</h2>
-              <span id="labelR">2 x 2</span>
-            </header>
-            <div id="resultMatrix" class="matrix-output" aria-label="逆行列"></div>
-          </article>
+        <section class="verification-band" aria-label="逆行列の検算">
+          <div class="verification-header">
+            <h2>検算: A x A^-1 = I</h2>
+            <span>逆行列を求めた後に再生できます</span>
+          </div>
+          <div class="verification-grid">
+            <article class="matrix-panel verification-panel">
+              <header>
+                <h2>A</h2>
+                <span>元の行列</span>
+              </header>
+              <div id="verifyA" class="matrix-output verify-matrix" aria-label="検算用の元行列"></div>
+            </article>
+            <div class="operator-glyph">x</div>
+            <article class="matrix-panel verification-panel">
+              <header>
+                <h2>A^-1</h2>
+                <span>求めた逆行列</span>
+              </header>
+              <div id="verifyInverse" class="matrix-output verify-matrix" aria-label="検算用の逆行列"></div>
+            </article>
+            <div class="operator-glyph equals">=</div>
+            <article class="matrix-panel verification-panel result-panel">
+              <header>
+                <h2>I</h2>
+                <span>積</span>
+              </header>
+              <div id="verifyProduct" class="matrix-output verify-matrix" aria-label="検算結果"></div>
+            </article>
+          </div>
         </section>
 
         <section class="animation-band" aria-label="計算状況表示">
