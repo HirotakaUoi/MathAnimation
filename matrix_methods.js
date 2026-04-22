@@ -304,6 +304,7 @@ function createInputGrid() {
       input.dataset.col = col;
       input.ariaLabel = pageType === "inverse" ? `A${row + 1}${col + 1}` : col === state.n ? `b${row + 1}` : `A${row + 1}${col + 1}`;
       if (pageType === "linear-system" && col === state.n) input.classList.add("divider-left");
+      input.addEventListener("input", updateLiveDisplays);
       elements.matrixA.append(input);
     }
   }
@@ -870,6 +871,37 @@ function syncLayout() {
   elements.dimensionStatus.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : `${state.n} 元`;
   elements.formulaTitle.textContent = "掃き出し法";
   elements.formula.textContent = pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。";
+}
+
+function updateLiveDisplays() {
+  clearTimers();
+  elements.animationTrack.innerHTML = "";
+  elements.historyList.innerHTML = "";
+  resetVerification();
+
+  try {
+    const inputMatrix = readInputMatrix();
+    const augmented = buildAugmented(inputMatrix);
+    renderMethodMatrix(augmented);
+
+    if (pageType === "linear-system") {
+      renderEquationSystem(augmented, { aligned: false, container: elements.originalEquationSystem });
+      renderEquationSystem(augmented, { aligned: true });
+      if (elements.resultMatrix) {
+        elements.resultMatrix.innerHTML = "";
+        setGrid(elements.resultMatrix, state.n, 1);
+      }
+    } else {
+      renderInverseDisplay(inputMatrix);
+      renderPendingInverse();
+    }
+
+    elements.message.textContent = "";
+    elements.formulaTitle.textContent = "掃き出し法";
+    elements.formula.textContent = pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。";
+  } catch (error) {
+    elements.message.textContent = error.message;
+  }
 }
 
 elements.sizeN.addEventListener("change", syncLayout);
