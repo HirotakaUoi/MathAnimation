@@ -854,7 +854,7 @@ elements.operation.addEventListener("change", syncLayout);
 elements.randomize.addEventListener("click", () => {
   randomizeMatrix(elements.matrixA);
   randomizeMatrix(elements.matrixB);
-  animateCalculation();
+  syncLayout();
 });
 elements.fitDimensions.addEventListener("click", fitDimensionsToOperation);
 elements.animate.addEventListener("click", animateCalculation);

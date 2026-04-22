@@ -909,7 +909,6 @@ function updateLiveDisplays() {
 elements.sizeN.addEventListener("change", syncLayout);
 elements.randomize.addEventListener("click", () => {
   randomizeInputs();
-  animate();
 });
 elements.animate.addEventListener("click", animate);
 elements.verify?.addEventListener("click", animateVerification);
