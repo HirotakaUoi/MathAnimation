@@ -372,6 +372,7 @@ function randomizeInputs() {
       if (!fallback) fallback = values;
       if (pageType !== "inverse" || hasSimpleInverse(calculation.finalMatrix)) {
         elements.message.textContent = "";
+        updateLiveDisplays();
         return;
       }
     } catch {
@@ -384,6 +385,7 @@ function randomizeInputs() {
       input.value = fallback[index];
     });
     elements.message.textContent = "逆行列の分数が少し複雑です。もう一度ランダムを押すと別の問題を作ります。";
+    updateLiveDisplays();
     return;
   }
 
