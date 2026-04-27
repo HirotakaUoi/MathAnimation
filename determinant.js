@@ -318,6 +318,32 @@ function formatExpansionTerm(coefficient, sign, minorValue) {
   return `${prefix} ${formatNumber(Math.abs(coefficient))} × ${formatNumber(minorValue)}`;
 }
 
+function toSubscript(value) {
+  return String(value).replace(/\d/g, (digit) => "₀₁₂₃₄₅₆₇₈₉"[Number(digit)]);
+}
+
+function entryName(row, col) {
+  return `a${toSubscript(row + 1)}${toSubscript(col + 1)}`;
+}
+
+function minorName(row, col) {
+  return `M${toSubscript(row + 1)}${toSubscript(col + 1)}`;
+}
+
+function cofactorName(row, col) {
+  return `C${toSubscript(row + 1)}${toSubscript(col + 1)}`;
+}
+
+function expansionFormula(size, row = 0) {
+  const terms = [];
+  for (let col = 0; col < size; col += 1) {
+    const sign = col % 2 === 0 ? "+" : "-";
+    const prefix = col === 0 ? "" : ` ${sign} `;
+    terms.push(`${prefix}${entryName(row, col)}${cofactorName(row, col)}`);
+  }
+  return `det(A) = ${terms.join("")}`;
+}
+
 function randomizeInputs() {
   const inputs = Array.from(elements.matrixA.querySelectorAll("input"));
   for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -416,6 +442,7 @@ function cofactorSteps(input, compact = false) {
       steps.push({
         title: `${label} の値`,
         text: `${label} は 1 x 1 なので ${formatNumber(scalar)} です。`,
+        formula: `det(${label}) = ${formatNumber(scalar)}`,
         matrix: cloneMatrix(matrix),
         determinant: scalar,
       });
@@ -427,6 +454,7 @@ function cofactorSteps(input, compact = false) {
       steps.push({
         title: `${label} を直接計算`,
         text: `${formatNumber(matrix[0][0])} × ${formatNumber(matrix[1][1])} - ${formatNumber(matrix[0][1])} × ${formatNumber(matrix[1][0])} = ${formatNumber(value)}`,
+        formula: `det(${label}) = ${formatNumber(matrix[0][0])} × ${formatNumber(matrix[1][1])} - ${formatNumber(matrix[0][1])} × ${formatNumber(matrix[1][0])} = ${formatNumber(value)}`,
         matrix: cloneMatrix(matrix),
         activeCells: [
           [0, 0],
@@ -444,6 +472,7 @@ function cofactorSteps(input, compact = false) {
       steps.push({
         title: `${label} を省略計算`,
         text: `${size} x ${size} の小行列なので途中を省略し、det(${label}) = ${formatNumber(value)} とします。`,
+        formula: `det(${label}) = ${formatNumber(value)}`,
         matrix: cloneMatrix(matrix),
         determinant: value,
       });
@@ -453,6 +482,7 @@ function cofactorSteps(input, compact = false) {
     steps.push({
       title: `${label} を 1 行目で展開`,
       text: `${size} x ${size} 行列なので 1 行目で余因子展開します。`,
+      formula: expansionFormula(size, 0),
       matrix: cloneMatrix(matrix),
       activeRows: [0],
     });
@@ -462,44 +492,56 @@ function cofactorSteps(input, compact = false) {
 
     for (let col = 0; col < size; col += 1) {
       const coefficient = matrix[0][col];
+      const itemEntry = entryName(0, col);
+      const itemMinor = minorName(0, col);
+      const itemCofactor = cofactorName(0, col);
+      const sign = col % 2 === 0 ? 1 : -1;
+      const signFormula = `(-1)^(1+${col + 1})`;
       if (Math.abs(coefficient) < EPSILON) {
         steps.push({
-          title: `a1${col + 1} の項を省略`,
-          text: `a1${col + 1} = 0 なので、この項は 0 です。`,
+          title: `${itemEntry} の項を省略`,
+          text: `${itemEntry} = 0 なので、この項は 0 です。`,
+          formula: `${itemEntry}${itemCofactor} = 0`,
           matrix: cloneMatrix(matrix),
           activeCells: [[0, col]],
+          sourceLabel: itemEntry,
         });
         continue;
       }
 
-      const sign = col % 2 === 0 ? 1 : -1;
       const minor = minorMatrix(matrix, 0, col);
       steps.push({
-        title: `a1${col + 1} の小行列`,
-        text: `${sign === 1 ? "+" : "-"} ${formatNumber(coefficient)} に対応する小行列 ${label}(1, ${col + 1}) です。`,
+        title: `${itemCofactor} の小行列`,
+        text: `${itemEntry} に対応する小行列 ${itemMinor} を作ります。${itemCofactor} = ${signFormula} det(${itemMinor}) です。`,
+        formula: `${itemCofactor} = ${signFormula} det(${itemMinor})`,
         matrix: cloneMatrix(minor),
         activeCells: [[0, col]],
         sourceMatrix: cloneMatrix(matrix),
         sourceCell: [0, col],
+        sourceLabel: itemEntry,
       });
 
-      const minorValue = visit(minor, `${label}(1, ${col + 1})`, depth + 1);
+      const minorValue = visit(minor, itemMinor, depth + 1);
+      const cofactorValue = sign * minorValue;
       const termValue = sign * coefficient * minorValue;
       total += termValue;
       termSummaries.push(formatExpansionTerm(coefficient, sign, minorValue));
 
       steps.push({
-        title: `a1${col + 1} の寄与`,
-        text: `${sign === 1 ? "+" : "-"} ${formatNumber(Math.abs(coefficient))} × det(${label}(1, ${col + 1})) = ${formatNumber(termValue)}`,
+        title: `${itemEntry}${itemCofactor} の寄与`,
+        text: `${itemCofactor} = ${formatNumber(cofactorValue)} なので、${itemEntry}${itemCofactor} = ${formatNumber(coefficient)} × ${formatNumber(cofactorValue)} = ${formatNumber(termValue)} です。`,
+        formula: `${itemCofactor} = ${signFormula} det(${itemMinor}) = ${formatNumber(cofactorValue)}, ${itemEntry}${itemCofactor} = ${formatNumber(termValue)}`,
         matrix: cloneMatrix(matrix),
         activeCells: [[0, col]],
         partial: total,
+        sourceLabel: itemEntry,
       });
     }
 
     steps.push({
       title: `${label} の合計`,
       text: `${termSummaries.join(" ")} = ${formatNumber(total)}`,
+      formula: `${label === "det(A)" ? expansionFormula(size, 0) : `det(${label})`} = ${formatNumber(total)}`,
       matrix: cloneMatrix(matrix),
       activeRows: [0],
       determinant: total,
@@ -573,7 +615,7 @@ function renderTrack(step) {
   elements.animationTrack.innerHTML = "";
   const left = document.createElement("div");
   left.className = "flow-cell source-a";
-  left.textContent = step.sourceCell ? `a${step.sourceCell[0] + 1}${step.sourceCell[1] + 1}` : step.activeRows?.length ? step.activeRows.map((row) => `R${row + 1}`).join(", ") : "A";
+  left.textContent = step.sourceLabel || (step.sourceCell ? entryName(step.sourceCell[0], step.sourceCell[1]) : step.activeRows?.length ? step.activeRows.map((row) => `R${row + 1}`).join(", ") : "A");
 
   const op = document.createElement("div");
   op.className = "flow-cell operator";
@@ -634,7 +676,7 @@ function animate() {
       renderTrack(step);
       if (index === calculation.steps.length - 1) renderDeterminantResult(calculation.determinant);
       elements.formulaTitle.textContent = step.title;
-      elements.formula.textContent = step.text;
+      elements.formula.textContent = step.formula || step.text;
       appendHistory(step);
     }, index * 1200);
     state.timerIds.push(timerId);
@@ -650,7 +692,7 @@ function updateLiveDisplays() {
     renderPendingDeterminant();
     elements.message.textContent = "";
     elements.formulaTitle.textContent = state.mode === "elimination" ? "行列式" : "余因子展開";
-    elements.formula.textContent = DEFAULT_FORMULAS[state.mode];
+    elements.formula.textContent = state.mode === "elimination" ? DEFAULT_FORMULAS[state.mode] : expansionFormula(matrix.length, 0);
   } catch (error) {
     elements.message.textContent = error.message;
   }
