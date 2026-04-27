@@ -1,9 +1,14 @@
 const EPSILON = 1e-9;
 const MAX_SIZE = 4;
 const MAX_RATIONAL_DENOMINATOR = 1000;
+const DEFAULT_FORMULAS = {
+  elimination: "行の入れ替えで符号を変え、下を 0 にして上三角行列の対角成分の積をとります。",
+  cofactor: "1 行目で余因子展開し、各項の小行列の行列式を順にたどります。",
+};
 
 const elements = {
   sizeN: document.querySelector("#sizeN"),
+  methodMode: document.querySelector("#methodMode"),
   randomize: document.querySelector("#randomize"),
   animate: document.querySelector("#animate"),
   matrixA: document.querySelector("#matrixA"),
@@ -13,6 +18,8 @@ const elements = {
   determinantValue: document.querySelector("#determinantValue"),
   labelA: document.querySelector("#labelA"),
   labelR: document.querySelector("#labelR"),
+  methodTitle: document.querySelector("#methodTitle"),
+  methodSubtitle: document.querySelector("#methodSubtitle"),
   message: document.querySelector("#message"),
   dimensionStatus: document.querySelector("#dimensionStatus"),
   animationTrack: document.querySelector("#animationTrack"),
@@ -23,6 +30,7 @@ const elements = {
 
 const state = {
   n: 2,
+  mode: "elimination",
   timerIds: [],
 };
 
@@ -213,7 +221,7 @@ function clearAnimation() {
   elements.animationTrack.innerHTML = "";
   elements.historyList.innerHTML = "";
   elements.methodMatrix.querySelectorAll(".cell-output").forEach((cell) => {
-    cell.classList.remove("active", "pivot-cell", "row-cell");
+    cell.classList.remove("active", "pivot-cell", "row-cell", "referenced-a", "referenced-b");
   });
 }
 
@@ -277,6 +285,21 @@ function readInputMatrix() {
   return matrix;
 }
 
+function cloneMatrix(matrix) {
+  return matrix.map((row) => row.slice());
+}
+
+function minorMatrix(matrix, excludeRow, excludeCol) {
+  return matrix
+    .filter((_, rowIndex) => rowIndex !== excludeRow)
+    .map((row) => row.filter((_, colIndex) => colIndex !== excludeCol));
+}
+
+function formatExpansionTerm(coefficient, sign, minorValue) {
+  const prefix = sign === 1 ? "+" : "-";
+  return `${prefix} ${formatNumber(Math.abs(coefficient))} × ${formatNumber(minorValue)}`;
+}
+
 function randomizeInputs() {
   const inputs = Array.from(elements.matrixA.querySelectorAll("input"));
   for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -284,7 +307,7 @@ function randomizeInputs() {
       input.value = randomInteger();
     });
     try {
-      const calculation = determinantSteps(readInputMatrix());
+      const calculation = buildCalculation(readInputMatrix(), state.mode);
       if (Math.abs(calculation.determinant) < EPSILON) continue;
       updateLiveDisplays();
       elements.message.textContent = "";
@@ -296,11 +319,7 @@ function randomizeInputs() {
   elements.message.textContent = "扱いやすいランダム行列を作れませんでした。もう一度ランダムを押してください。";
 }
 
-function cloneMatrix(matrix) {
-  return matrix.map((row) => row.slice());
-}
-
-function determinantSteps(input) {
+function eliminationSteps(input) {
   const matrix = cloneMatrix(input);
   const steps = [];
   let sign = 1;
@@ -368,6 +387,106 @@ function determinantSteps(input) {
   return { steps, determinant };
 }
 
+function cofactorSteps(input) {
+  const steps = [];
+
+  function visit(matrix, label) {
+    const size = matrix.length;
+
+    if (size === 1) {
+      const scalar = matrix[0][0];
+      steps.push({
+        title: `${label} の値`,
+        text: `${label} は 1 x 1 なので ${formatNumber(scalar)} です。`,
+        matrix: cloneMatrix(matrix),
+        determinant: scalar,
+      });
+      return scalar;
+    }
+
+    if (size === 2) {
+      const value = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+      steps.push({
+        title: `${label} を直接計算`,
+        text: `${formatNumber(matrix[0][0])} × ${formatNumber(matrix[1][1])} - ${formatNumber(matrix[0][1])} × ${formatNumber(matrix[1][0])} = ${formatNumber(value)}`,
+        matrix: cloneMatrix(matrix),
+        activeCells: [
+          [0, 0],
+          [0, 1],
+          [1, 0],
+          [1, 1],
+        ],
+        determinant: value,
+      });
+      return value;
+    }
+
+    steps.push({
+      title: `${label} を 1 行目で展開`,
+      text: `${size} x ${size} 行列なので 1 行目で余因子展開します。`,
+      matrix: cloneMatrix(matrix),
+      activeRows: [0],
+    });
+
+    let total = 0;
+    const termSummaries = [];
+
+    for (let col = 0; col < size; col += 1) {
+      const coefficient = matrix[0][col];
+      if (Math.abs(coefficient) < EPSILON) {
+        steps.push({
+          title: `a1${col + 1} の項を省略`,
+          text: `a1${col + 1} = 0 なので、この項は 0 です。`,
+          matrix: cloneMatrix(matrix),
+          activeCells: [[0, col]],
+        });
+        continue;
+      }
+
+      const sign = col % 2 === 0 ? 1 : -1;
+      const minor = minorMatrix(matrix, 0, col);
+      steps.push({
+        title: `a1${col + 1} の小行列`,
+        text: `${sign === 1 ? "+" : "-"} ${formatNumber(coefficient)} に対応する小行列 ${label}(1, ${col + 1}) です。`,
+        matrix: cloneMatrix(minor),
+        activeCells: [[0, col]],
+        sourceMatrix: cloneMatrix(matrix),
+        sourceCell: [0, col],
+      });
+
+      const minorValue = visit(minor, `${label}(1, ${col + 1})`);
+      const termValue = sign * coefficient * minorValue;
+      total += termValue;
+      termSummaries.push(formatExpansionTerm(coefficient, sign, minorValue));
+
+      steps.push({
+        title: `a1${col + 1} の寄与`,
+        text: `${sign === 1 ? "+" : "-"} ${formatNumber(Math.abs(coefficient))} × det(${label}(1, ${col + 1})) = ${formatNumber(termValue)}`,
+        matrix: cloneMatrix(matrix),
+        activeCells: [[0, col]],
+        partial: total,
+      });
+    }
+
+    steps.push({
+      title: `${label} の合計`,
+      text: `${termSummaries.join(" ")} = ${formatNumber(total)}`,
+      matrix: cloneMatrix(matrix),
+      activeRows: [0],
+      determinant: total,
+    });
+
+    return total;
+  }
+
+  const determinant = visit(input, "det(A)");
+  return { steps, determinant };
+}
+
+function buildCalculation(matrix, mode) {
+  return mode === "cofactor" ? cofactorSteps(matrix) : eliminationSteps(matrix);
+}
+
 function renderMathMatrix(matrix) {
   elements.mathMatrixA.innerHTML = "";
   elements.mathMatrixA.style.gridTemplateColumns = `repeat(${matrix[0].length}, minmax(44px, auto))`;
@@ -391,6 +510,9 @@ function renderMethodMatrix(matrix, step = {}) {
       cell.textContent = formatNumber(value);
       if (step.activeRows?.includes(rowIndex)) cell.classList.add("row-cell");
       if (step.pivot?.[0] === rowIndex && step.pivot?.[1] === colIndex) cell.classList.add("pivot-cell");
+      if (step.activeCells?.some(([activeRow, activeCol]) => activeRow === rowIndex && activeCol === colIndex)) {
+        cell.classList.add("referenced-a");
+      }
       elements.methodMatrix.append(cell);
     });
   });
@@ -418,16 +540,18 @@ function renderDeterminantResult(value) {
 
 function renderTrack(step) {
   elements.animationTrack.innerHTML = "";
-  const labels = step.activeRows?.length ? step.activeRows.map((row) => `R${row + 1}`).join(", ") : "全体";
   const left = document.createElement("div");
   left.className = "flow-cell source-a";
-  left.textContent = labels;
+  left.textContent = step.sourceCell ? `a${step.sourceCell[0] + 1}${step.sourceCell[1] + 1}` : step.activeRows?.length ? step.activeRows.map((row) => `R${row + 1}`).join(", ") : "A";
+
   const op = document.createElement("div");
   op.className = "flow-cell operator";
   op.textContent = "→";
+
   const right = document.createElement("div");
   right.className = "flow-cell result";
   right.textContent = step.title;
+
   elements.animationTrack.append(left, op, right);
 }
 
@@ -442,6 +566,16 @@ function appendHistory(step) {
   elements.historyList.scrollTop = elements.historyList.scrollHeight;
 }
 
+function updateMethodHeaders() {
+  if (state.mode === "cofactor") {
+    elements.methodTitle.textContent = "余因子展開";
+    elements.methodSubtitle.textContent = "小行列";
+  } else {
+    elements.methodTitle.textContent = "上三角化";
+    elements.methodSubtitle.textContent = "行基本変形";
+  }
+}
+
 function animate() {
   clearAnimation();
   elements.message.textContent = "";
@@ -450,7 +584,7 @@ function animate() {
 
   try {
     inputMatrix = readInputMatrix();
-    calculation = determinantSteps(inputMatrix);
+    calculation = buildCalculation(inputMatrix, state.mode);
   } catch (error) {
     elements.message.textContent = error.message;
     return;
@@ -481,8 +615,8 @@ function updateLiveDisplays() {
     renderMethodMatrix(matrix);
     renderPendingDeterminant();
     elements.message.textContent = "";
-    elements.formulaTitle.textContent = "行列式";
-    elements.formula.textContent = "行の入れ替えで符号を変え、下を 0 にして上三角行列の対角成分の積をとります。";
+    elements.formulaTitle.textContent = state.mode === "cofactor" ? "余因子展開" : "行列式";
+    elements.formula.textContent = DEFAULT_FORMULAS[state.mode];
   } catch (error) {
     elements.message.textContent = error.message;
   }
@@ -491,8 +625,10 @@ function updateLiveDisplays() {
 function syncLayout() {
   clearAnimation();
   state.n = clampSize(elements.sizeN.value);
+  state.mode = elements.methodMode.value;
   elements.sizeN.value = state.n;
   createInputGrid();
+  updateMethodHeaders();
   updateLiveDisplays();
   elements.labelA.textContent = `${state.n} x ${state.n}`;
   elements.labelR.textContent = "det(A)";
@@ -500,6 +636,7 @@ function syncLayout() {
 }
 
 elements.sizeN.addEventListener("change", syncLayout);
+elements.methodMode.addEventListener("change", syncLayout);
 elements.randomize.addEventListener("click", randomizeInputs);
 elements.animate.addEventListener("click", animate);
 

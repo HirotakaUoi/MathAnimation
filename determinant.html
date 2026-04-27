@@ -31,6 +31,13 @@
             </select>
           </div>
           <div class="control-group">
+            <label for="methodMode">求め方</label>
+            <select id="methodMode">
+              <option value="elimination">上三角化</option>
+              <option value="cofactor">余因子展開</option>
+            </select>
+          </div>
+          <div class="control-group">
             <label>入力</label>
             <div class="button-row">
               <button id="randomize" type="button" class="secondary">ランダム</button>
@@ -70,8 +77,8 @@
 
           <article class="matrix-panel method-wide">
             <header>
-              <h2>上三角化</h2>
-              <span>行基本変形</span>
+              <h2 id="methodTitle">上三角化</h2>
+              <span id="methodSubtitle">行基本変形</span>
             </header>
             <div id="methodMatrix" class="matrix-output method-matrix" aria-label="上三角化の途中経過"></div>
           </article>
