@@ -103,6 +103,13 @@ select {
   line-height: 1.2;
 }
 
+.card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
 .animation-card span:last-child {
   color: var(--muted);
   font-size: 1.08rem;
