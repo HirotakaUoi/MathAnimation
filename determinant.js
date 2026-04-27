@@ -4,6 +4,7 @@ const MAX_RATIONAL_DENOMINATOR = 1000;
 const DEFAULT_FORMULAS = {
   elimination: "行の入れ替えで符号を変え、下を 0 にして上三角行列の対角成分の積をとります。",
   cofactor: "1 行目で余因子展開し、各項の小行列の行列式を順にたどります。",
+  "cofactor-compact": "1 行目で余因子展開し、小行列の内部計算は要点だけに省略して表示します。",
 };
 
 const elements = {
@@ -295,6 +296,23 @@ function minorMatrix(matrix, excludeRow, excludeCol) {
     .map((row) => row.filter((_, colIndex) => colIndex !== excludeCol));
 }
 
+function determinantValue(matrix) {
+  const size = matrix.length;
+  if (size === 1) return matrix[0][0];
+  if (size === 2) {
+    return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+  }
+
+  let total = 0;
+  for (let col = 0; col < size; col += 1) {
+    const coefficient = matrix[0][col];
+    if (Math.abs(coefficient) < EPSILON) continue;
+    const sign = col % 2 === 0 ? 1 : -1;
+    total += sign * coefficient * determinantValue(minorMatrix(matrix, 0, col));
+  }
+  return total;
+}
+
 function formatExpansionTerm(coefficient, sign, minorValue) {
   const prefix = sign === 1 ? "+" : "-";
   return `${prefix} ${formatNumber(Math.abs(coefficient))} × ${formatNumber(minorValue)}`;
@@ -387,10 +405,10 @@ function eliminationSteps(input) {
   return { steps, determinant };
 }
 
-function cofactorSteps(input) {
+function cofactorSteps(input, compact = false) {
   const steps = [];
 
-  function visit(matrix, label) {
+  function visit(matrix, label, depth) {
     const size = matrix.length;
 
     if (size === 1) {
@@ -416,6 +434,17 @@ function cofactorSteps(input) {
           [1, 0],
           [1, 1],
         ],
+        determinant: value,
+      });
+      return value;
+    }
+
+    if (compact && depth > 0) {
+      const value = determinantValue(matrix);
+      steps.push({
+        title: `${label} を省略計算`,
+        text: `${size} x ${size} の小行列なので途中を省略し、det(${label}) = ${formatNumber(value)} とします。`,
+        matrix: cloneMatrix(matrix),
         determinant: value,
       });
       return value;
@@ -454,7 +483,7 @@ function cofactorSteps(input) {
         sourceCell: [0, col],
       });
 
-      const minorValue = visit(minor, `${label}(1, ${col + 1})`);
+      const minorValue = visit(minor, `${label}(1, ${col + 1})`, depth + 1);
       const termValue = sign * coefficient * minorValue;
       total += termValue;
       termSummaries.push(formatExpansionTerm(coefficient, sign, minorValue));
@@ -479,12 +508,14 @@ function cofactorSteps(input) {
     return total;
   }
 
-  const determinant = visit(input, "det(A)");
+  const determinant = visit(input, "det(A)", 0);
   return { steps, determinant };
 }
 
 function buildCalculation(matrix, mode) {
-  return mode === "cofactor" ? cofactorSteps(matrix) : eliminationSteps(matrix);
+  if (mode === "cofactor") return cofactorSteps(matrix, false);
+  if (mode === "cofactor-compact") return cofactorSteps(matrix, true);
+  return eliminationSteps(matrix);
 }
 
 function renderMathMatrix(matrix) {
@@ -569,7 +600,10 @@ function appendHistory(step) {
 function updateMethodHeaders() {
   if (state.mode === "cofactor") {
     elements.methodTitle.textContent = "余因子展開";
-    elements.methodSubtitle.textContent = "小行列";
+    elements.methodSubtitle.textContent = "小行列を順に追う";
+  } else if (state.mode === "cofactor-compact") {
+    elements.methodTitle.textContent = "余因子展開（簡潔）";
+    elements.methodSubtitle.textContent = "途中省略あり";
   } else {
     elements.methodTitle.textContent = "上三角化";
     elements.methodSubtitle.textContent = "行基本変形";
@@ -615,7 +649,7 @@ function updateLiveDisplays() {
     renderMethodMatrix(matrix);
     renderPendingDeterminant();
     elements.message.textContent = "";
-    elements.formulaTitle.textContent = state.mode === "cofactor" ? "余因子展開" : "行列式";
+    elements.formulaTitle.textContent = state.mode === "elimination" ? "行列式" : "余因子展開";
     elements.formula.textContent = DEFAULT_FORMULAS[state.mode];
   } catch (error) {
     elements.message.textContent = error.message;
