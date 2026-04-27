@@ -264,6 +264,13 @@ h1 {
   gap: 12px;
 }
 
+.panel-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
 .debug-badge {
   display: inline-grid;
   min-height: 38px;
