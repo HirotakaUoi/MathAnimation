@@ -36,6 +36,12 @@ http://localhost:8100/inverse_matrix.html
 http://localhost:8100/linear_system.html
 ```
 
+行列式の求め方をアニメーションするページは次です。
+
+```text
+http://localhost:8100/determinant.html
+```
+
 各 HTML、CSS、JS はすべて相対パスでつながっているため、フォルダごと別の場所へ移動しても同じ手順で動きます。
 
 ## 機能
@@ -49,5 +55,6 @@ http://localhost:8100/linear_system.html
 - 除算は `A ÷ B = A x B^-1` として計算
 - 逆行列を `[ A | I ]` の掃き出し法で表示
 - 連立一次方程式を `[ A | b ]` の掃き出し法で表示
+- 行列式を行の交換と下三角消去で上三角化し、対角成分の積として表示
 
 除算では B が正方行列かつ逆行列を持つ必要があります。
