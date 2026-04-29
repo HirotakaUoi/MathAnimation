@@ -42,6 +42,24 @@ http://localhost:8100/linear_system.html
 http://localhost:8100/determinant.html
 ```
 
+ベクトルの内積をアニメーションするページは次です。
+
+```text
+http://localhost:8100/vector_dot.html
+```
+
+ベクトルのなす角をアニメーションするページは次です。
+
+```text
+http://localhost:8100/vector_angle.html
+```
+
+ベクトルの加減算を図解つきでアニメーションするページは次です。
+
+```text
+http://localhost:8100/vector_add_sub.html
+```
+
 各 HTML、CSS、JS はすべて相対パスでつながっているため、フォルダごと別の場所へ移動しても同じ手順で動きます。
 
 ## 機能
@@ -56,5 +74,8 @@ http://localhost:8100/determinant.html
 - 逆行列を `[ A | I ]` の掃き出し法で表示
 - 連立一次方程式を `[ A | b ]` の掃き出し法で表示
 - 行列式を行の交換と下三角消去で上三角化し、対角成分の積として表示
+- ベクトルの内積を 2 次元・3 次元で表示
+- ベクトルのなす角を内積と長さから表示
+- ベクトルの加減算を 2 次元・3 次元で図解つき表示
 
 除算では B が正方行列かつ逆行列を持つ必要があります。

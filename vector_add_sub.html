@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vector Add/Sub Motion</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace has-vector-display has-vector-diagram" aria-label="ベクトルの加減算アニメーション">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Vector Method</p>
+            <div class="title-row">
+              <h1>ベクトルの加減算</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./index.html">一覧へ</a>
+            <span id="dimensionStatus">2 次元</span>
+            <span id="operationStatus">a + b</span>
+          </div>
+        </header>
+
+        <section class="control-band" aria-label="設定">
+          <div class="control-group">
+            <label for="dimension">次元</label>
+            <select id="dimension">
+              <option value="2">2 次元</option>
+              <option value="3">3 次元</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="operation">演算</label>
+            <select id="operation">
+              <option value="add">加算 a + b</option>
+              <option value="subtract">減算 a - b</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="vector-stage" aria-label="ベクトルと結果">
+          <article class="matrix-panel vector-panel">
+            <header>
+              <h2 class="vector-heading"><span class="vector-heading-prefix">ベクトル</span><span class="vector-arrowed"><span class="vector-variable">a</span></span></h2>
+              <span id="labelA">2 要素</span>
+            </header>
+            <div id="vectorA" class="vector-input" aria-label="ベクトルa"></div>
+          </article>
+
+          <div class="operator-glyph" id="operatorGlyph">+</div>
+
+          <article class="matrix-panel vector-panel">
+            <header>
+              <h2 class="vector-heading"><span class="vector-heading-prefix">ベクトル</span><span class="vector-arrowed"><span class="vector-variable">b</span></span></h2>
+              <span id="labelB">2 要素</span>
+            </header>
+            <div id="vectorB" class="vector-input" aria-label="ベクトルb"></div>
+          </article>
+
+          <div class="operator-glyph equals">=</div>
+
+          <article class="matrix-panel result-panel">
+            <header>
+              <h2 id="resultLabel" class="vector-heading"><span class="vector-heading-prefix">ベクトル</span><span class="vector-arrowed"><span class="vector-variable">a</span></span><span class="vector-expression-operator">+</span><span class="vector-arrowed"><span class="vector-variable">b</span></span></h2>
+              <span>結果ベクトル</span>
+            </header>
+            <div id="resultVector" class="vector-output" aria-label="結果ベクトル"></div>
+            <div id="resultDetail" class="result-detail">対応する成分を足し合わせます。</div>
+          </article>
+        </section>
+
+        <section class="vector-display-band" aria-label="数式表示">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>成分ごとに加減算します</span>
+          </div>
+          <div id="equationDisplay" class="vector-equation" aria-label="加減算の数式"></div>
+        </section>
+
+        <section class="vector-diagram-band" aria-label="図解表示">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>平行移動して合成ベクトルを作ります</span>
+            </div>
+            <div id="viewControls" class="control-group view-controls" hidden>
+              <label>回転</label>
+              <div class="view-slider-row">
+                <span>X軸</span>
+                <input id="rotateX" type="range" min="-180" max="180" step="1" value="0" />
+                <output id="rotateXValue" for="rotateX">0°</output>
+              </div>
+              <div class="view-slider-row">
+                <span>Y軸</span>
+                <input id="rotateY" type="range" min="-180" max="180" step="1" value="0" />
+                <output id="rotateYValue" for="rotateY">0°</output>
+              </div>
+              <div class="view-slider-row">
+                <span>Z軸</span>
+                <input id="rotateZ" type="range" min="-180" max="180" step="1" value="0" />
+                <output id="rotateZValue" for="rotateZ">0°</output>
+              </div>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360" aria-label="ベクトル図解"></svg>
+        </section>
+
+        <section class="animation-band" aria-label="計算状況表示">
+          <div class="timeline">
+            <div id="animationTrack" class="animation-track"></div>
+          </div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">ベクトルの加減算</div>
+            <div id="formula" class="formula">図では、2本目のベクトルを平行移動して先端をつなぎます。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list" aria-label="計算履歴"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./vector_add_sub.js"></script>
+  </body>
+</html>

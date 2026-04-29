@@ -151,6 +151,14 @@ select {
   grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
 }
 
+.workspace.has-vector-display {
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+}
+
+.workspace.has-vector-diagram {
+  grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr);
+}
+
 .workspace > * {
   min-height: 0;
 }
@@ -183,6 +191,14 @@ select {
   grid-row: 4;
 }
 
+.vector-display-band {
+  grid-row: 5;
+}
+
+.vector-diagram-band {
+  grid-row: 6;
+}
+
 .workspace.has-equation-band .matrix-stage {
   grid-row: 5;
 }
@@ -193,6 +209,14 @@ select {
 
 .workspace.has-determinant-display .matrix-stage {
   grid-row: 5;
+}
+
+.workspace.has-vector-display .animation-band {
+  grid-row: 6;
+}
+
+.workspace.has-vector-diagram .animation-band {
+  grid-row: 7;
 }
 
 .verification-band {
@@ -229,6 +253,8 @@ select {
 .equation-display-band,
 .inverse-display-band,
 .determinant-display-band,
+.vector-display-band,
+.vector-diagram-band,
 .verification-band {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--line);
@@ -356,6 +382,51 @@ h2 {
   font-weight: 800;
 }
 
+.view-controls {
+  align-self: stretch;
+  min-width: 0;
+}
+
+.view-controls[hidden] {
+  display: none;
+}
+
+.view-slider-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 52px;
+  gap: 10px;
+  align-items: center;
+}
+
+.view-slider-row span,
+.view-slider-row output {
+  color: var(--muted);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.view-slider-row output {
+  text-align: right;
+}
+
+.vector-diagram-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px 20px;
+  align-items: start;
+}
+
+.vector-diagram-header .view-controls {
+  min-width: min(100%, 360px);
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
 select,
 input[type="number"] {
   height: 48px;
@@ -429,6 +500,18 @@ select:focus-visible {
   visibility: hidden;
 }
 
+.vector-stage {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr) auto minmax(260px, 0.9fr);
+  gap: 14px;
+  align-items: stretch;
+  align-self: start;
+}
+
+.angle-stage {
+  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) minmax(280px, 0.95fr);
+}
+
 .matrix-stage {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr) auto minmax(240px, 1fr);
@@ -452,6 +535,93 @@ select:focus-visible {
 
 .method-wide {
   border-color: rgba(37, 99, 235, 0.34);
+}
+
+.vector-panel {
+  min-width: 0;
+}
+
+.vector-heading {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.1;
+}
+
+.vector-heading-prefix {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.vector-variable {
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 1.5em;
+  font-style: italic;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.vector-arrowed {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1em;
+  padding-top: 0.28em;
+}
+
+.vector-arrowed::before {
+  position: absolute;
+  top: -0.1em;
+  left: 50%;
+  color: currentColor;
+  content: "\2192";
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.88em;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateX(-50%) scaleX(1.28);
+}
+
+.vector-expression-operator {
+  padding: 0 0.06em;
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 1.1em;
+  font-weight: 900;
+}
+
+.vector-input {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+}
+
+.vector-cell {
+  min-height: 72px;
+  font-size: clamp(1.2rem, 2vw, 1.85rem);
+}
+
+.scalar-result {
+  display: grid;
+  place-items: center;
+  min-height: 112px;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  border-radius: 6px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-size: clamp(1.5rem, 2.2vw, 2.6rem);
+  font-weight: 900;
+}
+
+.result-detail {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 .equation-display-band {
@@ -482,6 +652,36 @@ select:focus-visible {
   padding: 14px 16px;
   border-radius: 8px;
   overflow: auto;
+}
+
+.vector-display-band {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.vector-diagram-band {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vector-equation {
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1.18rem;
+  font-weight: 850;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .verification-band {
@@ -528,6 +728,147 @@ select:focus-visible {
   min-width: 0;
   overflow: hidden;
   padding-bottom: 4px;
+}
+
+.vector-output {
+  display: grid;
+  gap: 8px;
+  align-content: stretch;
+  min-height: auto;
+  padding: 12px;
+  border-left: 5px solid var(--ink);
+  border-right: 5px solid var(--ink);
+}
+
+.vector-output-cell {
+  min-height: 64px;
+  padding: 0 8px;
+  font-size: clamp(1.05rem, 1.8vw, 1.7rem);
+}
+
+.vector-diagram {
+  width: 100%;
+  height: min(420px, 38vh);
+  min-height: 280px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fbfe;
+}
+
+.diagram-grid {
+  stroke: rgba(148, 163, 184, 0.35);
+  stroke-width: 1;
+}
+
+.diagram-axis {
+  stroke: rgba(29, 38, 51, 0.65);
+  stroke-width: 2;
+}
+
+.diagram-axis-negative {
+  stroke: rgba(29, 38, 51, 0.28);
+  stroke-width: 1.5;
+}
+
+.diagram-tick {
+  stroke: rgba(29, 38, 51, 0.72);
+  stroke-width: 1.5;
+}
+
+.diagram-axis-label {
+  fill: rgba(29, 38, 51, 0.72);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.diagram-axis-name {
+  fill: rgba(29, 38, 51, 0.82);
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.diagram-axis-label.y-label {
+  text-anchor: start;
+}
+
+.diagram-axis-label.z-label {
+  text-anchor: end;
+}
+
+.diagram-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.diagram-arrow {
+  stroke: none;
+}
+
+.diagram-label-group {
+  pointer-events: none;
+}
+
+.diagram-label-box {
+  stroke-width: 1.5px;
+}
+
+.diagram-label {
+  font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  text-rendering: geometricPrecision;
+  letter-spacing: 0;
+}
+
+.diagram-a {
+  stroke: var(--blue);
+  fill: var(--blue);
+}
+
+.diagram-label-box.diagram-a {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(37, 99, 235, 0.34);
+}
+
+.diagram-b {
+  stroke: var(--violet);
+  fill: var(--violet);
+}
+
+.diagram-label-box.diagram-b {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(109, 40, 217, 0.34);
+}
+
+.diagram-b-faded {
+  stroke: rgba(109, 40, 217, 0.34);
+  fill: rgba(109, 40, 217, 0.34);
+}
+
+.diagram-label-box.diagram-b-faded {
+  fill: rgba(255, 255, 255, 0.88);
+  stroke: rgba(109, 40, 217, 0.22);
+}
+
+.diagram-result {
+  stroke: var(--teal);
+  fill: var(--teal);
+}
+
+.diagram-label-box.diagram-result {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: rgba(15, 118, 110, 0.34);
 }
 
 .verification-panel {
@@ -1216,10 +1557,22 @@ select:focus-visible {
   .equation-compare,
   .inverse-display-band,
   .determinant-display-band,
+  .vector-display-band,
+  .vector-diagram-band,
   .animation-band,
   .matrix-stage,
   .method-stage {
     grid-template-columns: 1fr;
+  }
+
+  .vector-stage,
+  .angle-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .vector-diagram {
+    height: min(340px, 34vh);
+    min-height: 240px;
   }
 
   .verification-grid {
