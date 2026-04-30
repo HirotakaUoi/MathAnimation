@@ -4,17 +4,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vector Angle Motion</title>
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
-      <section class="workspace has-vector-display" aria-label="ベクトルのなす角アニメーション">
+      <section class="workspace has-vector-display has-vector-diagram" aria-label="ベクトルのなす角アニメーション">
         <header class="topbar">
           <div>
             <p class="eyebrow">Vector Method</p>
             <div class="title-row">
               <h1>ベクトルのなす角</h1>
-              <span class="debug-badge">デバッグ中</span>
             </div>
           </div>
           <div class="status-strip" aria-live="polite">
@@ -78,6 +83,16 @@
           <div id="equationDisplay" class="vector-equation" aria-label="角度の数式"></div>
         </section>
 
+        <section class="vector-diagram-band" aria-label="図解表示">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>2次元・3次元とも、2本のベクトルとそのなす角を表示します</span>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360" aria-label="ベクトル図解"></svg>
+        </section>
+
         <section class="animation-band" aria-label="計算状況表示">
           <div class="timeline">
             <div id="animationTrack" class="animation-track"></div>
@@ -92,6 +107,7 @@
       </section>
     </main>
 
+    <script src="./pwa.js"></script>
     <script src="./vector_methods.js"></script>
   </body>
 </html>

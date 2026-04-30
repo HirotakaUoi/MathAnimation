@@ -38,11 +38,19 @@ select {
 
 .app-shell {
   width: min(1760px, 100%);
-  height: 100dvh;
+  height: auto;
   min-height: 100dvh;
   margin: 0 auto;
   padding: 24px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  --formula-title-size: clamp(0.94rem, 0.76rem + 0.55vh, 1.1rem);
+  --formula-body-size: clamp(0.98rem, 0.84rem + 0.7vh, 1.2rem);
+  --history-title-size: clamp(0.92rem, 0.8rem + 0.45vh, 1.05rem);
+  --history-item-padding-y: clamp(6px, 0.4vh + 4px, 8px);
+  --history-item-padding-x: clamp(8px, 0.45vw + 6px, 10px);
+  --history-item-gap: clamp(6px, 0.45vh + 3px, 8px);
+  --history-min-visible: clamp(146px, 18vh, 196px);
 }
 
 .hub-shell {
@@ -128,8 +136,8 @@ select {
 }
 
 .workspace {
-  height: calc(100dvh - 48px);
-  min-height: 0;
+  height: auto;
+  min-height: calc(100dvh - 48px);
   display: grid;
   grid-template-rows: auto auto auto auto minmax(0, 1fr);
   gap: 18px;
@@ -387,6 +395,63 @@ h2 {
   min-width: 0;
 }
 
+.offline-panel {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.offline-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pwa-install-banner {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow);
+}
+
+.pwa-install-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.pwa-install-copy strong {
+  font-size: 1rem;
+}
+
+.pwa-install-text {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.pwa-install-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.ghost-button {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .view-controls[hidden] {
   display: none;
 }
@@ -441,6 +506,15 @@ select,
 input[type="number"],
 input[type="text"] {
   font-size: 1.05rem;
+}
+
+input[type="text"] {
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 10px;
 }
 
 .size-grid {
@@ -662,6 +736,25 @@ select:focus-visible {
   overflow: auto;
 }
 
+.geometry-sync-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 220px));
+  gap: 12px;
+  align-items: start;
+}
+
+.geometry-sync-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.geometry-sync-card label {
+  color: var(--muted);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
 .vector-diagram-band {
   display: grid;
   gap: 12px;
@@ -794,6 +887,15 @@ select:focus-visible {
   dominant-baseline: middle;
 }
 
+.diagram-angle-value {
+  fill: rgba(29, 38, 51, 0.86);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
 .diagram-axis-label.y-label {
   text-anchor: start;
 }
@@ -864,6 +966,54 @@ select:focus-visible {
 .diagram-result {
   stroke: var(--teal);
   fill: var(--teal);
+}
+
+.diagram-angle-arc {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.diagram-projection-line {
+  stroke: rgba(109, 40, 217, 0.4);
+  stroke-width: 2;
+  stroke-dasharray: 8 7;
+}
+
+.diagram-projection-guide {
+  stroke: rgba(15, 118, 110, 0.82);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 6;
+}
+
+.diagram-projection-shadow {
+  stroke: rgba(15, 118, 110, 0.42);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.diagram-projection-point {
+  fill: var(--teal);
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 2;
+}
+
+.diagram-parallelogram {
+  fill: rgba(15, 118, 110, 0.12);
+  stroke: rgba(15, 118, 110, 0.45);
+  stroke-width: 2;
+}
+
+.diagram-cross {
+  stroke: var(--amber);
+  fill: var(--amber);
+}
+
+.diagram-label-box.diagram-cross {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: rgba(183, 121, 31, 0.34);
 }
 
 .diagram-label-box.diagram-result {
@@ -1376,7 +1526,7 @@ select:focus-visible {
   grid-template-columns: minmax(280px, 1fr) minmax(280px, 520px);
   grid-template-rows: minmax(0, 1fr);
   gap: 16px;
-  padding: 16px;
+  padding: clamp(12px, 0.9vh + 6px, 16px);
   border-radius: 8px;
   align-self: stretch;
   align-items: stretch;
@@ -1395,7 +1545,7 @@ select:focus-visible {
   min-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 10px;
+  padding: clamp(8px, 0.55vh + 4px, 10px);
   border: 1px dashed #c1ccd8;
   border-radius: 8px;
   background: var(--paper);
@@ -1408,7 +1558,7 @@ select:focus-visible {
   align-items: center;
   gap: 10px;
   height: auto;
-  min-height: 108px;
+  min-height: clamp(84px, 10vh, 108px);
 }
 
 .flow-cell {
@@ -1463,42 +1613,47 @@ select:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-  padding: 14px;
-  display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  padding: clamp(10px, 0.8vh + 4px, 14px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .formula-title {
   color: var(--muted);
   font-weight: 900;
-  margin-bottom: 8px;
-  font-size: 1.1rem;
+  margin-bottom: clamp(5px, 0.45vh + 2px, 8px);
+  font-size: var(--formula-title-size);
 }
 
 .formula {
-  line-height: 1.6;
+  line-height: 1.45;
   font-weight: 750;
-  font-size: 1.2rem;
+  font-size: var(--formula-body-size);
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: clamp(72px, 12vh, 156px);
+  overflow: auto;
 }
 
 .history-title {
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: clamp(10px, 0.8vh + 3px, 16px);
+  padding-top: clamp(8px, 0.55vh + 4px, 12px);
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-weight: 900;
-  font-size: 1.05rem;
+  font-size: var(--history-title-size);
 }
 
 .history-list {
   display: block;
   height: auto;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: var(--history-min-visible);
   max-height: none;
-  margin: 10px 0 0;
+  margin: clamp(8px, 0.55vh + 4px, 10px) 0 0;
   padding-left: 28px;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -1509,24 +1664,27 @@ select:focus-visible {
 }
 
 .history-list li {
-  padding: 8px 10px;
+  padding: var(--history-item-padding-y) var(--history-item-padding-x);
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--paper);
 }
 
 .history-list li + li {
-  margin-top: 8px;
+  margin-top: var(--history-item-gap);
 }
 
 .history-list strong {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: clamp(2px, 0.3vh + 1px, 4px);
   color: var(--teal);
+  font-size: clamp(0.9rem, 0.8rem + 0.35vh, 1rem);
 }
 
 .history-list span {
   overflow-wrap: anywhere;
+  font-size: clamp(0.9rem, 0.8rem + 0.4vh, 1rem);
+  line-height: 1.4;
 }
 
 @keyframes pulse {
@@ -1542,13 +1700,15 @@ select:focus-visible {
 
 @media (max-width: 980px) {
   .app-shell {
-    height: 100dvh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .workspace {
-    height: calc(100dvh - 48px);
-    min-height: 0;
+    height: auto;
+    min-height: calc(100dvh - 48px);
   }
 
   .hub-hero,
@@ -1614,8 +1774,8 @@ select:focus-visible {
   }
 
   .workspace {
-    height: calc(100dvh - 24px);
-    min-height: 0;
+    height: auto;
+    min-height: calc(100dvh - 24px);
   }
 
   .topbar {

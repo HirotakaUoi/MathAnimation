@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-04-29
+最終更新: 2026-04-30
 
 ## プロジェクト概要
 
@@ -26,12 +26,19 @@ python3 -m http.server 8100
   - 掃き出し法で連立一次方程式を解く
 - `determinant.html`
   - 行列式を上三角化して求める
+  - 2 x 2 / 3 x 3 のサラスの公式
 - `vector_dot.html`
   - ベクトルの内積を 2 次元・3 次元で表示
+  - 成分から求める方法
+  - 大きさとなす角から求める方法
+  - 成分入力と，大きさ・なす角入力を相互同期
+  - 図解表示つき
 - `vector_angle.html`
   - ベクトルのなす角を表示
 - `vector_add_sub.html`
   - ベクトルの加算・減算を図解つきで表示
+- `vector_cross.html`
+  - ベクトルの外積を表示
 
 ## 主要ファイル
 
@@ -45,6 +52,8 @@ python3 -m http.server 8100
   - `vector_dot.html`, `vector_angle.html` 用
 - `vector_add_sub.js`
   - `vector_add_sub.html` 用
+- `vector_cross.js`
+  - `vector_cross.html` 用
 - `styles.css`
   - 共通スタイル
 - `README.md`
@@ -58,6 +67,8 @@ python3 -m http.server 8100
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
 - フォルダ内に特殊名ディレクトリ `”` が残っている
+- `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` を追加し、PWA の導線とオフライン表示まで導入済み
+- `localhost` では古いキャッシュ確認を避けるため service worker を自動解除する設定
 
 ## 最近の重要な実装内容
 
@@ -76,8 +87,15 @@ python3 -m http.server 8100
 - 行列式ページ
   - 行交換と下三角消去を表示
   - 最後に対角成分の積として行列式を表示
+  - 2 x 2 / 3 x 3 ではサラスの公式を追加
+  - 3 x 3 のサラスの公式は横に拡張せず、元の 3 x 3 行列上で対角線を追う
 - ベクトルページ
   - 2D/3D の内積
+  - 内積は「成分から求める」「大きさとなす角から求める」の両方に対応
+  - 内積ページは成分入力と，大きさ・なす角入力を相互同期
+  - 成分法でも |a|, |b| の計算まで表示
+  - 内積ページは図解中に `a` から `b` の延長線への垂線を出すアニメーションを追加
+  - 2D/3D の外積ページを追加
   - `cos θ = (a · b) / (|a||b|)` によるなす角
   - 加減算を成分計算と平行移動の図解で表示
   - 加減算ページは図解レイアウトを継続調整済み

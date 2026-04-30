@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Math Animation Lab</title>
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -49,23 +55,27 @@
 
         <a class="animation-card" href="./vector_dot.html">
           <span class="card-kicker">Vector</span>
-          <div class="card-title-row">
-            <strong>ベクトルの内積</strong>
-            <span class="debug-badge">デバッグ中</span>
-          </div>
-          <span>2次元・3次元で、対応する成分の積を足し合わせて内積を求める流れを表示します。</span>
+          <strong>ベクトルの内積</strong>
+          <span>2次元・3次元で、成分入力と大きさ・なす角入力を同期しながら、2通りの内積の求め方を図解つきで表示します。</span>
         </a>
 
         <a class="animation-card" href="./vector_angle.html">
           <span class="card-kicker">Vector</span>
+          <strong>ベクトルのなす角</strong>
+          <span>内積とベクトルの長さから、cos θ と角度 θ を求める流れを表示します。</span>
+        </a>
+
+        <a class="animation-card" href="./vector_cross.html">
+          <span class="card-kicker">Vector</span>
           <div class="card-title-row">
-            <strong>ベクトルのなす角</strong>
+            <strong>ベクトルの外積</strong>
             <span class="debug-badge">デバッグ中</span>
           </div>
-          <span>内積とベクトルの長さから、cos θ と角度 θ を求める流れを表示します。</span>
+          <span>2次元では符号付き面積、3次元では外積ベクトルとして、成分ごとの計算と図解を表示します。</span>
         </a>
 
       </section>
     </main>
+    <script src="./pwa.js"></script>
   </body>
 </html>

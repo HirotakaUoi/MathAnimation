@@ -5,6 +5,7 @@ const DEFAULT_FORMULAS = {
   elimination: "行の入れ替えで符号を変え、下を 0 にして上三角行列の対角成分の積をとります。",
   cofactor: "1 行目で余因子展開し、各項の小行列の行列式を順にたどります。",
   "cofactor-compact": "1 行目で余因子展開し、小行列の内部計算は要点だけに省略して表示します。",
+  sarrus: "2 x 2 では斜め 2 本、3 x 3 では最初の 2 列を右へ写して対角線の積を追います。",
 };
 
 const elements = {
@@ -431,6 +432,107 @@ function eliminationSteps(input) {
   return { steps, determinant };
 }
 
+function sarrusSteps(input) {
+  const size = input.length;
+  if (size !== 2 && size !== 3) {
+    throw new Error("サラスの公式は 2 x 2 または 3 x 3 行列で使ってください。");
+  }
+
+  const displayMatrix = cloneMatrix(input);
+  const steps = [
+    {
+      title: "開始",
+      text: size === 3
+        ? "元の 3 x 3 行列のまま、右下がりと左下がりの 3 本ずつを順に追います。"
+        : "2 x 2 では右下がり 1 本と左下がり 1 本を比べます。",
+      formula: size === 3 ? "右下がり 3 本の和 − 左下がり 3 本の和" : "右下がり 1 本 − 左下がり 1 本",
+      matrix: cloneMatrix(displayMatrix),
+    },
+  ];
+
+  const positiveDiagonals = size === 3
+    ? [
+        { cells: [[0, 0], [1, 1], [2, 2]] },
+        { cells: [[0, 1], [1, 2], [2, 0]] },
+        { cells: [[0, 2], [1, 0], [2, 1]] },
+      ]
+    : [
+        { cells: [[0, 0], [1, 1]] },
+      ];
+  const negativeDiagonals = size === 3
+    ? [
+        { cells: [[0, 2], [1, 1], [2, 0]] },
+        { cells: [[0, 0], [1, 2], [2, 1]] },
+        { cells: [[0, 1], [1, 0], [2, 2]] },
+      ]
+    : [
+        { cells: [[0, 1], [1, 0]] },
+      ];
+
+  const positiveValues = positiveDiagonals.map(({ cells }) =>
+    cells.reduce((product, [row, col]) => product * input[row][col], 1),
+  );
+  const negativeValues = negativeDiagonals.map(({ cells }) =>
+    cells.reduce((product, [row, col]) => product * input[row][col], 1),
+  );
+  const positiveSum = positiveValues.reduce((sum, value) => sum + value, 0);
+  const negativeSum = negativeValues.reduce((sum, value) => sum + value, 0);
+  const determinant = positiveSum - negativeSum;
+
+  positiveDiagonals.forEach(({ cells }, index) => {
+    const termText = cells.map(([row, col]) => formatNumber(input[row][col])).join(" × ");
+    steps.push({
+      title: `右下がり ${index + 1} 本目`,
+      text: `${termText} = ${formatNumber(positiveValues[index])}`,
+      formula: `p${index + 1} = ${termText} = ${formatNumber(positiveValues[index])}`,
+      matrix: cloneMatrix(displayMatrix),
+      activeCells: cells,
+      sourceLabel: `p${index + 1}`,
+    });
+  });
+
+  steps.push({
+    title: "右下がりの和",
+    text: `${positiveValues.map((value) => formatNumber(value)).join(" + ")} = ${formatNumber(positiveSum)}`,
+    formula: `P = ${positiveValues.map((value) => formatNumber(value)).join(" + ")} = ${formatNumber(positiveSum)}`,
+    matrix: cloneMatrix(displayMatrix),
+    activeRows: Array.from({ length: size }, (_, index) => index),
+    sourceLabel: "P",
+  });
+
+  negativeDiagonals.forEach(({ cells }, index) => {
+    const termText = cells.map(([row, col]) => formatNumber(input[row][col])).join(" × ");
+    steps.push({
+      title: `左下がり ${index + 1} 本目`,
+      text: `${termText} = ${formatNumber(negativeValues[index])}`,
+      formula: `n${index + 1} = ${termText} = ${formatNumber(negativeValues[index])}`,
+      matrix: cloneMatrix(displayMatrix),
+      activeCells: cells,
+      sourceLabel: `n${index + 1}`,
+    });
+  });
+
+  steps.push({
+    title: "左下がりの和",
+    text: `${negativeValues.map((value) => formatNumber(value)).join(" + ")} = ${formatNumber(negativeSum)}`,
+    formula: `N = ${negativeValues.map((value) => formatNumber(value)).join(" + ")} = ${formatNumber(negativeSum)}`,
+    matrix: cloneMatrix(displayMatrix),
+    activeRows: Array.from({ length: size }, (_, index) => index),
+    sourceLabel: "N",
+  });
+
+  steps.push({
+    title: "完了",
+    text: `det(A) = ${formatNumber(positiveSum)} - ${formatNumber(negativeSum)} = ${formatNumber(determinant)}`,
+    formula: `det(A) = P - N = ${formatNumber(positiveSum)} - ${formatNumber(negativeSum)} = ${formatNumber(determinant)}`,
+    matrix: cloneMatrix(displayMatrix),
+    determinant,
+    sourceLabel: "det(A)",
+  });
+
+  return { steps, determinant };
+}
+
 function cofactorSteps(input, compact = false) {
   const steps = [];
 
@@ -555,6 +657,7 @@ function cofactorSteps(input, compact = false) {
 }
 
 function buildCalculation(matrix, mode) {
+  if (mode === "sarrus") return sarrusSteps(matrix);
   if (mode === "cofactor") return cofactorSteps(matrix, false);
   if (mode === "cofactor-compact") return cofactorSteps(matrix, true);
   return eliminationSteps(matrix);
@@ -640,7 +743,10 @@ function appendHistory(step) {
 }
 
 function updateMethodHeaders() {
-  if (state.mode === "cofactor") {
+  if (state.mode === "sarrus") {
+    elements.methodTitle.textContent = "サラスの公式";
+    elements.methodSubtitle.textContent = state.n === 2 ? "2 x 2 の斜め 2 本" : "3 x 3 の対角線";
+  } else if (state.mode === "cofactor") {
     elements.methodTitle.textContent = "余因子展開";
     elements.methodSubtitle.textContent = "小行列を順に追う";
   } else if (state.mode === "cofactor-compact") {
@@ -687,12 +793,25 @@ function updateLiveDisplays() {
   clearAnimation();
   try {
     const matrix = readInputMatrix();
+    if (state.mode === "sarrus" && matrix.length > 3) {
+      renderMathMatrix(matrix);
+      renderMethodMatrix(matrix);
+      renderPendingDeterminant();
+      elements.message.textContent = "サラスの公式は 2 x 2 または 3 x 3 で使ってください。";
+      elements.formulaTitle.textContent = "サラスの公式";
+      elements.formula.textContent = DEFAULT_FORMULAS.sarrus;
+      return;
+    }
     renderMathMatrix(matrix);
     renderMethodMatrix(matrix);
     renderPendingDeterminant();
     elements.message.textContent = "";
-    elements.formulaTitle.textContent = state.mode === "elimination" ? "行列式" : "余因子展開";
-    elements.formula.textContent = state.mode === "elimination" ? DEFAULT_FORMULAS[state.mode] : expansionFormula(matrix.length, 0);
+    elements.formulaTitle.textContent = state.mode === "elimination" ? "行列式" : state.mode === "sarrus" ? "サラスの公式" : "余因子展開";
+    elements.formula.textContent = state.mode === "elimination"
+      ? DEFAULT_FORMULAS[state.mode]
+      : state.mode === "sarrus"
+        ? DEFAULT_FORMULAS.sarrus
+        : expansionFormula(matrix.length, 0);
   } catch (error) {
     elements.message.textContent = error.message;
   }
