@@ -68,7 +68,7 @@ http://localhost:8100/vector_add_sub.html
 
 各 HTML、CSS、JS はすべて相対パスでつながっているため、フォルダごと別の場所へ移動しても同じ手順で動きます。
 
-PWA の確認は `file://` ではなく `http://localhost:8100/` のようなローカルサーバ経由で行ってください。`manifest.webmanifest` と `service-worker.js` を追加してあり、ホーム画面追加用の導線、iPhone 用 PNG アイコン、オフライン用の `offline.html` も入っています。なお、`localhost` では古いキャッシュ確認を避けるため service worker を登録しない設定にしてあります。
+PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`, アイコン類, `offline.html`) は残していますが、現時点では各ページから参照を外してあり、PWA としては動かない状態にしています。
 
 ## 機能
 

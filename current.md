@@ -67,8 +67,8 @@ python3 -m http.server 8100
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
 - フォルダ内に特殊名ディレクトリ `”` が残っている
-- `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` を追加し、PWA の導線とオフライン表示まで導入済み
-- `localhost` では古いキャッシュ確認を避けるため service worker を自動解除する設定
+- `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
+- ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
 
 ## 最近の重要な実装内容
 
