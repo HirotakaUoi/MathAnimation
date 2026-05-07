@@ -37,6 +37,16 @@ const PROJECT_3D = {
   zY: 0.46,
 };
 
+function dotFormula() {
+  return vectorState.methodMode === "components"
+    ? "a · b = a1b1 + a2b2 (+ a3b3),  |a| = sqrt(a1^2 + a2^2 (+ a3^2)),  |b| = sqrt(b1^2 + b2^2 (+ b3^2))"
+    : "a · b = |a||b|cosθ";
+}
+
+function angleFormula() {
+  return "cosθ = (a · b) / (|a||b|),  θ = arccos((a · b) / (|a||b|))";
+}
+
 function vectorFormatNumber(value) {
   if (!Number.isFinite(value)) return "NaN";
   const rounded = Math.abs(value) < EPSILON ? 0 : value;
@@ -733,15 +743,13 @@ function syncVectorLayout() {
     vectorElements.resultDetail.textContent = vectorState.methodMode === "components"
       ? "成分の積の和と，大きさ |a|, |b| を順に確認します。"
       : "入力した |a|, |b|, θ から a · b = |a||b|cosθ を作ります。";
-    vectorElements.formulaTitle.textContent = "内積";
-    vectorElements.formula.textContent = vectorState.methodMode === "components"
-      ? "対応する成分を掛けて和をとり、その後 |a| と |b| も計算します。"
-      : "大きさ |a|, |b| と なす角 θ を使って a · b = |a||b|cosθ を計算します。";
+    vectorElements.formulaTitle.textContent = "内積の公式";
+    vectorElements.formula.textContent = dotFormula();
     syncDotFromComponents();
   } else {
     vectorElements.resultDetail.textContent = "cos θ = (a · b) / (|a||b|) を使います。";
-    vectorElements.formulaTitle.textContent = "なす角";
-    vectorElements.formula.textContent = "まず内積を求め、その後 |a| と |b| で割って cos θ を作り、最後に arccos をとります。";
+    vectorElements.formulaTitle.textContent = "なす角の公式";
+    vectorElements.formula.textContent = angleFormula();
     vectorElements.equationDisplay.textContent = "";
     try {
       const a = readVector(vectorElements.vectorA, "a");

@@ -1,7 +1,7 @@
 const EPSILON = 1e-9;
 const MAX_SIZE = 4;
 const MAX_RATIONAL_DENOMINATOR = 1000;
-const pageType = location.pathname.includes("linear_system") ? "linear-system" : "inverse";
+const pageType = document.querySelector("#verify") ? "inverse" : "linear-system";
 
 const elements = {
   sizeN: document.querySelector("#sizeN"),
@@ -35,6 +35,13 @@ const state = {
   lastInverseMatrix: null,
   initialMatrix: null,
 };
+
+function methodFormula() {
+  if (pageType === "inverse") {
+    return "[ A | I ] → [ I | A^-1 ]";
+  }
+  return "[ A | b ] → [ I | x ]";
+}
 
 if (pageType === "linear-system") {
   document.querySelector(".workspace")?.classList.add("has-equation-band");
@@ -426,6 +433,7 @@ function gaussJordanSteps(augmented) {
   const matrix = cloneMatrix(augmented);
   const cols = matrix[0].length;
   const steps = [];
+  let pivotRow = 0;
 
   steps.push({
     title: "開始",
@@ -434,58 +442,90 @@ function gaussJordanSteps(augmented) {
   });
 
   for (let col = 0; col < state.n; col += 1) {
-    let pivot = col;
-    for (let row = col + 1; row < state.n; row += 1) {
+    let pivot = pivotRow;
+    for (let row = pivotRow + 1; row < state.n; row += 1) {
       if (Math.abs(matrix[row][col]) > Math.abs(matrix[pivot][col])) pivot = row;
     }
 
     if (Math.abs(matrix[pivot][col]) < EPSILON) {
-      throw new Error("この行列では一意な解または逆行列を求められません。入力を変更してください。");
+      if (pageType === "inverse") {
+        throw new Error("この行列では一意な解または逆行列を求められません。入力を変更してください。");
+      }
+      steps.push({
+        title: `第${col + 1}列はピボットなし`,
+        text: `第${col + 1}列には主変数を置けないので、この列は自由変数候補として残します。`,
+        matrix: cloneMatrix(matrix),
+      });
+      continue;
     }
 
-    if (pivot !== col) {
-      [matrix[col], matrix[pivot]] = [matrix[pivot], matrix[col]];
+    if (pivot !== pivotRow) {
+      [matrix[pivotRow], matrix[pivot]] = [matrix[pivot], matrix[pivotRow]];
       steps.push({
-        title: `R${col + 1} と R${pivot + 1} を交換`,
+        title: `R${pivotRow + 1} と R${pivot + 1} を交換`,
         text: `第${col + 1}列のピボットを作るために行を交換します。`,
         matrix: cloneMatrix(matrix),
-        activeRows: [col, pivot],
-        pivot: [col, col],
+        activeRows: [pivotRow, pivot],
+        pivot: [pivotRow, col],
       });
     }
 
-    const divisor = matrix[col][col];
-    for (let j = 0; j < cols; j += 1) matrix[col][j] /= divisor;
+    const divisor = matrix[pivotRow][col];
+    for (let j = 0; j < cols; j += 1) matrix[pivotRow][j] /= divisor;
     steps.push({
-      title: `R${col + 1} を ${formatNumber(divisor)} で割る`,
+      title: `R${pivotRow + 1} を ${formatNumber(divisor)} で割る`,
       text: `ピボットを 1 にします。`,
       matrix: cloneMatrix(matrix),
-      activeRows: [col],
-      pivot: [col, col],
+      activeRows: [pivotRow],
+      pivot: [pivotRow, col],
     });
 
     for (let row = 0; row < state.n; row += 1) {
-      if (row === col) continue;
+      if (row === pivotRow) continue;
       const factor = matrix[row][col];
       if (Math.abs(factor) < EPSILON) continue;
-      for (let j = 0; j < cols; j += 1) matrix[row][j] -= factor * matrix[col][j];
+      for (let j = 0; j < cols; j += 1) matrix[row][j] -= factor * matrix[pivotRow][j];
       steps.push({
-        title: `R${row + 1} ← R${row + 1} - (${formatNumber(factor)})R${col + 1}`,
+        title: `R${row + 1} ← R${row + 1} - (${formatNumber(factor)})R${pivotRow + 1}`,
         text: `第${col + 1}列の R${row + 1} 成分を 0 にします。`,
         matrix: cloneMatrix(matrix),
-        activeRows: [row, col],
-        pivot: [col, col],
+        activeRows: [row, pivotRow],
+        pivot: [pivotRow, col],
       });
     }
+
+    pivotRow += 1;
+    if (pivotRow >= state.n) break;
   }
+
+  const rank = matrix.reduce((count, row) => {
+    const hasCoefficient = row.slice(0, state.n).some((value) => Math.abs(value) >= EPSILON);
+    return count + (hasCoefficient ? 1 : 0);
+  }, 0);
+  const inconsistent = pageType === "linear-system" && matrix.some((row) =>
+    row.slice(0, state.n).every((value) => Math.abs(value) < EPSILON) && Math.abs(row[state.n]) >= EPSILON,
+  );
+  const solutionType = pageType === "inverse"
+    ? "unique"
+    : inconsistent
+      ? "none"
+      : rank < state.n
+        ? "multiple"
+        : "unique";
 
   steps.push({
     title: "完了",
-    text: pageType === "inverse" ? "左側が I になったので、右側が A^-1 です。" : "左側が I になったので、右側が解です。",
+    text: pageType === "inverse"
+      ? "左側が I になったので、右側が A^-1 です。"
+      : solutionType === "unique"
+        ? "掃き出しが終わりました。左側が I なので、右側が一意の解です。"
+        : solutionType === "multiple"
+          ? "掃き出しは終わりましたが、ピボットが足りないので自由変数が残ります。一意な解にはなりません。"
+          : "掃き出しは終わりましたが、0 = 0 ではない行が出たのでこの連立方程式は解を持ちません。",
     matrix: cloneMatrix(matrix),
   });
 
-  return { steps, finalMatrix: matrix };
+  return { steps, finalMatrix: matrix, solutionType, rank };
 }
 
 function renderMethodMatrix(matrix, step = {}) {
@@ -685,8 +725,8 @@ function animateVerification() {
   clearTimers();
   elements.animationTrack.innerHTML = "";
   elements.historyList.innerHTML = "";
-  elements.formulaTitle.textContent = "検算";
-  elements.formula.textContent = "A の行と A^-1 の列を掛けて、単位行列 I になることを確認します。";
+  elements.formulaTitle.textContent = "検算公式";
+  elements.formula.textContent = "A x A^-1 = I。A の行と A^-1 の列を掛けて、単位行列 I になることを確認します。";
   renderPlainMatrix(elements.verifyA, state.lastInputMatrix);
   renderPlainMatrix(elements.verifyInverse, state.lastInverseMatrix);
   renderPlainMatrix(elements.verifyProduct, identity(state.n), { pending: true });
@@ -719,7 +759,7 @@ function renderSolutionCell(cell, row, valueText) {
   cell.append(document.createTextNode(` = ${valueText}`));
 }
 
-function renderResult(finalMatrix) {
+function renderResult(finalMatrix, solutionType = "unique") {
   if (!elements.resultMatrix) return;
   elements.resultMatrix.innerHTML = "";
 
@@ -733,6 +773,15 @@ function renderResult(finalMatrix) {
         elements.resultMatrix.append(cell);
       }
     }
+    return;
+  }
+
+  if (solutionType !== "unique") {
+    setGrid(elements.resultMatrix, 1, 1);
+    const cell = document.createElement("div");
+    cell.className = "cell-output solution-cell pending-solution";
+    cell.textContent = solutionType === "multiple" ? "一意な解なし（自由変数あり）" : "解なし";
+    elements.resultMatrix.append(cell);
     return;
   }
 
@@ -829,7 +878,7 @@ function animate() {
       renderEquationSystem(step.matrix, step);
       renderTrack(step);
       if (index === calculation.steps.length - 1) {
-        renderResult(calculation.finalMatrix);
+        renderResult(calculation.finalMatrix, calculation.solutionType);
         if (pageType === "inverse") {
           const inverse = calculation.finalMatrix.map((row) => row.slice(state.n));
           const inputMatrix = readInputMatrix();
@@ -871,8 +920,8 @@ function syncLayout() {
   elements.labelA.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : `${state.n} 元`;
   if (elements.labelR) elements.labelR.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : "x";
   elements.dimensionStatus.textContent = pageType === "inverse" ? `${state.n} x ${state.n}` : `${state.n} 元`;
-  elements.formulaTitle.textContent = "掃き出し法";
-  elements.formula.textContent = pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。";
+  elements.formulaTitle.textContent = "掃き出し法の公式";
+  elements.formula.textContent = `${methodFormula()}。${pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。"}`;
 }
 
 function updateLiveDisplays() {
@@ -899,8 +948,8 @@ function updateLiveDisplays() {
     }
 
     elements.message.textContent = "";
-    elements.formulaTitle.textContent = "掃き出し法";
-    elements.formula.textContent = pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。";
+    elements.formulaTitle.textContent = "掃き出し法の公式";
+    elements.formula.textContent = `${methodFormula()}。${pageType === "inverse" ? "左側を単位行列に変形すると、右側が逆行列になります。" : "左側を単位行列に変形すると、右側に解が現れます。"}`;
   } catch (error) {
     elements.message.textContent = error.message;
   }

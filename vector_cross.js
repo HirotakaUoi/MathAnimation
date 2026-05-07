@@ -42,6 +42,12 @@ const PROJECT_3D = {
   zY: 0.46,
 };
 
+function crossFormula() {
+  return crossState.dimension === 2
+    ? "a × b = a1b2 - a2b1"
+    : "a × b = (a2b3 - a3b2, a3b1 - a1b3, a1b2 - a2b1)";
+}
+
 function formatNumber(value) {
   if (!Number.isFinite(value)) return "NaN";
   const rounded = Math.abs(value) < EPSILON ? 0 : value;
@@ -570,10 +576,8 @@ function syncLayout() {
   crossElements.rotateXValue.textContent = `${crossState.rotateX}°`;
   crossElements.rotateYValue.textContent = `${crossState.rotateY}°`;
   crossElements.rotateZValue.textContent = `${crossState.rotateZ}°`;
-  crossElements.formulaTitle.textContent = "外積";
-  crossElements.formula.textContent = crossState.dimension === 2
-    ? "2次元では a1b2 - a2b1 を計算して、符号付き面積として読みます。"
-    : "3次元では x, y, z の各成分を順に求めます。";
+  crossElements.formulaTitle.textContent = "外積の公式";
+  crossElements.formula.textContent = crossFormula();
   renderPreviewFromInputs();
 }
 

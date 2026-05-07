@@ -46,6 +46,12 @@ const PROJECT_3D = {
   zY: 0.46,
 };
 
+function vectorOperationFormula() {
+  return state.operation === "add"
+    ? "a + b = (a1 + b1, a2 + b2 (+ a3 + b3))"
+    : "a - b = (a1 - b1, a2 - b2 (+ a3 - b3)) = a + (-b)";
+}
+
 function schedulePreviewRefresh(preserveResult = false) {
   window.requestAnimationFrame(() => {
     refreshPreview(preserveResult);
@@ -743,8 +749,8 @@ function syncLayout() {
   elements.rotateZValue.textContent = `${state.rotateZ}°`;
   renderResultVector(Array.from({ length: state.dimension }, () => 0), true);
   elements.resultDetail.textContent = state.operation === "add" ? "対応する成分を足し合わせます。" : "a - b は a + (-b) と考えます。";
-  elements.formulaTitle.textContent = "ベクトルの加減算";
-  elements.formula.textContent = state.operation === "add" ? "図では、2本目のベクトルを平行移動して先端をつなぎます。" : "減算では b を反対向きにした -b を足します。";
+  elements.formulaTitle.textContent = "加減算の公式";
+  elements.formula.textContent = vectorOperationFormula();
   refreshPreview();
 }
 

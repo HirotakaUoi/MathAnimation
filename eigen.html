@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eigen Motion</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace has-eigen-display" aria-label="固有値と固有ベクトルのアニメーション">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Eigenvalue</p>
+            <div class="title-row">
+              <h1>固有値と固有ベクトル</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./index.html">一覧へ</a>
+            <span id="dimensionStatus">2 x 2</span>
+            <span>A v = λ v</span>
+          </div>
+        </header>
+
+        <section class="control-band method-controls" aria-label="設定">
+          <div class="control-group">
+            <label>サイズ</label>
+            <div class="static-pill">2 x 2</div>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="eigen-display-band" aria-label="固有値の数式表示">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>特性方程式と固有値</span>
+          </div>
+          <div class="eigen-summary-grid">
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">A</div>
+              <div id="mathMatrixA" class="math-matrix" aria-label="元行列A"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">det(A - λI) = 0</div>
+              <div id="characteristicEquation" class="eigen-text-block"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">固有値</div>
+              <div id="eigenvalueSummary" class="eigen-text-block"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="matrix-stage determinant-stage" aria-label="固有値と固有ベクトルの途中経過">
+          <article class="matrix-panel">
+            <header>
+              <h2>A</h2>
+              <span>2 x 2</span>
+            </header>
+            <div id="matrixA" class="matrix-input" aria-label="行列A"></div>
+          </article>
+
+          <article class="matrix-panel method-wide">
+            <header>
+              <div class="panel-title-row">
+                <h2 id="methodTitle">特性方程式</h2>
+              </div>
+              <span id="methodSubtitle">A - λI の形</span>
+            </header>
+            <div id="methodMatrix" class="matrix-output method-matrix" aria-label="途中経過"></div>
+          </article>
+
+          <article class="matrix-panel result-panel">
+            <header>
+              <h2>Result</h2>
+              <span id="labelR">固有ベクトル</span>
+            </header>
+            <div id="resultMatrix" class="matrix-output solution-output" aria-label="固有ベクトル"></div>
+            <div id="resultText" class="result-note">再生すると固有ベクトルを表示します。</div>
+          </article>
+        </section>
+
+        <section class="animation-band" aria-label="計算状況表示">
+          <div class="timeline">
+            <div id="animationTrack" class="animation-track"></div>
+          </div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">固有値</div>
+            <div id="formula" class="formula">まず det(A - λI) = 0 を立てて固有値を求め、その λ ごとに (A - λI)v = 0 を自由変数で解きます。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list" aria-label="計算履歴"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./eigen.js"></script>
+  </body>
+</html>

@@ -237,6 +237,15 @@ function operationLabel(operation = state.operation) {
   }[operation];
 }
 
+function operationFormula(operation = state.operation) {
+  return {
+    add: "C = A + B,  Cij = Aij + Bij",
+    subtract: "C = A - B,  Cij = Aij - Bij",
+    multiply: "C = A x B,  Cij = Σk(Aik x Bkj)",
+    divide: "A ÷ B = A x B^-1,  Cij = Σk(Aik x (B^-1)kj)",
+  }[operation];
+}
+
 function updateStateFromInputs() {
   state.rowsA = clampSize(elements.rowsA.value);
   state.colsA = clampSize(elements.colsA.value);
@@ -481,8 +490,8 @@ function clearAnimation() {
   state.timerIds = [];
   elements.animationTrack.innerHTML = "";
   elements.historyList.innerHTML = "";
-  elements.formulaTitle.textContent = "各セルの計算";
-  elements.formula.textContent = "例: sin(30), cos(60), tan(45), sqrt(2), 1/2 + sqrt(3) が使えます。";
+  elements.formulaTitle.textContent = "計算公式";
+  elements.formula.textContent = `${operationFormula()}。例: sin(30), cos(60), tan(45), sqrt(2), 1/2 + sqrt(3) が使えます。`;
   elements.matrixResult.querySelectorAll(".cell-output").forEach((cell) => cell.classList.remove("active"));
   clearReferenceHighlights();
   clearDivisionDetail();
@@ -679,8 +688,8 @@ function showInverseProof(calculation, proofSlot) {
     }
   }
 
-  elements.formulaTitle.textContent = "B x B^-1 の確認";
-  elements.formula.textContent = "B と B^-1 を掛けると単位行列 I になります。";
+  elements.formulaTitle.textContent = "検算公式";
+  elements.formula.textContent = "B x B^-1 = I。B と B^-1 を掛けると単位行列 I になります。";
 
   steps.forEach((step, index) => {
     const timerId = window.setTimeout(() => {
