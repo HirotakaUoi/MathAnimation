@@ -1565,31 +1565,76 @@ function initAffineTransform() {
     ];
   }
 
-  function renderMathMatrix(matrix) {
+  function sourceAngleLabel(source, unit) {
+    const trimmed = String(source || "").trim() || "0";
+    const normalized = trimmed.replace(/PI/g, "π").replace(/pi/g, "π");
+    return unit === "rad" ? normalized : `${normalized}°`;
+  }
+
+  function symbolicRotationMatrix(transforms) {
+    if (state.dimension === 2) {
+      const theta = sourceAngleLabel(elements.rotateAngle.value, transforms.rotate.angleUnit);
+      return {
+        label: `θ = ${theta}`,
+        matrix: [
+          [`cos(${theta})`, `-sin(${theta})`, "0"],
+          [`sin(${theta})`, `cos(${theta})`, "0"],
+          ["0", "0", "1"],
+        ],
+      };
+    }
+
+    const ax = sourceAngleLabel(elements.rotateAngleX.value, transforms.rotate.angleUnit);
+    const ay = sourceAngleLabel(elements.rotateAngleY.value, transforms.rotate.angleUnit);
+    const az = sourceAngleLabel(elements.rotateAngleZ.value, transforms.rotate.angleUnit);
+    return {
+      label: `θx = ${ax}, θy = ${ay}, θz = ${az}`,
+      matrix: [
+        ["cos(θz)cos(θy)", "cos(θz)sin(θy)sin(θx)-sin(θz)cos(θx)", "cos(θz)sin(θy)cos(θx)+sin(θz)sin(θx)", "0"],
+        ["sin(θz)cos(θy)", "sin(θz)sin(θy)sin(θx)+cos(θz)cos(θx)", "sin(θz)sin(θy)cos(θx)-cos(θz)sin(θx)", "0"],
+        ["-sin(θy)", "cos(θy)sin(θx)", "cos(θy)cos(θx)", "0"],
+        ["0", "0", "0", "1"],
+      ],
+    };
+  }
+
+  function compositeTransformMatrix(transforms) {
+    return multiplyMatrices(
+      homogeneousTranslateMatrix(transforms.translate),
+      multiplyMatrices(homogeneousScaleMatrix(transforms.scale), homogeneousRotationMatrix(transforms.rotate)),
+    );
+  }
+
+  function renderMathMatrix(matrix, formatter = (value) => TopicShared.formatNumber(value)) {
     const columns = matrix[0]?.length ?? 1;
     return `<div class="math-matrix" style="grid-template-columns: repeat(${columns}, auto);">${matrix
       .flat()
-      .map((value) => `<span class="math-matrix-cell">${TopicShared.formatNumber(value)}</span>`)
+      .map((value) => `<span class="math-matrix-cell">${formatter(value)}</span>`)
       .join("")}</div>`;
   }
 
   function renderTransformMatrices(transforms) {
+    const symbolicRotate = symbolicRotationMatrix(transforms);
+    const composite = compositeTransformMatrix(transforms);
     const labels = state.dimension === 2
       ? {
           rotate: `回転行列 R（同次 3×3）`,
           scale: `拡大縮小行列 S（同次 3×3）`,
           translate: `平行移動行列 T（同次 3×3）`,
+          composite: `合成変換行列 M = T S R`,
         }
       : {
           rotate: `回転行列 R = Rz Ry Rx（同次 4×4）`,
           scale: `拡大縮小行列 S（同次 4×4）`,
           translate: `平行移動行列 T（同次 4×4）`,
+          composite: `合成変換行列 M = T S R`,
         };
     return `
       <div class="transform-matrix-display">
         <div class="math-matrix-term">
           <span class="math-matrix-label">${labels.rotate}</span>
-          ${renderMathMatrix(homogeneousRotationMatrix(transforms.rotate))}
+          <span class="math-matrix-note">${symbolicRotate.label}</span>
+          ${renderMathMatrix(symbolicRotate.matrix, String)}
         </div>
         <div class="math-matrix-term">
           <span class="math-matrix-label">${labels.scale}</span>
@@ -1598,6 +1643,10 @@ function initAffineTransform() {
         <div class="math-matrix-term">
           <span class="math-matrix-label">${labels.translate}</span>
           ${renderMathMatrix(homogeneousTranslateMatrix(transforms.translate))}
+        </div>
+        <div class="math-matrix-term">
+          <span class="math-matrix-label">${labels.composite}</span>
+          ${renderMathMatrix(composite)}
         </div>
       </div>
     `;

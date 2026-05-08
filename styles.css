@@ -934,6 +934,12 @@ select:focus-visible {
   justify-items: start;
 }
 
+.math-matrix-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
 .verification-band {
   display: grid;
   gap: 10px;
