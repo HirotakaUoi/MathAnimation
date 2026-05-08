@@ -1369,6 +1369,7 @@ function initAffineTransform() {
   const elements = {
     dimension: $("#dimension"),
     transformType: $("#transformType"),
+    subControls: $("#subControls"),
     axisControl: $("#axisControl"),
     axis: $("#axis"),
     randomize: $("#randomize"),
@@ -1406,7 +1407,9 @@ function initAffineTransform() {
   function buildParamInputs() {
     const dim = Number(elements.dimension.value);
     const type = elements.transformType.value;
-    elements.axisControl.hidden = !(dim === 3 && type === "rotate");
+    const showAxisControl = dim === 3 && type === "rotate";
+    elements.axisControl.hidden = !showAxisControl;
+    elements.subControls.classList.toggle("with-axis-control", showAxisControl);
     const fields = [];
     if (type === "rotate") {
       fields.push({ id: "angle", label: "角度", value: 45, placeholder: "45 / PI/2 / π/2" });
