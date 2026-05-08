@@ -1463,6 +1463,14 @@ function initAffineTransform() {
     return [point[0] + params.tx, point[1] + params.ty, (point[2] ?? 0) + (params.tz ?? 0)];
   }
 
+  function pointForDisplay(point) {
+    return point.slice(0, state.dimension);
+  }
+
+  function formatPoint(point) {
+    return `(${pointForDisplay(point).map((value) => TopicShared.formatNumber(value)).join(", ")})`;
+  }
+
   function applyTransformSequence(point, transforms) {
     const afterRotate = rotatePoint(point, transforms.rotate);
     const afterScale = scalePoint(afterRotate, transforms.scale);
@@ -1564,7 +1572,7 @@ function initAffineTransform() {
       const point = readShape();
       const transforms = readTransforms();
       const applied = applyTransformSequence(point, transforms);
-      elements.resultSummary.textContent = `最終像 = (${applied.afterTranslate.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
+      elements.resultSummary.textContent = `最終像 = ${formatPoint(applied.afterTranslate)}`;
       elements.equationDisplay.textContent =
         `R(p) → S(R(p)) → T(S(R(p))) を順に計算します。回転角 ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}, ` +
         `倍率 (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""}), ` +
@@ -1684,21 +1692,21 @@ function initAffineTransform() {
           TopicShared.renderTrack(elements.animationTrack, labels, 1);
           renderDiagramState(diagramStates[1]);
           elements.formulaTitle.textContent = diagramStates[1].title;
-          elements.formula.textContent = `R(p) = (${applied.afterRotate.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[1].text}`;
+          elements.formula.textContent = `R(p) = ${formatPoint(applied.afterRotate)} / ${diagramStates[1].text}`;
           TopicShared.pushHistory(elements.historyList, "回転", elements.formula.textContent);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 2);
           renderDiagramState(diagramStates[2]);
           elements.formulaTitle.textContent = diagramStates[2].title;
-          elements.formula.textContent = `S(R(p)) = (${applied.afterScale.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[2].text}`;
+          elements.formula.textContent = `S(R(p)) = ${formatPoint(applied.afterScale)} / ${diagramStates[2].text}`;
           TopicShared.pushHistory(elements.historyList, "拡大縮小", elements.formula.textContent);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 3);
           renderDiagramState(diagramStates[3]);
           elements.formulaTitle.textContent = diagramStates[3].title;
-          elements.formula.textContent = `T(S(R(p))) = (${applied.afterTranslate.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[3].text}`;
+          elements.formula.textContent = `T(S(R(p))) = ${formatPoint(applied.afterTranslate)} / ${diagramStates[3].text}`;
           TopicShared.pushHistory(elements.historyList, "平行移動", elements.formula.textContent);
         },
       ];
