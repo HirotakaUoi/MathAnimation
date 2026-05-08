@@ -183,6 +183,10 @@ select {
   grid-row: 2;
 }
 
+.sub-control-band {
+  grid-row: 3;
+}
+
 .message {
   grid-row: 3;
 }
@@ -236,6 +240,22 @@ select {
 }
 
 .workspace.has-vector-diagram .animation-band {
+  grid-row: 7;
+}
+
+.workspace.has-sub-control-band .message {
+  grid-row: 4;
+}
+
+.workspace.has-sub-control-band .vector-display-band {
+  grid-row: 5;
+}
+
+.workspace.has-sub-control-band .vector-diagram-band {
+  grid-row: 6;
+}
+
+.workspace.has-sub-control-band .animation-band {
   grid-row: 7;
 }
 
