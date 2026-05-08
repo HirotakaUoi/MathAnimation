@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-05-07
+最終更新: 2026-05-08
 
 ## プロジェクト概要
 
@@ -16,6 +16,10 @@ python3 -m http.server 8100
 
 - `index.html`
   - まとめページ
+  - 現在は行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角を掲載
+- `future_index.html`
+  - 追加ページ用の別トップページ
+  - 今後の追加ページやデバッグ中ページの置き場
 - `matrix_operation.html`
   - 行列の加算・減算・乗算・除算
 - `inverse_matrix.html`
@@ -26,6 +30,8 @@ python3 -m http.server 8100
   - 掃き出し法で連立一次方程式を解く
 - `determinant.html`
   - 行列式を上三角化して求める
+  - 余因子展開
+  - 余因子展開（簡潔）
   - 2 x 2 / 3 x 3 のサラスの公式
 - `vector_dot.html`
   - ベクトルの内積を 2 次元・3 次元で表示
@@ -43,6 +49,19 @@ python3 -m http.server 8100
   - 2 x 2 行列の固有値と固有ベクトル
   - 特性方程式
   - 実数固有値がない場合の表示
+- `linear_independence.html`
+  - 2 次元 / 3 次元の線形独立と線形従属
+- `basis_vectors.html`
+  - 基底ベクトルと標準基底ベクトル
+- `linear_map_matrix.html`
+  - 線形写像と表現行列
+  - 図解表示の拡大縮小スライダあり
+- `affine_transform.html`
+  - 回転 / 拡大縮小 / 平行移動
+- `homogeneous_coordinates.html`
+  - 2D / 3D の同次座標系とグラフィックス
+- `quaternion_vector.html`
+  - クオータニオンとベクトル
 
 ## 主要ファイル
 
@@ -60,6 +79,8 @@ python3 -m http.server 8100
   - `vector_cross.html` 用
 - `eigen.js`
   - `eigen.html` 用
+- `future_topics.js`
+  - 今回追加した future 側 6 ページの共通ロジック
 - `styles.css`
   - 共通スタイル
 - `README.md`
@@ -70,11 +91,15 @@ python3 -m http.server 8100
 ## 現在の状態
 
 - Git 作業ツリーは更新あり
+- future 側の新規ページ群はまだ未コミットの変更を含む
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
 - フォルダ内に特殊名ディレクトリ `”` が残っている
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
+- 今後の追加ページは `future_index.html` 側に置く運用に変更
+- `future_index.html` には、固有値・外積に加えて新しい 6 ページも掲載
+- `index.html` からは `future_index.html` へ直接リンクしていない
 
 ## 最近の重要な実装内容
 
@@ -95,6 +120,9 @@ python3 -m http.server 8100
 - 行列式ページ
   - 行交換と下三角消去を表示
   - 最後に対角成分の積として行列式を表示
+  - 余因子展開モードを追加
+  - 余因子展開（簡潔）モードを追加
+  - `a_ij`, `M_ij`, `C_ij` の関係と展開公式を表示
   - 2 x 2 / 3 x 3 ではサラスの公式を追加
   - 3 x 3 のサラスの公式は横に拡張せず、元の 3 x 3 行列上で対角線を追う
 - ベクトルページ
@@ -119,6 +147,34 @@ python3 -m http.server 8100
   - 判別式で実数固有値の有無を表示
   - (A - λI)v = 0 を自由変数で解いて固有ベクトルを表示
   - A = λI のときは 0 でない任意のベクトルが固有ベクトルであることを表示
+- future 側の新規ページ
+  - 線形独立と線形従属
+    - 2D / 3D 対応
+    - 一次結合と行列式の両方から判定
+  - 基底ベクトルと標準基底ベクトル
+    - 標準基底と任意の基底を比較
+    - 基底行列 Bc = x の形で座標を表示
+  - 線形写像と表現行列
+    - T(e_i) を列に並べて表現行列を作る
+    - T(x) = Ax を図解つきで表示
+    - 図解表示に倍率スライダを追加
+  - 回転 / 拡大縮小 / 平行移動
+    - 回転と拡大縮小は線形写像
+    - 平行移動はアフィン写像として表示
+  - 同次座標系とグラフィックス
+    - 2D は 3 x 3, 3D は 4 x 4
+    - 最後に 1 を足して平行移動を行列積に入れる流れ
+  - クオータニオンとベクトル
+    - q = (cos(θ/2), u sin(θ/2))
+    - q p q^-1 で回転後のベクトルを表示
+- トップページ構成
+  - `index.html` は公開扱いのページ中心
+  - `future_index.html` は追加ページやデバッグ中ページ用
+  - `index.html` からは `future_index.html` へ直接リンクしない
+- デバッグ表示の状況
+  - `determinant.html` はデバッグ表示を解除済み
+  - `vector_add_sub.html` はデバッグ表示を解除済み
+  - `future_index.html` に載せている各ページは基本的に `デバッグ中` バッジつき
 - 公式表示
   - 公式のあるページでは、初期表示の数式欄にも公式を出すよう統一
 
@@ -136,5 +192,7 @@ python3 -m http.server 8100
 - `inverse_matrix.html` の検算エリアがウインドウ幅に応じて十分に広がるか
 - `randomize` で逆行列の分数の複雑さが実用上十分に抑えられているか
 - `determinant.html` の現在仕様が README に反映済みか
+- `current.md` と実装内容のズレが再発していないか
 - `vector_add_sub.html` の 3D 回転 UI とラベル位置が実用上十分か
 - ベクトルページのレイアウトが 2D/3D の両方で破綻しないか
+- `future_topics.js` を使う future 側ページは、キャッシュ回避用の query string を必要に応じて更新する

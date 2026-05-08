@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Linear Map and Matrix Motion</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      body[data-topic="linear-map-matrix"] .diagram-label-box {
+        display: none;
+      }
+
+      body[data-topic="linear-map-matrix"] .diagram-line {
+        stroke-linecap: butt;
+      }
+    </style>
+  </head>
+  <body data-topic="linear-map-matrix">
+    <main class="app-shell">
+      <section class="workspace has-vector-display has-vector-diagram" aria-label="線形写像と表現行列">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Linear Algebra</p>
+            <div class="title-row">
+              <h1>線形写像と表現行列</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span id="dimensionStatus">2 次元</span>
+            <span id="presetStatus">表現行列</span>
+          </div>
+        </header>
+
+        <section class="control-band">
+          <div class="control-group">
+            <label for="dimension">次元</label>
+            <select id="dimension">
+              <option value="2">2 次元</option>
+              <option value="3">3 次元</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="preset">例</label>
+            <select id="preset">
+              <option value="shear">shear</option>
+              <option value="stretch">stretch</option>
+              <option value="reflection">reflection</option>
+              <option value="rotation">rotation</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">プリセット</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="topic-stage topic-stage-3">
+          <article class="matrix-panel">
+            <header><h2>A</h2><span>表現行列</span></header>
+            <div id="matrixInput" class="matrix-input"></div>
+          </article>
+          <article class="matrix-panel vector-panel">
+            <header><h2>x</h2><span>入力ベクトル</span></header>
+            <div id="vectorInput" class="vector-input"></div>
+          </article>
+          <article class="matrix-panel result-panel">
+            <header><h2>T(x)</h2><span>結果</span></header>
+            <div id="resultSummary" class="topic-summary-box">A x を計算します。</div>
+          </article>
+        </section>
+
+        <section class="vector-display-band">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>各列が基底ベクトルの像になります</span>
+          </div>
+          <div id="equationDisplay" class="vector-equation"></div>
+        </section>
+
+        <section class="vector-diagram-band">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>標準基底の像と、ベクトル x の像を重ねて見ます</span>
+            </div>
+            <div class="diagram-controls">
+              <div class="control-group view-controls">
+                <label>倍率</label>
+                <div class="view-slider-row"><span>拡大率</span><input id="zoomScale" type="range" min="60" max="180" step="5" value="100" /><output id="zoomScaleValue">100%</output></div>
+              </div>
+              <div id="viewControls" class="control-group view-controls" hidden>
+                <label>回転</label>
+                <div class="view-slider-row"><span>X軸</span><input id="rotateX" type="range" min="-180" max="180" value="0" /><output id="rotateXValue">0°</output></div>
+                <div class="view-slider-row"><span>Y軸</span><input id="rotateY" type="range" min="-180" max="180" value="0" /><output id="rotateYValue">0°</output></div>
+                <div class="view-slider-row"><span>Z軸</span><input id="rotateZ" type="range" min="-180" max="180" value="0" /><output id="rotateZValue">0°</output></div>
+              </div>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360"></svg>
+        </section>
+
+        <section class="animation-band">
+          <div class="timeline"><div id="animationTrack" class="animation-track"></div></div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">表現行列</div>
+            <div id="formula" class="formula">A の各列は T(ei) です。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="./future_topics.js?v=20260508f"></script>
+  </body>
+</html>

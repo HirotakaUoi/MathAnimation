@@ -615,6 +615,62 @@ select:focus-visible {
   grid-template-columns: minmax(260px, 0.45fr) minmax(720px, 1.55fr);
 }
 
+.topic-stage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.topic-stage-4 {
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+}
+
+.topic-inline-copy {
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.topic-sub-controls {
+  grid-template-columns: minmax(180px, 220px) minmax(320px, 1fr) minmax(260px, 320px);
+}
+
+.topic-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.topic-inline-field {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.topic-summary-box {
+  display: grid;
+  place-items: center;
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  border-radius: 6px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-size: 1.15rem;
+  font-weight: 850;
+  line-height: 1.55;
+  text-align: center;
+}
+
 .matrix-panel {
   min-width: 0;
   background: var(--panel);
@@ -916,6 +972,32 @@ select:focus-visible {
   dominant-baseline: middle;
 }
 
+.diagram-plain-label {
+  fill: rgba(29, 38, 51, 0.86);
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.diagram-plain-a {
+  fill: var(--blue);
+}
+
+.diagram-plain-b {
+  fill: var(--violet);
+}
+
+.diagram-plain-c {
+  fill: #c05621;
+}
+
+.diagram-plain-result {
+  fill: var(--teal);
+}
+
 .diagram-axis-label.y-label {
   text-anchor: start;
 }
@@ -938,6 +1020,10 @@ select:focus-visible {
   pointer-events: none;
 }
 
+body[data-topic="basis-vectors"] .diagram-label-group {
+  display: none;
+}
+
 .diagram-label-box {
   stroke-width: 1.5px;
 }
@@ -951,6 +1037,13 @@ select:focus-visible {
   dominant-baseline: middle;
   text-rendering: geometricPrecision;
   letter-spacing: 0;
+}
+
+.diagram-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .diagram-a {
@@ -988,6 +1081,38 @@ select:focus-visible {
   fill: var(--teal);
 }
 
+.diagram-c {
+  stroke: #c05621;
+  fill: #c05621;
+}
+
+.diagram-label-box.diagram-c {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(192, 86, 33, 0.34);
+}
+
+.diagram-guide {
+  stroke: rgba(100, 116, 139, 0.72);
+  fill: rgba(100, 116, 139, 0.72);
+}
+
+.diagram-label-box.diagram-guide {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(100, 116, 139, 0.28);
+}
+
+.diagram-guide-surface {
+  fill: rgba(148, 163, 184, 0.14);
+  stroke: rgba(148, 163, 184, 0.42);
+  stroke-width: 2;
+}
+
+.diagram-guide-line {
+  stroke: rgba(100, 116, 139, 0.72);
+  stroke-width: 2.2;
+  stroke-dasharray: 7 5;
+}
+
 .diagram-angle-arc {
   fill: none;
   stroke: var(--teal);
@@ -1018,6 +1143,12 @@ select:focus-visible {
   fill: var(--teal);
   stroke: rgba(255, 255, 255, 0.92);
   stroke-width: 2;
+}
+
+.diagram-origin-mask {
+  fill: #f8fbfe;
+  stroke: rgba(29, 38, 51, 0.28);
+  stroke-width: 1.4;
 }
 
 .diagram-parallelogram {
@@ -1630,6 +1761,34 @@ select:focus-visible {
   min-height: clamp(84px, 10vh, 108px);
 }
 
+.track-step {
+  display: grid;
+  place-items: center;
+  min-width: 138px;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.track-step.done {
+  border-color: rgba(15, 118, 110, 0.32);
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+}
+
+.track-step.active {
+  border-color: rgba(37, 99, 235, 0.38);
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--blue);
+}
+
 .flow-cell {
   width: auto;
   min-width: 220px;
@@ -1797,7 +1956,9 @@ select:focus-visible {
 
   .vector-stage,
   .angle-stage,
-  .eigen-summary-grid {
+  .eigen-summary-grid,
+  .topic-stage,
+  .topic-stage-4 {
     grid-template-columns: 1fr;
   }
 

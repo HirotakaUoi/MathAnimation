@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quaternion and Vector Motion</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-topic="quaternion-vector">
+    <main class="app-shell">
+      <section class="workspace has-vector-display has-vector-diagram" aria-label="クオータニオンとベクトル">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">3D Rotation</p>
+            <div class="title-row">
+              <h1>クオータニオンとベクトル</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span>3 次元</span>
+            <span id="angleStatus">45°</span>
+          </div>
+        </header>
+
+        <section class="control-band">
+          <div class="control-group">
+            <label for="angle">回転角</label>
+            <input id="angle" type="text" value="45" />
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>説明</label>
+            <div class="topic-inline-copy">回転軸 u とベクトル v から、q p q^-1 で回転後のベクトルを出します。</div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="topic-stage topic-stage-3">
+          <article class="matrix-panel vector-panel">
+            <header><h2>u</h2><span>回転軸</span></header>
+            <div id="axisInput" class="vector-input"></div>
+          </article>
+          <article class="matrix-panel vector-panel">
+            <header><h2>v</h2><span>回転するベクトル</span></header>
+            <div id="vectorInput" class="vector-input"></div>
+          </article>
+          <article class="matrix-panel result-panel">
+            <header><h2>v'</h2><span>回転後</span></header>
+            <div id="resultSummary" class="topic-summary-box">回転後のベクトルを表示します。</div>
+          </article>
+        </section>
+
+        <section class="vector-display-band">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>q = (cos(θ/2), u sin(θ/2)) を使います</span>
+          </div>
+          <div id="equationDisplay" class="vector-equation"></div>
+        </section>
+
+        <section class="vector-diagram-band">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>回転軸とベクトルの前後関係を 3D で見ます</span>
+            </div>
+            <div id="viewControls" class="control-group view-controls">
+              <label>回転</label>
+              <div class="view-slider-row"><span>X軸</span><input id="rotateX" type="range" min="-180" max="180" value="0" /><output id="rotateXValue">0°</output></div>
+              <div class="view-slider-row"><span>Y軸</span><input id="rotateY" type="range" min="-180" max="180" value="0" /><output id="rotateYValue">0°</output></div>
+              <div class="view-slider-row"><span>Z軸</span><input id="rotateZ" type="range" min="-180" max="180" value="0" /><output id="rotateZValue">0°</output></div>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360"></svg>
+        </section>
+
+        <section class="animation-band">
+          <div class="timeline"><div id="animationTrack" class="animation-track"></div></div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">クオータニオン</div>
+            <div id="formula" class="formula">q p q^-1 による共役変換で回転させます。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="./future_topics.js"></script>
+  </body>
+</html>

@@ -18,6 +18,12 @@ python3 -m http.server 8100
 http://localhost:8100/
 ```
 
+追加ページ用のトップページは次です。
+
+```text
+http://localhost:8100/future_index.html
+```
+
 行列演算アニメーターを直接開く場合は次です。
 
 ```text
@@ -72,6 +78,44 @@ http://localhost:8100/vector_add_sub.html
 http://localhost:8100/eigen.html
 ```
 
+線形独立と線形従属の違いをアニメーションするページは次です。
+
+```text
+http://localhost:8100/linear_independence.html
+```
+
+基底ベクトルと標準基底ベクトルをアニメーションするページは次です。
+
+```text
+http://localhost:8100/basis_vectors.html
+```
+
+線形写像と表現行列をアニメーションするページは次です。
+
+```text
+http://localhost:8100/linear_map_matrix.html
+```
+
+回転・拡大縮小・平行移動をアニメーションするページは次です。
+
+```text
+http://localhost:8100/affine_transform.html
+```
+
+同次座標系とグラフィックスをアニメーションするページは次です。
+
+```text
+http://localhost:8100/homogeneous_coordinates.html
+```
+
+クオータニオンとベクトルをアニメーションするページは次です。
+
+```text
+http://localhost:8100/quaternion_vector.html
+```
+
+現在 `デバッグ中` のページや、今後の追加ページは `future_index.html` 側にまとめています。`index.html` からは直接リンクしていません。
+
 各 HTML、CSS、JS はすべて相対パスでつながっているため、フォルダごと別の場所へ移動しても同じ手順で動きます。
 
 PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`, アイコン類, `offline.html`) は残していますが、現時点では各ページから参照を外してあり、PWA としては動かない状態にしています。
@@ -106,6 +150,28 @@ PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`
   - det(A - λI) = 0 から特性方程式を作る
   - 実数固有値がない場合も表示
   - (A - λI)v = 0 を自由変数で解いて固有ベクトルを作る
+- 線形独立と線形従属の違いを 2 次元・3 次元で表示
+  - 一次結合
+  - 行列式
+  - 図解表示
+- 基底ベクトルと標準基底ベクトルを表示
+  - 標準基底での座標
+  - 任意の基底での座標
+- 線形写像と表現行列を表示
+  - 基底ベクトルの像
+  - 表現行列の各列
+  - T(x) = Ax
+  - 図解表示の拡大縮小
+- 回転・拡大縮小・平行移動を表示
+  - 回転と拡大縮小は線形写像
+  - 平行移動はアフィン写像
+- 同次座標系とグラフィックスを表示
+  - 2D は 3 x 3
+  - 3D は 4 x 4
+  - 最後に 1 を足して平行移動を行列積に入れる
+- クオータニオンとベクトルを表示
+  - 回転軸と角度から q を作る
+  - q p q^-1 で回転後のベクトルを出す
 - 公式のある計算ページでは、初期表示の数式欄にも公式を表示
 
 除算では B が正方行列かつ逆行列を持つ必要があります。
