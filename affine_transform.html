@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rotation Scale Translation Motion</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260508b" />
+    <link rel="stylesheet" href="./styles.css?v=20260508c" />
     <style>
       body[data-topic="affine-transform"] .sub-control-band {
         grid-row: 3;
@@ -33,7 +33,9 @@
         display: none;
       }
 
-      body[data-topic="affine-transform"] #axisControl[hidden] {
+      body[data-topic="affine-transform"] #rotateAxisControl[hidden],
+      body[data-topic="affine-transform"] #scaleZControl[hidden],
+      body[data-topic="affine-transform"] #translateZControl[hidden] {
         display: none !important;
       }
     </style>
@@ -52,7 +54,7 @@
           <div class="status-strip">
             <a class="home-link" href="./future_index.html">一覧へ</a>
             <span id="dimensionStatus">2 次元</span>
-            <span id="transformStatus">回転</span>
+            <span id="transformStatus">回転 → 拡大縮小 → 平行移動</span>
           </div>
         </header>
 
@@ -65,12 +67,8 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="transformType">変換</label>
-            <select id="transformType">
-              <option value="rotate">回転</option>
-              <option value="scale">拡大縮小</option>
-              <option value="translate">平行移動</option>
-            </select>
+            <label>適用順</label>
+            <div class="topic-inline-copy">1. 回転 → 2. 拡大縮小 → 3. 平行移動 の順にまとめて適用します。</div>
           </div>
           <div class="control-group">
             <label>入力</label>
@@ -81,23 +79,86 @@
           </div>
         </section>
 
-        <section id="subControls" class="control-band sub-control-band topic-sub-controls">
-          <div id="axisControl" class="control-group" hidden>
-            <label for="axis">3D 回転軸</label>
-            <select id="axis">
-              <option value="x">x 軸</option>
-              <option value="y">y 軸</option>
-              <option value="z">z 軸</option>
-            </select>
+        <section id="subControls" class="control-band sub-control-band transform-sequence-band">
+          <div class="transform-stack" aria-label="変換パネル">
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>1. 回転</strong>
+                <span>先に向きを変えます</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  角度
+                  <input id="rotateAngle" type="text" value="45" placeholder="45 / PI/2 / π/2" />
+                </label>
+                <label class="topic-inline-field">
+                  単位
+                  <select id="rotateAngleUnit">
+                    <option value="deg">度数</option>
+                    <option value="rad">ラジアン</option>
+                  </select>
+                </label>
+                <label id="rotateAxisControl" class="topic-inline-field" hidden>
+                  3D 回転軸
+                  <select id="rotateAxis">
+                    <option value="x">x 軸</option>
+                    <option value="y">y 軸</option>
+                    <option value="z">z 軸</option>
+                  </select>
+                </label>
+              </div>
+            </article>
+
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>2. 拡大縮小</strong>
+                <span>各軸ごとに倍率をかけます</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  x 方向
+                  <input id="scaleX" type="text" value="2" />
+                </label>
+                <label class="topic-inline-field">
+                  y 方向
+                  <input id="scaleY" type="text" value="0.5" />
+                </label>
+                <label id="scaleZControl" class="topic-inline-field" hidden>
+                  z 方向
+                  <input id="scaleZ" type="text" value="1" />
+                </label>
+              </div>
+            </article>
+
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>3. 平行移動</strong>
+                <span>最後に位置をずらします</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  x 方向
+                  <input id="translateX" type="text" value="3" />
+                </label>
+                <label class="topic-inline-field">
+                  y 方向
+                  <input id="translateY" type="text" value="-2" />
+                </label>
+                <label id="translateZControl" class="topic-inline-field" hidden>
+                  z 方向
+                  <input id="translateZ" type="text" value="2" />
+                </label>
+              </div>
+            </article>
           </div>
-          <div class="control-group">
-            <label>変換パラメータ</label>
-            <div id="params" class="topic-inline-grid"></div>
-          </div>
-          <div class="control-group">
-            <label>対象点 p</label>
+
+          <article class="transform-point-card">
+            <div class="transform-step-header">
+              <strong>対象点 p</strong>
+              <span>この点も図形と一緒に変換します</span>
+            </div>
             <div id="pointInput" class="vector-input"></div>
-          </div>
+          </article>
         </section>
 
         <section id="message" class="message" role="status"></section>
@@ -108,7 +169,7 @@
             <span>平行移動だけは通常座標では写像として扱います</span>
           </div>
           <div id="equationDisplay" class="vector-equation"></div>
-          <div id="resultSummary" class="topic-summary-box">変換後の点を表示します。</div>
+          <div id="resultSummary" class="topic-summary-box">最終的な変換後の点を表示します。</div>
         </section>
 
         <section class="vector-diagram-band">
@@ -138,6 +199,6 @@
         </section>
       </section>
     </main>
-    <script src="./future_topics.js?v=20260508b"></script>
+    <script src="./future_topics.js?v=20260508c"></script>
   </body>
 </html>

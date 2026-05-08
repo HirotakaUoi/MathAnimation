@@ -1368,14 +1368,22 @@ function initAffineTransform() {
   const $ = (selector) => document.querySelector(selector);
   const elements = {
     dimension: $("#dimension"),
-    transformType: $("#transformType"),
     subControls: $("#subControls"),
-    axisControl: $("#axisControl"),
-    axis: $("#axis"),
     randomize: $("#randomize"),
     animate: $("#animate"),
     message: $("#message"),
-    params: $("#params"),
+    rotateAngle: $("#rotateAngle"),
+    rotateAngleUnit: $("#rotateAngleUnit"),
+    rotateAxisControl: $("#rotateAxisControl"),
+    rotateAxis: $("#rotateAxis"),
+    scaleX: $("#scaleX"),
+    scaleY: $("#scaleY"),
+    scaleZControl: $("#scaleZControl"),
+    scaleZ: $("#scaleZ"),
+    translateX: $("#translateX"),
+    translateY: $("#translateY"),
+    translateZControl: $("#translateZControl"),
+    translateZ: $("#translateZ"),
     pointInput: $("#pointInput"),
     resultSummary: $("#resultSummary"),
     equationDisplay: $("#equationDisplay"),
@@ -1404,85 +1412,66 @@ function initAffineTransform() {
     };
   }
 
-  function buildParamInputs() {
-    const dim = Number(elements.dimension.value);
-    const type = elements.transformType.value;
-    const showAxisControl = dim === 3 && type === "rotate";
-    elements.axisControl.hidden = !showAxisControl;
-    elements.subControls.classList.toggle("with-axis-control", showAxisControl);
-    const fields = [];
-    if (type === "rotate") {
-      fields.push({ id: "angle", label: "角度", value: 45, placeholder: "45 / PI/2 / π/2" });
-      fields.push({
-        id: "angleUnit",
-        label: "単位",
-        type: "select",
-        value: "deg",
-        options: [
-          { value: "deg", label: "度数" },
-          { value: "rad", label: "ラジアン" },
-        ],
-      });
-    } else if (type === "scale") {
-      fields.push({ id: "sx", label: "x 方向", value: 2 });
-      fields.push({ id: "sy", label: "y 方向", value: dim === 2 ? 0.5 : 1.5 });
-      if (dim === 3) fields.push({ id: "sz", label: "z 方向", value: 1 });
-    } else {
-      fields.push({ id: "tx", label: "x 方向", value: 3 });
-      fields.push({ id: "ty", label: "y 方向", value: -2 });
-      if (dim === 3) fields.push({ id: "tz", label: "z 方向", value: 2 });
-    }
-    elements.params.innerHTML = fields
-      .map((field) => {
-        if (field.type === "select") {
-          const options = field.options
-            .map((option) => `<option value="${option.value}"${option.value === field.value ? " selected" : ""}>${option.label}</option>`)
-            .join("");
-          return `<label class="topic-inline-field">${field.label}<select id="${field.id}">${options}</select></label>`;
-        }
-        const placeholder = field.placeholder ? ` placeholder="${field.placeholder}"` : "";
-        return `<label class="topic-inline-field">${field.label}<input id="${field.id}" type="text" value="${field.value}"${placeholder} /></label>`;
-      })
-      .join("");
+  function syncTransformPanels() {
+    const show3D = state.dimension === 3;
+    elements.rotateAxisControl.hidden = !show3D;
+    elements.scaleZControl.hidden = !show3D;
+    elements.translateZControl.hidden = !show3D;
+    elements.subControls.classList.toggle("with-axis-control", show3D);
   }
 
-  function readParams() {
-    const type = elements.transformType.value;
-    if (type === "rotate") {
-      return {
-        angle: TopicShared.parseExpressionValue(document.querySelector("#angle").value),
-        angleUnit: document.querySelector("#angleUnit").value,
-      };
-    }
-    if (type === "scale") {
-      return {
-        sx: TopicShared.parseExpressionValue(document.querySelector("#sx").value),
-        sy: TopicShared.parseExpressionValue(document.querySelector("#sy").value),
-        sz: state.dimension === 3 ? TopicShared.parseExpressionValue(document.querySelector("#sz").value) : 1,
-      };
-    }
+  function readTransforms() {
     return {
-      tx: TopicShared.parseExpressionValue(document.querySelector("#tx").value),
-      ty: TopicShared.parseExpressionValue(document.querySelector("#ty").value),
-      tz: state.dimension === 3 ? TopicShared.parseExpressionValue(document.querySelector("#tz").value) : 0,
+      rotate: {
+        angle: TopicShared.parseExpressionValue(elements.rotateAngle.value),
+        angleUnit: elements.rotateAngleUnit.value,
+        axis: elements.rotateAxis.value,
+      },
+      scale: {
+        sx: TopicShared.parseExpressionValue(elements.scaleX.value),
+        sy: TopicShared.parseExpressionValue(elements.scaleY.value),
+        sz: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.scaleZ.value) : 1,
+      },
+      translate: {
+        tx: TopicShared.parseExpressionValue(elements.translateX.value),
+        ty: TopicShared.parseExpressionValue(elements.translateY.value),
+        tz: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.translateZ.value) : 0,
+      },
     };
   }
 
-  function transformation(point, params) {
-    const type = elements.transformType.value;
-    if (type === "rotate") {
-      const radians = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
-      if (state.dimension === 2) {
-        const [x, y] = point;
-        return [x * Math.cos(radians) - y * Math.sin(radians), x * Math.sin(radians) + y * Math.cos(radians)];
-      }
-      const axisName = elements.axis.value;
-      if (axisName === "x") return [point[0], point[1] * Math.cos(radians) - point[2] * Math.sin(radians), point[1] * Math.sin(radians) + point[2] * Math.cos(radians)];
-      if (axisName === "y") return [point[0] * Math.cos(radians) + point[2] * Math.sin(radians), point[1], -point[0] * Math.sin(radians) + point[2] * Math.cos(radians)];
-      return [point[0] * Math.cos(radians) - point[1] * Math.sin(radians), point[0] * Math.sin(radians) + point[1] * Math.cos(radians), point[2]];
+  function rotatePoint(point, params) {
+    const radians = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
+    if (state.dimension === 2) {
+      const [x, y] = point;
+      return [x * Math.cos(radians) - y * Math.sin(radians), x * Math.sin(radians) + y * Math.cos(radians)];
     }
-    if (type === "scale") return [point[0] * params.sx, point[1] * params.sy, (point[2] ?? 0) * (params.sz ?? 1)];
+    if (params.axis === "x") {
+      return [point[0], point[1] * Math.cos(radians) - point[2] * Math.sin(radians), point[1] * Math.sin(radians) + point[2] * Math.cos(radians)];
+    }
+    if (params.axis === "y") {
+      return [point[0] * Math.cos(radians) + point[2] * Math.sin(radians), point[1], -point[0] * Math.sin(radians) + point[2] * Math.cos(radians)];
+    }
+    return [point[0] * Math.cos(radians) - point[1] * Math.sin(radians), point[0] * Math.sin(radians) + point[1] * Math.cos(radians), point[2]];
+  }
+
+  function scalePoint(point, params) {
+    return [point[0] * params.sx, point[1] * params.sy, (point[2] ?? 0) * (params.sz ?? 1)];
+  }
+
+  function translatePoint(point, params) {
     return [point[0] + params.tx, point[1] + params.ty, (point[2] ?? 0) + (params.tz ?? 0)];
+  }
+
+  function applyTransformSequence(point, transforms) {
+    const afterRotate = rotatePoint(point, transforms.rotate);
+    const afterScale = scalePoint(afterRotate, transforms.scale);
+    const afterTranslate = translatePoint(afterScale, transforms.translate);
+    return {
+      afterRotate,
+      afterScale,
+      afterTranslate,
+    };
   }
 
   function sampleShape(dimension) {
@@ -1528,12 +1517,22 @@ function initAffineTransform() {
     return { points, edges, faces };
   }
 
-  function transformShape(shape, params) {
-    const transformedPoints = shape.points.map((point) => transformation(point, params));
-    const transformedFaces = shape.faces.map((face) =>
-      face.map((point) => transformation(point, params)),
-    );
-    return { points: transformedPoints, edges: shape.edges, faces: transformedFaces };
+  function shapeWithPoints(points, edges, faces) {
+    return { points, edges, faces };
+  }
+
+  function transformShape(shape, transforms) {
+    const pointsAfterRotate = shape.points.map((point) => rotatePoint(point, transforms.rotate));
+    const pointsAfterScale = pointsAfterRotate.map((point) => scalePoint(point, transforms.scale));
+    const pointsAfterTranslate = pointsAfterScale.map((point) => translatePoint(point, transforms.translate));
+    const facesAfterRotate = shape.faces.map((face) => face.map((point) => rotatePoint(point, transforms.rotate)));
+    const facesAfterScale = facesAfterRotate.map((face) => face.map((point) => scalePoint(point, transforms.scale)));
+    const facesAfterTranslate = facesAfterScale.map((face) => face.map((point) => translatePoint(point, transforms.translate)));
+    return {
+      rotate: shapeWithPoints(pointsAfterRotate, shape.edges, facesAfterRotate),
+      scale: shapeWithPoints(pointsAfterScale, shape.edges, facesAfterScale),
+      translate: shapeWithPoints(pointsAfterTranslate, shape.edges, facesAfterTranslate),
+    };
   }
 
   function shapeSegments(shape, className) {
@@ -1553,46 +1552,42 @@ function initAffineTransform() {
     TopicShared.clearHistory(elements.historyList);
     elements.message.textContent = "";
     state.dimension = Number(elements.dimension.value);
+    syncTransformPanels();
     elements.viewControls.hidden = state.dimension !== 3;
     [elements.rotateXValue, elements.rotateYValue, elements.rotateZValue].forEach((output, index) => {
       const values = [elements.rotateX.value, elements.rotateY.value, elements.rotateZ.value];
       output.textContent = `${values[index]}°`;
     });
     elements.dimensionStatus.textContent = `${state.dimension} 次元`;
-    elements.transformStatus.textContent = elements.transformType.selectedOptions[0].textContent;
+    elements.transformStatus.textContent = "回転 → 拡大縮小 → 平行移動";
     try {
       const point = readShape();
-      const params = readParams();
-      const moved = transformation(point, params);
-      elements.resultSummary.textContent = `像 = (${moved.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
+      const transforms = readTransforms();
+      const applied = applyTransformSequence(point, transforms);
+      elements.resultSummary.textContent = `最終像 = (${applied.afterTranslate.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
       elements.equationDisplay.textContent =
-        elements.transformType.value === "rotate"
-          ? `回転は角度と回転軸で決まります。現在は ${TopicShared.formatNumber(params.angle)} ${params.angleUnit === "rad" ? "rad" : "°"} を使います。`
-          : elements.transformType.value === "scale"
-            ? "拡大縮小は各軸方向の倍率で決まります。"
-            : "平行移動は通常の n x n 行列ではなく、x ↦ x + t という写像で表します。";
+        `R(p) → S(R(p)) → T(S(R(p))) を順に計算します。回転角 ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}, ` +
+        `倍率 (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""}), ` +
+        `平行移動 (${TopicShared.formatNumber(transforms.translate.tx)}, ${TopicShared.formatNumber(transforms.translate.ty)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.translate.tz)}` : ""})`;
       elements.formulaTitle.textContent = "変換の考え方";
-      elements.formula.textContent =
-        elements.transformType.value === "translate"
-          ? "平行移動だけは通常の座標では行列積に入らないので、同次座標系のページで行列表現を扱います。"
-          : "回転と拡大縮小は、基底ベクトルの像を並べた行列として表せます。";
-      TopicShared.renderTrack(elements.animationTrack, ["元の図形", "写像の式", "像を計算", "意味づけ"], -1);
+      elements.formula.textContent = "回転と拡大縮小は線形写像、平行移動は最後の位置調整として続けて適用します。";
+      TopicShared.renderTrack(elements.animationTrack, ["元の図形", "回転後", "拡大縮小後", "平行移動後"], -1);
       const sample = sampleShape(state.dimension);
-      const transformedSample = transformShape(sample, params);
+      const transformedSample = transformShape(sample, transforms);
       TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
         dimension: state.dimension,
         rotation: rotation(),
         vectors: [
           { from: [0, 0, 0], to: point, className: "diagram-cross" },
-          { from: [0, 0, 0], to: moved, className: "diagram-result" },
+          { from: [0, 0, 0], to: applied.afterTranslate, className: "diagram-result" },
         ],
         polygons: [
           ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
-          ...transformedSample.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+          ...transformedSample.translate.faces.map((face) => ({ points: face, className: "diagram-surface" })),
         ],
         segments: [
           ...shapeSegments(sample, "diagram-guide-line"),
-          ...shapeSegments(transformedSample, "diagram-result-line"),
+          ...shapeSegments(transformedSample.translate, "diagram-result-line"),
         ],
         axisExtent: 8,
         gridStep: 1,
@@ -1611,12 +1606,14 @@ function initAffineTransform() {
         ? [TopicShared.randomNonZero(), TopicShared.randomNonZero()]
         : [TopicShared.randomNonZero(), TopicShared.randomNonZero(), TopicShared.randomNonZero()],
     );
-    if (elements.transformType.value === "rotate") {
-      const angleInput = document.querySelector("#angle");
-      const angleUnitInput = document.querySelector("#angleUnit");
-      if (angleInput) angleInput.value = String(TopicShared.randomInt(15, 165));
-      if (angleUnitInput) angleUnitInput.value = "deg";
-    }
+    elements.rotateAngle.value = String(TopicShared.randomInt(15, 165));
+    elements.rotateAngleUnit.value = "deg";
+    elements.scaleX.value = String(TopicShared.randomNonZero(1, 3));
+    elements.scaleY.value = String(TopicShared.randomInt(0, 1) === 0 ? 0.5 : TopicShared.randomNonZero(1, 3));
+    if (state.dimension === 3) elements.scaleZ.value = String(TopicShared.randomNonZero(1, 3));
+    elements.translateX.value = String(TopicShared.randomInt(-3, 3));
+    elements.translateY.value = String(TopicShared.randomInt(-3, 3));
+    if (state.dimension === 3) elements.translateZ.value = String(TopicShared.randomInt(-3, 3));
     refreshPreview();
   }
 
@@ -1625,45 +1622,84 @@ function initAffineTransform() {
     TopicShared.clearHistory(elements.historyList);
     try {
       const point = readShape();
-      const params = readParams();
-      const moved = transformation(point, params);
+      const transforms = readTransforms();
+      const applied = applyTransformSequence(point, transforms);
       const sample = sampleShape(state.dimension);
-      const transformedSample = transformShape(sample, params);
-      const labels = ["元の図形", "写像の式", "像を計算", "意味づけ"];
+      const transformedSample = transformShape(sample, transforms);
+      const labels = ["元の図形", "回転後", "拡大縮小後", "平行移動後"];
+      const diagramStates = [
+        { point, shape: sample, title: "元の図形", text: state.dimension === 2 ? "正方形と点 p の初期状態です。" : "立方体と点 p の初期状態です。" },
+        {
+          point: applied.afterRotate,
+          shape: transformedSample.rotate,
+          title: "回転後",
+          text: `回転角 = ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}`
+            + (state.dimension === 3 ? `, 軸 = ${transforms.rotate.axis}` : ""),
+        },
+        {
+          point: applied.afterScale,
+          shape: transformedSample.scale,
+          title: "拡大縮小後",
+          text: `倍率 = (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""})`,
+        },
+        {
+          point: applied.afterTranslate,
+          shape: transformedSample.translate,
+          title: "平行移動後",
+          text: `移動量 = (${TopicShared.formatNumber(transforms.translate.tx)}, ${TopicShared.formatNumber(transforms.translate.ty)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.translate.tz)}` : ""})`,
+        },
+      ];
+
+      function renderDiagramState(current) {
+        TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+          dimension: state.dimension,
+          rotation: rotation(),
+          vectors: [
+            { from: [0, 0, 0], to: point, className: "diagram-cross" },
+            { from: [0, 0, 0], to: current.point, className: "diagram-result" },
+          ],
+          polygons: [
+            ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+            ...current.shape.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+          ],
+          segments: [
+            ...shapeSegments(sample, "diagram-guide-line"),
+            ...shapeSegments(current.shape, "diagram-result-line"),
+          ],
+          axisExtent: 8,
+          gridStep: 1,
+          tickStep: 5,
+        });
+      }
+
       const steps = [
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 0);
-          elements.formulaTitle.textContent = "元の図形";
-          elements.formula.textContent = state.dimension === 2
-            ? "サンプルとして (-1,-1) から (1,1) の正方形を重ねて表示します。"
-            : "サンプルとして (-1,-1,-1) から (1,1,1) の立方体を重ねて表示します。";
-          TopicShared.pushHistory(elements.historyList, "元の図形", "点 p に加えて、基準形状の前後比較も同時に見ます。");
+          renderDiagramState(diagramStates[0]);
+          elements.formulaTitle.textContent = diagramStates[0].title;
+          elements.formula.textContent = diagramStates[0].text;
+          TopicShared.pushHistory(elements.historyList, "元の図形", diagramStates[0].text);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 1);
-          elements.formulaTitle.textContent = "写像の式";
-          elements.formula.textContent =
-            elements.transformType.value === "rotate"
-              ? `回転角 = ${TopicShared.formatNumber(params.angle)} ${params.angleUnit === "rad" ? "rad" : "°"}`
-              : elements.transformType.value === "scale"
-                ? `x, y${state.dimension === 3 ? ", z" : ""} の倍率 = ${Object.values(params).map((value) => TopicShared.formatNumber(value)).join(", ")}`
-                : `x ↦ x + t, t = (${Object.values(params).map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "式", "どの写像をかけるかを先に固定します。");
+          renderDiagramState(diagramStates[1]);
+          elements.formulaTitle.textContent = diagramStates[1].title;
+          elements.formula.textContent = `R(p) = (${applied.afterRotate.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[1].text}`;
+          TopicShared.pushHistory(elements.historyList, "回転", elements.formula.textContent);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 2);
-          elements.formulaTitle.textContent = "像を計算";
-          elements.formula.textContent = `T(p) = (${moved.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "像", `サンプル形状の各頂点にも同じ写像をかけるので、${state.dimension === 2 ? "正方形" : "立方体"}全体の変形が見えます。`);
+          renderDiagramState(diagramStates[2]);
+          elements.formulaTitle.textContent = diagramStates[2].title;
+          elements.formula.textContent = `S(R(p)) = (${applied.afterScale.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[2].text}`;
+          TopicShared.pushHistory(elements.historyList, "拡大縮小", elements.formula.textContent);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 3);
-          elements.formulaTitle.textContent = "意味づけ";
-          elements.formula.textContent =
-            elements.transformType.value === "translate"
-              ? "平行移動は行列ではなくアフィン写像として表し、同次座標なら 1 本の行列にまとめられます。"
-              : "回転と拡大縮小は線形写像なので、行列でそのまま表せます。";
-          TopicShared.pushHistory(elements.historyList, "意味", elements.formula.textContent);
+          renderDiagramState(diagramStates[3]);
+          elements.formulaTitle.textContent = diagramStates[3].title;
+          elements.formula.textContent = `T(S(R(p))) = (${applied.afterTranslate.map((value) => TopicShared.formatNumber(value)).join(", ")}) / ${diagramStates[3].text}`;
+          TopicShared.pushHistory(elements.historyList, "平行移動", elements.formula.textContent);
         },
       ];
       steps.forEach((step, index) => state.timerIds.push(window.setTimeout(step, index * 900)));
@@ -1673,21 +1709,16 @@ function initAffineTransform() {
   }
 
   TopicShared.createVectorInputs(elements.pointInput, 2, "p", [2, 1]);
-  buildParamInputs();
+  syncTransformPanels();
   TopicShared.attachLiveRefresh(document.body, refreshPreview);
   elements.dimension.addEventListener("change", () => {
     state.dimension = Number(elements.dimension.value);
     TopicShared.createVectorInputs(elements.pointInput, state.dimension, "p", state.dimension === 2 ? [2, 1] : [2, 1, 1]);
-    buildParamInputs();
+    syncTransformPanels();
     TopicShared.attachLiveRefresh(document.body, refreshPreview);
     refreshPreview();
   });
-  elements.transformType.addEventListener("change", () => {
-    buildParamInputs();
-    TopicShared.attachLiveRefresh(document.body, refreshPreview);
-    refreshPreview();
-  });
-  [elements.rotateX, elements.rotateY, elements.rotateZ, elements.axis].forEach((control) => control.addEventListener("input", refreshPreview));
+  [elements.rotateX, elements.rotateY, elements.rotateZ, elements.rotateAxis].forEach((control) => control.addEventListener("input", refreshPreview));
   elements.randomize.addEventListener("click", randomize);
   elements.animate.addEventListener("click", animate);
   refreshPreview();

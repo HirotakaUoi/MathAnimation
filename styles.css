@@ -667,6 +667,48 @@ select:focus-visible {
   grid-template-columns: minmax(180px, 220px) minmax(320px, 1fr) minmax(260px, 320px);
 }
 
+.transform-sequence-band {
+  grid-template-columns: minmax(520px, 1.45fr) minmax(240px, 0.55fr);
+  align-items: start;
+}
+
+.transform-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.transform-step-card,
+.transform-point-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.transform-step-header {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 10px;
+}
+
+.transform-step-header strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.transform-step-header span {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.transform-step-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+}
+
 .topic-inline-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
