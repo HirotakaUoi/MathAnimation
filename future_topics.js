@@ -1471,6 +1471,111 @@ function initAffineTransform() {
     return `(${pointForDisplay(point).map((value) => TopicShared.formatNumber(value)).join(", ")})`;
   }
 
+  function homogeneousRotationMatrix(params) {
+    const angle = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    if (state.dimension === 2) {
+      return [
+        [c, -s, 0],
+        [s, c, 0],
+        [0, 0, 1],
+      ];
+    }
+    if (params.axis === "x") {
+      return [
+        [1, 0, 0, 0],
+        [0, c, -s, 0],
+        [0, s, c, 0],
+        [0, 0, 0, 1],
+      ];
+    }
+    if (params.axis === "y") {
+      return [
+        [c, 0, s, 0],
+        [0, 1, 0, 0],
+        [-s, 0, c, 0],
+        [0, 0, 0, 1],
+      ];
+    }
+    return [
+      [c, -s, 0, 0],
+      [s, c, 0, 0],
+      [0, 0, 1, 0],
+      [0, 0, 0, 1],
+    ];
+  }
+
+  function homogeneousScaleMatrix(params) {
+    if (state.dimension === 2) {
+      return [
+        [params.sx, 0, 0],
+        [0, params.sy, 0],
+        [0, 0, 1],
+      ];
+    }
+    return [
+      [params.sx, 0, 0, 0],
+      [0, params.sy, 0, 0],
+      [0, 0, params.sz, 0],
+      [0, 0, 0, 1],
+    ];
+  }
+
+  function homogeneousTranslateMatrix(params) {
+    if (state.dimension === 2) {
+      return [
+        [1, 0, params.tx],
+        [0, 1, params.ty],
+        [0, 0, 1],
+      ];
+    }
+    return [
+      [1, 0, 0, params.tx],
+      [0, 1, 0, params.ty],
+      [0, 0, 1, params.tz],
+      [0, 0, 0, 1],
+    ];
+  }
+
+  function renderMathMatrix(matrix) {
+    const columns = matrix[0]?.length ?? 1;
+    return `<div class="math-matrix" style="grid-template-columns: repeat(${columns}, auto);">${matrix
+      .flat()
+      .map((value) => `<span class="math-matrix-cell">${TopicShared.formatNumber(value)}</span>`)
+      .join("")}</div>`;
+  }
+
+  function renderTransformMatrices(transforms) {
+    const labels = state.dimension === 2
+      ? {
+          rotate: `回転行列 R（同次 3×3）`,
+          scale: `拡大縮小行列 S（同次 3×3）`,
+          translate: `平行移動行列 T（同次 3×3）`,
+        }
+      : {
+          rotate: `回転行列 R（同次 4×4）`,
+          scale: `拡大縮小行列 S（同次 4×4）`,
+          translate: `平行移動行列 T（同次 4×4）`,
+        };
+    return `
+      <div class="transform-matrix-display">
+        <div class="math-matrix-term">
+          <span class="math-matrix-label">${labels.rotate}</span>
+          ${renderMathMatrix(homogeneousRotationMatrix(transforms.rotate))}
+        </div>
+        <div class="math-matrix-term">
+          <span class="math-matrix-label">${labels.scale}</span>
+          ${renderMathMatrix(homogeneousScaleMatrix(transforms.scale))}
+        </div>
+        <div class="math-matrix-term">
+          <span class="math-matrix-label">${labels.translate}</span>
+          ${renderMathMatrix(homogeneousTranslateMatrix(transforms.translate))}
+        </div>
+      </div>
+    `;
+  }
+
   function applyTransformSequence(point, transforms) {
     const afterRotate = rotatePoint(point, transforms.rotate);
     const afterScale = scalePoint(afterRotate, transforms.scale);
@@ -1573,12 +1678,9 @@ function initAffineTransform() {
       const transforms = readTransforms();
       const applied = applyTransformSequence(point, transforms);
       elements.resultSummary.textContent = `最終像 = ${formatPoint(applied.afterTranslate)}`;
-      elements.equationDisplay.textContent =
-        `R(p) → S(R(p)) → T(S(R(p))) を順に計算します。回転角 ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}, ` +
-        `倍率 (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""}), ` +
-        `平行移動 (${TopicShared.formatNumber(transforms.translate.tx)}, ${TopicShared.formatNumber(transforms.translate.ty)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.translate.tz)}` : ""})`;
+      elements.equationDisplay.innerHTML = renderTransformMatrices(transforms);
       elements.formulaTitle.textContent = "変換の考え方";
-      elements.formula.textContent = "回転と拡大縮小は線形写像、平行移動は最後の位置調整として続けて適用します。";
+      elements.formula.textContent = "回転・拡大縮小・平行移動は、同次座標ではそれぞれ行列として表せます。";
       TopicShared.renderTrack(elements.animationTrack, ["元の図形", "回転後", "拡大縮小後", "平行移動後"], -1);
       const sample = sampleShape(state.dimension);
       const transformedSample = transformShape(sample, transforms);

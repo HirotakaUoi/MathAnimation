@@ -917,6 +917,18 @@ select:focus-visible {
   white-space: nowrap;
 }
 
+.transform-matrix-display {
+  display: grid;
+  gap: 14px;
+  min-width: max-content;
+  white-space: normal;
+}
+
+.transform-matrix-display .math-matrix-term {
+  align-items: start;
+  justify-items: start;
+}
+
 .verification-band {
   display: grid;
   gap: 10px;
