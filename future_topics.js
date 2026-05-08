@@ -30,6 +30,11 @@ const TopicShared = (() => {
         index += match[0].length;
         continue;
       }
+      if (char === "π") {
+        tokens.push({ type: "name", value: "pi" });
+        index += 1;
+        continue;
+      }
       if ("+-*/()".includes(char)) {
         tokens.push({ type: char });
         index += 1;
@@ -1364,6 +1369,7 @@ function initAffineTransform() {
   const elements = {
     dimension: $("#dimension"),
     transformType: $("#transformType"),
+    axisControl: $("#axisControl"),
     axis: $("#axis"),
     randomize: $("#randomize"),
     animate: $("#animate"),
@@ -1400,10 +1406,20 @@ function initAffineTransform() {
   function buildParamInputs() {
     const dim = Number(elements.dimension.value);
     const type = elements.transformType.value;
-    elements.axis.hidden = !(dim === 3 && type === "rotate");
+    elements.axisControl.hidden = !(dim === 3 && type === "rotate");
     const fields = [];
     if (type === "rotate") {
-      fields.push({ id: "angle", label: "角度", value: 45 });
+      fields.push({ id: "angle", label: "角度", value: 45, placeholder: "45 / PI/2 / π/2" });
+      fields.push({
+        id: "angleUnit",
+        label: "単位",
+        type: "select",
+        value: "deg",
+        options: [
+          { value: "deg", label: "度数" },
+          { value: "rad", label: "ラジアン" },
+        ],
+      });
     } else if (type === "scale") {
       fields.push({ id: "sx", label: "x 方向", value: 2 });
       fields.push({ id: "sy", label: "y 方向", value: dim === 2 ? 0.5 : 1.5 });
@@ -1414,16 +1430,26 @@ function initAffineTransform() {
       if (dim === 3) fields.push({ id: "tz", label: "z 方向", value: 2 });
     }
     elements.params.innerHTML = fields
-      .map(
-        (field) => `<label class="topic-inline-field">${field.label}<input id="${field.id}" type="text" value="${field.value}" /></label>`,
-      )
+      .map((field) => {
+        if (field.type === "select") {
+          const options = field.options
+            .map((option) => `<option value="${option.value}"${option.value === field.value ? " selected" : ""}>${option.label}</option>`)
+            .join("");
+          return `<label class="topic-inline-field">${field.label}<select id="${field.id}">${options}</select></label>`;
+        }
+        const placeholder = field.placeholder ? ` placeholder="${field.placeholder}"` : "";
+        return `<label class="topic-inline-field">${field.label}<input id="${field.id}" type="text" value="${field.value}"${placeholder} /></label>`;
+      })
       .join("");
   }
 
   function readParams() {
     const type = elements.transformType.value;
     if (type === "rotate") {
-      return { angle: TopicShared.parseExpressionValue(document.querySelector("#angle").value) };
+      return {
+        angle: TopicShared.parseExpressionValue(document.querySelector("#angle").value),
+        angleUnit: document.querySelector("#angleUnit").value,
+      };
     }
     if (type === "scale") {
       return {
@@ -1442,7 +1468,7 @@ function initAffineTransform() {
   function transformation(point, params) {
     const type = elements.transformType.value;
     if (type === "rotate") {
-      const radians = (params.angle * Math.PI) / 180;
+      const radians = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
       if (state.dimension === 2) {
         const [x, y] = point;
         return [x * Math.cos(radians) - y * Math.sin(radians), x * Math.sin(radians) + y * Math.cos(radians)];
@@ -1479,7 +1505,7 @@ function initAffineTransform() {
       elements.resultSummary.textContent = `像 = (${moved.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
       elements.equationDisplay.textContent =
         elements.transformType.value === "rotate"
-          ? "回転は角度と回転軸で決まります。"
+          ? `回転は角度と回転軸で決まります。現在は ${TopicShared.formatNumber(params.angle)} ${params.angleUnit === "rad" ? "rad" : "°"} を使います。`
           : elements.transformType.value === "scale"
             ? "拡大縮小は各軸方向の倍率で決まります。"
             : "平行移動は通常の n x n 行列ではなく、x ↦ x + t という写像で表します。";
@@ -1522,6 +1548,12 @@ function initAffineTransform() {
         ? [TopicShared.randomNonZero(), TopicShared.randomNonZero()]
         : [TopicShared.randomNonZero(), TopicShared.randomNonZero(), TopicShared.randomNonZero()],
     );
+    if (elements.transformType.value === "rotate") {
+      const angleInput = document.querySelector("#angle");
+      const angleUnitInput = document.querySelector("#angleUnit");
+      if (angleInput) angleInput.value = String(TopicShared.randomInt(15, 165));
+      if (angleUnitInput) angleUnitInput.value = "deg";
+    }
     refreshPreview();
   }
 
@@ -1545,7 +1577,7 @@ function initAffineTransform() {
           elements.formulaTitle.textContent = "写像の式";
           elements.formula.textContent =
             elements.transformType.value === "rotate"
-              ? `回転角 = ${TopicShared.formatNumber(params.angle)}°`
+              ? `回転角 = ${TopicShared.formatNumber(params.angle)} ${params.angleUnit === "rad" ? "rad" : "°"}`
               : elements.transformType.value === "scale"
                 ? `x, y${state.dimension === 3 ? ", z" : ""} の倍率 = ${Object.values(params).map((value) => TopicShared.formatNumber(value)).join(", ")}`
                 : `x ↦ x + t, t = (${Object.values(params).map((value) => TopicShared.formatNumber(value)).join(", ")})`;

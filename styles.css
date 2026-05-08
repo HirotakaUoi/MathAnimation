@@ -640,6 +640,7 @@ select:focus-visible {
 
 .topic-sub-controls {
   grid-template-columns: minmax(180px, 220px) minmax(320px, 1fr) minmax(260px, 320px);
+  align-items: start;
 }
 
 .topic-inline-grid {
