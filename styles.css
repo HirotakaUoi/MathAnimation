@@ -1025,6 +1025,11 @@ body[data-topic="basis-vectors"] .diagram-label-group {
   display: none;
 }
 
+body[data-topic="affine-transform"] .diagram-label-group,
+body[data-topic="affine-transform"] .diagram-axis-label {
+  display: none;
+}
+
 .diagram-label-box {
   stroke-width: 1.5px;
 }

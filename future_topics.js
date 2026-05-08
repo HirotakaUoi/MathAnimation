@@ -1580,8 +1580,8 @@ function initAffineTransform() {
         dimension: state.dimension,
         rotation: rotation(),
         vectors: [
-          { from: [0, 0, 0], to: point, className: "diagram-cross", label: "p" },
-          { from: [0, 0, 0], to: moved, className: "diagram-result", label: "T(p)" },
+          { from: [0, 0, 0], to: point, className: "diagram-cross" },
+          { from: [0, 0, 0], to: moved, className: "diagram-result" },
         ],
         polygons: [
           ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
