@@ -5,7 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rotation Scale Translation Motion</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260508a" />
+    <style>
+      body[data-topic="affine-transform"] .sub-control-band {
+        grid-row: 3;
+      }
+
+      body[data-topic="affine-transform"] .workspace.has-sub-control-band .message {
+        grid-row: 4;
+      }
+
+      body[data-topic="affine-transform"] .workspace.has-sub-control-band .vector-display-band {
+        grid-row: 5;
+      }
+
+      body[data-topic="affine-transform"] .workspace.has-sub-control-band .vector-diagram-band {
+        grid-row: 6;
+      }
+
+      body[data-topic="affine-transform"] .workspace.has-sub-control-band .animation-band {
+        grid-row: 7;
+      }
+
+      body[data-topic="affine-transform"] .diagram-label-group,
+      body[data-topic="affine-transform"] .diagram-axis-label,
+      body[data-topic="affine-transform"] .diagram-axis-name {
+        display: none;
+      }
+    </style>
   </head>
   <body data-topic="affine-transform">
     <main class="app-shell">
@@ -107,6 +134,6 @@
         </section>
       </section>
     </main>
-    <script src="./future_topics.js"></script>
+    <script src="./future_topics.js?v=20260508a"></script>
   </body>
 </html>
