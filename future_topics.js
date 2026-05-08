@@ -1482,6 +1482,65 @@ function initAffineTransform() {
     return [point[0] + params.tx, point[1] + params.ty, (point[2] ?? 0) + (params.tz ?? 0)];
   }
 
+  function sampleShape(dimension) {
+    if (dimension === 2) {
+      const points = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ];
+      const edges = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0],
+      ];
+      return { points, edges, faces: [points] };
+    }
+
+    const points = [
+      [-1, -1, -1],
+      [1, -1, -1],
+      [1, 1, -1],
+      [-1, 1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [1, 1, 1],
+      [-1, 1, 1],
+    ];
+    const edges = [
+      [0, 1], [1, 2], [2, 3], [3, 0],
+      [4, 5], [5, 6], [6, 7], [7, 4],
+      [0, 4], [1, 5], [2, 6], [3, 7],
+    ];
+    const faces = [
+      [0, 1, 2, 3],
+      [4, 5, 6, 7],
+      [0, 1, 5, 4],
+      [1, 2, 6, 5],
+      [2, 3, 7, 6],
+      [3, 0, 4, 7],
+    ].map((face) => face.map((index) => points[index]));
+    return { points, edges, faces };
+  }
+
+  function transformShape(shape, params) {
+    const transformedPoints = shape.points.map((point) => transformation(point, params));
+    const transformedFaces = shape.faces.map((face) =>
+      face.map((point) => transformation(point, params)),
+    );
+    return { points: transformedPoints, edges: shape.edges, faces: transformedFaces };
+  }
+
+  function shapeSegments(shape, className) {
+    return shape.edges.map(([fromIndex, toIndex]) => ({
+      from: shape.points[fromIndex],
+      to: shape.points[toIndex],
+      className,
+    }));
+  }
+
   function readShape() {
     return TopicShared.readVector(elements.pointInput, "p");
   }
@@ -1515,11 +1574,8 @@ function initAffineTransform() {
           ? "平行移動だけは通常の座標では行列積に入らないので、同次座標系のページで行列表現を扱います。"
           : "回転と拡大縮小は、基底ベクトルの像を並べた行列として表せます。";
       TopicShared.renderTrack(elements.animationTrack, ["元の図形", "写像の式", "像を計算", "意味づけ"], -1);
-      const shape =
-        state.dimension === 2
-          ? [[0, 0], point, [point[0] + 1, point[1]], [point[0], point[1] + 1]]
-          : [[0, 0, 0], point, [point[0] + 1, point[1], point[2]], [point[0], point[1] + 1, point[2]]];
-      const transformedShape = shape.map((p) => transformation(p, params));
+      const sample = sampleShape(state.dimension);
+      const transformedSample = transformShape(sample, params);
       TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
         dimension: state.dimension,
         rotation: rotation(),
@@ -1528,8 +1584,12 @@ function initAffineTransform() {
           { from: [0, 0, 0], to: moved, className: "diagram-result", label: "T(p)" },
         ],
         polygons: [
-          { points: shape, className: "diagram-guide-surface" },
-          { points: transformedShape, className: "diagram-surface" },
+          ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+          ...transformedSample.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+        ],
+        segments: [
+          ...shapeSegments(sample, "diagram-guide-line"),
+          ...shapeSegments(transformedSample, "diagram-result-line"),
         ],
         axisExtent: 8,
         gridStep: 1,
@@ -1564,13 +1624,17 @@ function initAffineTransform() {
       const point = readShape();
       const params = readParams();
       const moved = transformation(point, params);
+      const sample = sampleShape(state.dimension);
+      const transformedSample = transformShape(sample, params);
       const labels = ["元の図形", "写像の式", "像を計算", "意味づけ"];
       const steps = [
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 0);
           elements.formulaTitle.textContent = "元の図形";
-          elements.formula.textContent = `元の点 p = (${point.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "元の図形", "原点からの位置を基準に見ます。");
+          elements.formula.textContent = state.dimension === 2
+            ? "サンプルとして (-1,-1) から (1,1) の正方形を重ねて表示します。"
+            : "サンプルとして (-1,-1,-1) から (1,1,1) の立方体を重ねて表示します。";
+          TopicShared.pushHistory(elements.historyList, "元の図形", "点 p に加えて、基準形状の前後比較も同時に見ます。");
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 1);
@@ -1587,7 +1651,7 @@ function initAffineTransform() {
           TopicShared.renderTrack(elements.animationTrack, labels, 2);
           elements.formulaTitle.textContent = "像を計算";
           elements.formula.textContent = `T(p) = (${moved.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "像", "各点に同じ写像をかけて像を作ります。");
+          TopicShared.pushHistory(elements.historyList, "像", `サンプル形状の各頂点にも同じ写像をかけるので、${state.dimension === 2 ? "正方形" : "立方体"}全体の変形が見えます。`);
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 3);
