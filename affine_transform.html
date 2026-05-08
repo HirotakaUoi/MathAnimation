@@ -33,7 +33,9 @@
         display: none;
       }
 
-      body[data-topic="affine-transform"] #rotateAxisControl[hidden],
+      body[data-topic="affine-transform"] #rotateXYGroup[hidden],
+      body[data-topic="affine-transform"] #rotateZGroup[hidden],
+      body[data-topic="affine-transform"] #rotateYZGroup[hidden],
       body[data-topic="affine-transform"] #scaleZControl[hidden],
       body[data-topic="affine-transform"] #translateZControl[hidden] {
         display: none !important;
@@ -87,23 +89,27 @@
                 <span>先に向きを変えます</span>
               </div>
               <div class="transform-step-fields">
-                <label class="topic-inline-field">
+                <label id="rotate2DGroup" class="topic-inline-field">
                   角度
                   <input id="rotateAngle" type="text" value="45" placeholder="45 / PI/2 / π/2" />
+                </label>
+                <label id="rotateXYGroup" class="topic-inline-field" hidden>
+                  x 軸回転
+                  <input id="rotateAngleX" type="text" value="30" placeholder="30 / PI/6 / π/6" />
+                </label>
+                <label id="rotateZGroup" class="topic-inline-field" hidden>
+                  y 軸回転
+                  <input id="rotateAngleY" type="text" value="20" placeholder="20 / PI/9 / π/9" />
+                </label>
+                <label id="rotateYZGroup" class="topic-inline-field" hidden>
+                  z 軸回転
+                  <input id="rotateAngleZ" type="text" value="45" placeholder="45 / PI/4 / π/4" />
                 </label>
                 <label class="topic-inline-field">
                   単位
                   <select id="rotateAngleUnit">
                     <option value="deg">度数</option>
                     <option value="rad">ラジアン</option>
-                  </select>
-                </label>
-                <label id="rotateAxisControl" class="topic-inline-field" hidden>
-                  3D 回転軸
-                  <select id="rotateAxis">
-                    <option value="x">x 軸</option>
-                    <option value="y">y 軸</option>
-                    <option value="z">z 軸</option>
                   </select>
                 </label>
               </div>

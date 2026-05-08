@@ -1373,9 +1373,14 @@ function initAffineTransform() {
     animate: $("#animate"),
     message: $("#message"),
     rotateAngle: $("#rotateAngle"),
+    rotate2DGroup: $("#rotate2DGroup"),
+    rotateXYGroup: $("#rotateXYGroup"),
+    rotateZGroup: $("#rotateZGroup"),
+    rotateYZGroup: $("#rotateYZGroup"),
+    rotateAngleX: $("#rotateAngleX"),
+    rotateAngleY: $("#rotateAngleY"),
+    rotateAngleZ: $("#rotateAngleZ"),
     rotateAngleUnit: $("#rotateAngleUnit"),
-    rotateAxisControl: $("#rotateAxisControl"),
-    rotateAxis: $("#rotateAxis"),
     scaleX: $("#scaleX"),
     scaleY: $("#scaleY"),
     scaleZControl: $("#scaleZControl"),
@@ -1414,7 +1419,10 @@ function initAffineTransform() {
 
   function syncTransformPanels() {
     const show3D = state.dimension === 3;
-    elements.rotateAxisControl.hidden = !show3D;
+    elements.rotate2DGroup.hidden = show3D;
+    elements.rotateXYGroup.hidden = !show3D;
+    elements.rotateZGroup.hidden = !show3D;
+    elements.rotateYZGroup.hidden = !show3D;
     elements.scaleZControl.hidden = !show3D;
     elements.translateZControl.hidden = !show3D;
     elements.subControls.classList.toggle("with-axis-control", show3D);
@@ -1424,8 +1432,10 @@ function initAffineTransform() {
     return {
       rotate: {
         angle: TopicShared.parseExpressionValue(elements.rotateAngle.value),
+        angleX: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.rotateAngleX.value) : 0,
+        angleY: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.rotateAngleY.value) : 0,
+        angleZ: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.rotateAngleZ.value) : 0,
         angleUnit: elements.rotateAngleUnit.value,
-        axis: elements.rotateAxis.value,
       },
       scale: {
         sx: TopicShared.parseExpressionValue(elements.scaleX.value),
@@ -1441,18 +1451,8 @@ function initAffineTransform() {
   }
 
   function rotatePoint(point, params) {
-    const radians = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
-    if (state.dimension === 2) {
-      const [x, y] = point;
-      return [x * Math.cos(radians) - y * Math.sin(radians), x * Math.sin(radians) + y * Math.cos(radians)];
-    }
-    if (params.axis === "x") {
-      return [point[0], point[1] * Math.cos(radians) - point[2] * Math.sin(radians), point[1] * Math.sin(radians) + point[2] * Math.cos(radians)];
-    }
-    if (params.axis === "y") {
-      return [point[0] * Math.cos(radians) + point[2] * Math.sin(radians), point[1], -point[0] * Math.sin(radians) + point[2] * Math.cos(radians)];
-    }
-    return [point[0] * Math.cos(radians) - point[1] * Math.sin(radians), point[0] * Math.sin(radians) + point[1] * Math.cos(radians), point[2]];
+    const matrix = linearRotationMatrix(params);
+    return matrix.map((row) => row.reduce((sum, value, index) => sum + value * point[index], 0));
   }
 
   function scalePoint(point, params) {
@@ -1471,37 +1471,64 @@ function initAffineTransform() {
     return `(${pointForDisplay(point).map((value) => TopicShared.formatNumber(value)).join(", ")})`;
   }
 
+  function toRadians(angle, unit) {
+    return unit === "rad" ? angle : (angle * Math.PI) / 180;
+  }
+
+  function multiplyMatrices(left, right) {
+    return left.map((row) => right[0].map((_, columnIndex) => row.reduce((sum, value, rowIndex) => sum + value * right[rowIndex][columnIndex], 0)));
+  }
+
+  function linearRotationMatrix(params) {
+    if (state.dimension === 2) {
+      const angle = toRadians(params.angle, params.angleUnit);
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return [
+        [c, -s],
+        [s, c],
+      ];
+    }
+    const angleX = toRadians(params.angleX, params.angleUnit);
+    const angleY = toRadians(params.angleY, params.angleUnit);
+    const angleZ = toRadians(params.angleZ, params.angleUnit);
+    const cx = Math.cos(angleX);
+    const sx = Math.sin(angleX);
+    const cy = Math.cos(angleY);
+    const sy = Math.sin(angleY);
+    const cz = Math.cos(angleZ);
+    const sz = Math.sin(angleZ);
+    const rx = [
+      [1, 0, 0],
+      [0, cx, -sx],
+      [0, sx, cx],
+    ];
+    const ry = [
+      [cy, 0, sy],
+      [0, 1, 0],
+      [-sy, 0, cy],
+    ];
+    const rz = [
+      [cz, -sz, 0],
+      [sz, cz, 0],
+      [0, 0, 1],
+    ];
+    return multiplyMatrices(rz, multiplyMatrices(ry, rx));
+  }
+
   function homogeneousRotationMatrix(params) {
-    const angle = params.angleUnit === "rad" ? params.angle : (params.angle * Math.PI) / 180;
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
+    const linear = linearRotationMatrix(params);
     if (state.dimension === 2) {
       return [
-        [c, -s, 0],
-        [s, c, 0],
+        [linear[0][0], linear[0][1], 0],
+        [linear[1][0], linear[1][1], 0],
         [0, 0, 1],
       ];
     }
-    if (params.axis === "x") {
-      return [
-        [1, 0, 0, 0],
-        [0, c, -s, 0],
-        [0, s, c, 0],
-        [0, 0, 0, 1],
-      ];
-    }
-    if (params.axis === "y") {
-      return [
-        [c, 0, s, 0],
-        [0, 1, 0, 0],
-        [-s, 0, c, 0],
-        [0, 0, 0, 1],
-      ];
-    }
     return [
-      [c, -s, 0, 0],
-      [s, c, 0, 0],
-      [0, 0, 1, 0],
+      [linear[0][0], linear[0][1], linear[0][2], 0],
+      [linear[1][0], linear[1][1], linear[1][2], 0],
+      [linear[2][0], linear[2][1], linear[2][2], 0],
       [0, 0, 0, 1],
     ];
   }
@@ -1554,7 +1581,7 @@ function initAffineTransform() {
           translate: `平行移動行列 T（同次 3×3）`,
         }
       : {
-          rotate: `回転行列 R（同次 4×4）`,
+          rotate: `回転行列 R = Rz Ry Rx（同次 4×4）`,
           scale: `拡大縮小行列 S（同次 4×4）`,
           translate: `平行移動行列 T（同次 4×4）`,
         };
@@ -1680,7 +1707,9 @@ function initAffineTransform() {
       elements.resultSummary.textContent = `最終像 = ${formatPoint(applied.afterTranslate)}`;
       elements.equationDisplay.innerHTML = renderTransformMatrices(transforms);
       elements.formulaTitle.textContent = "変換の考え方";
-      elements.formula.textContent = "回転・拡大縮小・平行移動は、同次座標ではそれぞれ行列として表せます。";
+      elements.formula.textContent = state.dimension === 2
+        ? "回転・拡大縮小・平行移動は、同次座標ではそれぞれ行列として表せます。"
+        : "3D 回転は x → y → z の順に回転を合成した 1 個の回転行列で表しています。";
       TopicShared.renderTrack(elements.animationTrack, ["元の図形", "回転後", "拡大縮小後", "平行移動後"], -1);
       const sample = sampleShape(state.dimension);
       const transformedSample = transformShape(sample, transforms);
@@ -1717,6 +1746,11 @@ function initAffineTransform() {
         : [TopicShared.randomNonZero(), TopicShared.randomNonZero(), TopicShared.randomNonZero()],
     );
     elements.rotateAngle.value = String(TopicShared.randomInt(15, 165));
+    if (state.dimension === 3) {
+      elements.rotateAngleX.value = String(TopicShared.randomInt(-120, 120));
+      elements.rotateAngleY.value = String(TopicShared.randomInt(-120, 120));
+      elements.rotateAngleZ.value = String(TopicShared.randomInt(-120, 120));
+    }
     elements.rotateAngleUnit.value = "deg";
     elements.scaleX.value = String(TopicShared.randomNonZero(1, 3));
     elements.scaleY.value = String(TopicShared.randomInt(0, 1) === 0 ? 0.5 : TopicShared.randomNonZero(1, 3));
@@ -1743,8 +1777,9 @@ function initAffineTransform() {
           point: applied.afterRotate,
           shape: transformedSample.rotate,
           title: "回転後",
-          text: `回転角 = ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}`
-            + (state.dimension === 3 ? `, 軸 = ${transforms.rotate.axis}` : ""),
+          text: state.dimension === 2
+            ? `回転角 = ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}`
+            : `回転角 = (${TopicShared.formatNumber(transforms.rotate.angleX)}, ${TopicShared.formatNumber(transforms.rotate.angleY)}, ${TopicShared.formatNumber(transforms.rotate.angleZ)}) ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"} [x → y → z]`,
         },
         {
           point: applied.afterScale,
@@ -1828,7 +1863,7 @@ function initAffineTransform() {
     TopicShared.attachLiveRefresh(document.body, refreshPreview);
     refreshPreview();
   });
-  [elements.rotateX, elements.rotateY, elements.rotateZ, elements.rotateAxis].forEach((control) => control.addEventListener("input", refreshPreview));
+  [elements.rotateX, elements.rotateY, elements.rotateZ].forEach((control) => control.addEventListener("input", refreshPreview));
   elements.randomize.addEventListener("click", randomize);
   elements.animate.addEventListener("click", animate);
   refreshPreview();
