@@ -1409,7 +1409,7 @@ function initAffineTransform() {
     formula: $("#formula"),
     historyList: $("#historyList"),
   };
-  const state = { dimension: 2, timerIds: [] };
+  const state = { dimension: 2, timerIds: [], affineStageIndex: 3 };
 
   function rotation() {
     return {
@@ -1471,6 +1471,13 @@ function initAffineTransform() {
 
   function formatPoint(point) {
     return `(${pointForDisplay(point).map((value) => TopicShared.formatNumber(value)).join(", ")})`;
+  }
+
+  function affineStageFormula(index, diagramStates, applied) {
+    if (index === 0) return diagramStates[0].text;
+    if (index === 1) return `R(p) = ${formatPoint(applied.afterRotate)} / ${diagramStates[1].text}`;
+    if (index === 2) return `S(R(p)) = ${formatPoint(applied.afterScale)} / ${diagramStates[2].text}`;
+    return `T(S(R(p))) = ${formatPoint(applied.afterTranslate)} / ${diagramStates[3].text}`;
   }
 
   function toRadians(angle, unit) {
@@ -2004,6 +2011,61 @@ function initAffineTransform() {
     return TopicShared.readVector(elements.pointInput, "p");
   }
 
+  function buildAffineDiagramStates(point, transforms, applied, sample, transformedSample) {
+    return [
+      { point, shape: sample, title: "元の図形", text: state.dimension === 2 ? "正方形と点 p の初期状態です。" : "立方体と点 p の初期状態です。" },
+      {
+        point: applied.afterRotate,
+        shape: transformedSample.rotate,
+        title: "回転後",
+        text: state.dimension === 2
+          ? `回転角 = ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}`
+          : `回転角 = (${TopicShared.formatNumber(transforms.rotate.angleX)}, ${TopicShared.formatNumber(transforms.rotate.angleY)}, ${TopicShared.formatNumber(transforms.rotate.angleZ)}) ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"} [x → y → z]`,
+      },
+      {
+        point: applied.afterScale,
+        shape: transformedSample.scale,
+        title: "拡大縮小後",
+        text: `倍率 = (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""})`,
+      },
+      {
+        point: applied.afterTranslate,
+        shape: transformedSample.translate,
+        title: "平行移動後",
+        text: `移動量 = (${TopicShared.formatNumber(transforms.translate.tx)}, ${TopicShared.formatNumber(transforms.translate.ty)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.translate.tz)}` : ""})`,
+      },
+    ];
+  }
+
+  function renderAffineDiagramState(originPoint, current, sample, labels, diagramStates, applied) {
+    TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+      dimension: state.dimension,
+      rotation: rotation(),
+      vectors: [
+        { from: [0, 0, 0], to: originPoint, className: "diagram-cross" },
+        { from: [0, 0, 0], to: current.point, className: "diagram-result" },
+      ],
+      polygons: [
+        ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+        ...current.shape.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+      ],
+      segments: [
+        ...shapeSegments(sample, "diagram-guide-line"),
+        ...shapeSegments(current.shape, "diagram-result-line"),
+      ],
+      axisExtent: 8,
+      gridStep: 1,
+      tickStep: 5,
+    });
+    TopicShared.renderTrack(elements.animationTrack, labels, state.affineStageIndex, (index) => {
+      TopicShared.clearTimers(state);
+      state.affineStageIndex = index;
+      renderAffineDiagramState(originPoint, diagramStates[index], sample, labels, diagramStates, applied);
+    });
+    elements.formulaTitle.textContent = current.title;
+    elements.formula.textContent = affineStageFormula(state.affineStageIndex, diagramStates, applied);
+  }
+
   function refreshPreview() {
     TopicShared.clearTimers(state);
     TopicShared.clearHistory(elements.historyList);
@@ -2027,28 +2089,12 @@ function initAffineTransform() {
       elements.formula.textContent = state.dimension === 2
         ? "回転・拡大縮小・平行移動は、同次座標ではそれぞれ行列として表せます。"
         : "3D 回転は x → y → z の順に回転を合成した 1 個の回転行列で表しています。";
-      TopicShared.renderTrack(elements.animationTrack, ["元の図形", "回転後", "拡大縮小後", "平行移動後"], -1);
       const sample = sampleShape(state.dimension);
       const transformedSample = transformShape(sample, transforms);
-      TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
-        dimension: state.dimension,
-        rotation: rotation(),
-        vectors: [
-          { from: [0, 0, 0], to: point, className: "diagram-cross" },
-          { from: [0, 0, 0], to: applied.afterTranslate, className: "diagram-result" },
-        ],
-        polygons: [
-          ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
-          ...transformedSample.translate.faces.map((face) => ({ points: face, className: "diagram-surface" })),
-        ],
-        segments: [
-          ...shapeSegments(sample, "diagram-guide-line"),
-          ...shapeSegments(transformedSample.translate, "diagram-result-line"),
-        ],
-        axisExtent: 8,
-        gridStep: 1,
-        tickStep: 5,
-      });
+      const labels = ["元の図形", "回転後", "拡大縮小後", "平行移動後"];
+      const diagramStates = buildAffineDiagramStates(point, transforms, applied, sample, transformedSample);
+      if (state.affineStageIndex < 0 || state.affineStageIndex >= diagramStates.length) state.affineStageIndex = 3;
+      renderAffineDiagramState(point, diagramStates[state.affineStageIndex], sample, labels, diagramStates, applied);
     } catch (error) {
       elements.message.textContent = error.message;
       elements.resultSummary.textContent = "入力を確認してください。";
@@ -2088,86 +2134,27 @@ function initAffineTransform() {
       const sample = sampleShape(state.dimension);
       const transformedSample = transformShape(sample, transforms);
       const labels = ["元の図形", "回転後", "拡大縮小後", "平行移動後"];
-      const diagramStates = [
-        { point, shape: sample, title: "元の図形", text: state.dimension === 2 ? "正方形と点 p の初期状態です。" : "立方体と点 p の初期状態です。" },
-        {
-          point: applied.afterRotate,
-          shape: transformedSample.rotate,
-          title: "回転後",
-          text: state.dimension === 2
-            ? `回転角 = ${TopicShared.formatNumber(transforms.rotate.angle)} ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"}`
-            : `回転角 = (${TopicShared.formatNumber(transforms.rotate.angleX)}, ${TopicShared.formatNumber(transforms.rotate.angleY)}, ${TopicShared.formatNumber(transforms.rotate.angleZ)}) ${transforms.rotate.angleUnit === "rad" ? "rad" : "°"} [x → y → z]`,
-        },
-        {
-          point: applied.afterScale,
-          shape: transformedSample.scale,
-          title: "拡大縮小後",
-          text: `倍率 = (${TopicShared.formatNumber(transforms.scale.sx)}, ${TopicShared.formatNumber(transforms.scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.scale.sz)}` : ""})`,
-        },
-        {
-          point: applied.afterTranslate,
-          shape: transformedSample.translate,
-          title: "平行移動後",
-          text: `移動量 = (${TopicShared.formatNumber(transforms.translate.tx)}, ${TopicShared.formatNumber(transforms.translate.ty)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(transforms.translate.tz)}` : ""})`,
-        },
-      ];
-
-      function renderDiagramState(current) {
-        TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
-          dimension: state.dimension,
-          rotation: rotation(),
-          vectors: [
-            { from: [0, 0, 0], to: point, className: "diagram-cross" },
-            { from: [0, 0, 0], to: current.point, className: "diagram-result" },
-          ],
-          polygons: [
-            ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
-            ...current.shape.faces.map((face) => ({ points: face, className: "diagram-surface" })),
-          ],
-          segments: [
-            ...shapeSegments(sample, "diagram-guide-line"),
-            ...shapeSegments(current.shape, "diagram-result-line"),
-          ],
-          axisExtent: 8,
-          gridStep: 1,
-          tickStep: 5,
-        });
-      }
-
-      function applyStage(index) {
-        TopicShared.renderTrack(elements.animationTrack, labels, index, applyStage);
-        renderDiagramState(diagramStates[index]);
-        elements.formulaTitle.textContent = diagramStates[index].title;
-        if (index === 0) {
-          elements.formula.textContent = diagramStates[0].text;
-          return;
-        }
-        if (index === 1) {
-          elements.formula.textContent = `R(p) = ${formatPoint(applied.afterRotate)} / ${diagramStates[1].text}`;
-          return;
-        }
-        if (index === 2) {
-          elements.formula.textContent = `S(R(p)) = ${formatPoint(applied.afterScale)} / ${diagramStates[2].text}`;
-          return;
-        }
-        elements.formula.textContent = `T(S(R(p))) = ${formatPoint(applied.afterTranslate)} / ${diagramStates[3].text}`;
-      }
+      const diagramStates = buildAffineDiagramStates(point, transforms, applied, sample, transformedSample);
 
       const steps = [
         () => {
-          applyStage(0);
+          state.affineStageIndex = 0;
+          renderAffineDiagramState(point, diagramStates[0], sample, labels, diagramStates, applied);
           TopicShared.pushHistory(elements.historyList, "元の図形", diagramStates[0].text);
         },
         () => {
-          applyStage(1);
+          state.affineStageIndex = 1;
+          renderAffineDiagramState(point, diagramStates[1], sample, labels, diagramStates, applied);
           TopicShared.pushHistory(elements.historyList, "回転", elements.formula.textContent);
         },
         () => {
-          applyStage(2);
+          state.affineStageIndex = 2;
+          renderAffineDiagramState(point, diagramStates[2], sample, labels, diagramStates, applied);
           TopicShared.pushHistory(elements.historyList, "拡大縮小", elements.formula.textContent);
         },
         () => {
-          applyStage(3);
+          state.affineStageIndex = 3;
+          renderAffineDiagramState(point, diagramStates[3], sample, labels, diagramStates, applied);
           TopicShared.pushHistory(elements.historyList, "平行移動", elements.formula.textContent);
         },
       ];
