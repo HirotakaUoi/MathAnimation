@@ -180,6 +180,7 @@ python3 -m http.server 8100
   - `index.html` は公開扱いのページ中心
   - `future_index.html` は追加ページやデバッグ中ページ用
   - `index.html` からは `future_index.html` へ直接リンクしない
+  - `future_index.html` 配下のページの `一覧へ` は `future_index.html` へ戻す
 - デバッグ表示の状況
   - `determinant.html` はデバッグ表示を解除済み
   - `vector_add_sub.html` はデバッグ表示を解除済み
