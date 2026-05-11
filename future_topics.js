@@ -1571,33 +1571,6 @@ function initAffineTransform() {
     return unit === "rad" ? normalized : `${normalized}°`;
   }
 
-  function symbolicRotationMatrix(transforms) {
-    if (state.dimension === 2) {
-      const theta = sourceAngleLabel(elements.rotateAngle.value, transforms.rotate.angleUnit);
-      return {
-        label: `θ = ${theta}`,
-        matrix: [
-          [`cos(${theta})`, `-sin(${theta})`, "0"],
-          [`sin(${theta})`, `cos(${theta})`, "0"],
-          ["0", "0", "1"],
-        ],
-      };
-    }
-
-    const ax = sourceAngleLabel(elements.rotateAngleX.value, transforms.rotate.angleUnit);
-    const ay = sourceAngleLabel(elements.rotateAngleY.value, transforms.rotate.angleUnit);
-    const az = sourceAngleLabel(elements.rotateAngleZ.value, transforms.rotate.angleUnit);
-    return {
-      label: `θx = ${ax}, θy = ${ay}, θz = ${az}`,
-      matrix: [
-        ["cos(θz)cos(θy)", "cos(θz)sin(θy)sin(θx)-sin(θz)cos(θx)", "cos(θz)sin(θy)cos(θx)+sin(θz)sin(θx)", "0"],
-        ["sin(θz)cos(θy)", "sin(θz)sin(θy)sin(θx)+cos(θz)cos(θx)", "sin(θz)sin(θy)cos(θx)-cos(θz)sin(θx)", "0"],
-        ["-sin(θy)", "cos(θy)sin(θx)", "cos(θy)cos(θx)", "0"],
-        ["0", "0", "0", "1"],
-      ],
-    };
-  }
-
   function compositeTransformMatrix(transforms) {
     return multiplyMatrices(
       homogeneousTranslateMatrix(transforms.translate),
@@ -1613,40 +1586,335 @@ function initAffineTransform() {
       .join("")}</div>`;
   }
 
-  function renderTransformMatrices(transforms) {
-    const symbolicRotate = symbolicRotationMatrix(transforms);
-    const composite = compositeTransformMatrix(transforms);
-    const labels = state.dimension === 2
-      ? {
-          rotate: `回転行列 R（同次 3×3）`,
-          scale: `拡大縮小行列 S（同次 3×3）`,
-          translate: `平行移動行列 T（同次 3×3）`,
-          composite: `合成変換行列 M = T S R`,
-        }
-      : {
-          rotate: `回転行列 R = Rz Ry Rx（同次 4×4）`,
-          scale: `拡大縮小行列 S（同次 4×4）`,
-          translate: `平行移動行列 T（同次 4×4）`,
-          composite: `合成変換行列 M = T S R`,
+  function normalizedSymbol(source) {
+    const trimmed = String(source || "").trim();
+    if (!trimmed) return "0";
+    return trimmed.replace(/PI/g, "π").replace(/pi/g, "π");
+  }
+
+  function exactTrigStrings(angle, unit, label) {
+    const radians = toRadians(angle, unit);
+    const fullTurn = Math.PI * 2;
+    let normalized = ((radians % fullTurn) + fullTurn) % fullTurn;
+    if (Math.abs(normalized - fullTurn) < TopicShared.EPSILON) normalized = 0;
+    const exactTable = [
+      { radians: 0, cos: "1", sin: "0" },
+      { radians: Math.PI / 6, cos: "√3/2", sin: "1/2" },
+      { radians: Math.PI / 4, cos: "√2/2", sin: "√2/2" },
+      { radians: Math.PI / 3, cos: "1/2", sin: "√3/2" },
+      { radians: Math.PI / 2, cos: "0", sin: "1" },
+      { radians: (2 * Math.PI) / 3, cos: "-1/2", sin: "√3/2" },
+      { radians: (3 * Math.PI) / 4, cos: "-√2/2", sin: "√2/2" },
+      { radians: (5 * Math.PI) / 6, cos: "-√3/2", sin: "1/2" },
+      { radians: Math.PI, cos: "-1", sin: "0" },
+      { radians: (7 * Math.PI) / 6, cos: "-√3/2", sin: "-1/2" },
+      { radians: (5 * Math.PI) / 4, cos: "-√2/2", sin: "-√2/2" },
+      { radians: (4 * Math.PI) / 3, cos: "-1/2", sin: "-√3/2" },
+      { radians: (3 * Math.PI) / 2, cos: "0", sin: "-1" },
+      { radians: (5 * Math.PI) / 3, cos: "1/2", sin: "-√3/2" },
+      { radians: (7 * Math.PI) / 4, cos: "√2/2", sin: "-√2/2" },
+      { radians: (11 * Math.PI) / 6, cos: "√3/2", sin: "-1/2" },
+    ];
+    const exact = exactTable.find((entry) => Math.abs(entry.radians - normalized) < 1e-8);
+    if (exact) return exact;
+    return {
+      cos: `cos(${label})`,
+      sin: `sin(${label})`,
+    };
+  }
+
+  function gcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y !== 0) {
+      const next = x % y;
+      x = y;
+      y = next;
+    }
+    return x || 1;
+  }
+
+  function normalizeFraction(numerator, denominator) {
+    if (denominator === 0) throw new Error("分母が 0 です。");
+    if (numerator === 0) return { numerator: 0, denominator: 1 };
+    const sign = denominator < 0 ? -1 : 1;
+    const divisor = gcd(numerator, denominator);
+    return {
+      numerator: sign * numerator / divisor,
+      denominator: Math.abs(denominator) / divisor,
+    };
+  }
+
+  function decimalToFraction(value) {
+    if (Number.isInteger(value)) return { numerator: value, denominator: 1 };
+    const source = String(value);
+    const decimals = source.includes(".") ? source.split(".")[1].length : 0;
+    const denominator = 10 ** decimals;
+    const numerator = Math.round(value * denominator);
+    return normalizeFraction(numerator, denominator);
+  }
+
+  function multiplyFractions(left, right) {
+    return normalizeFraction(left.numerator * right.numerator, left.denominator * right.denominator);
+  }
+
+  function addFractions(left, right) {
+    return normalizeFraction(
+      left.numerator * right.denominator + right.numerator * left.denominator,
+      left.denominator * right.denominator,
+    );
+  }
+
+  function negateSymbol(symbol) {
+    if (symbol === "0") return "0";
+    if (symbol.startsWith("-")) return symbol.slice(1);
+    return `-${symbol}`;
+  }
+
+  function parseAtomicFactor(source) {
+    const factor = source.trim();
+    if (!factor || factor === "1") return { coefficient: { numerator: 1, denominator: 1 }, factors: [] };
+    if (factor === "-1") return { coefficient: { numerator: -1, denominator: 1 }, factors: [] };
+    if (/^-?\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)?$/.test(factor)) {
+      if (factor.includes("/")) {
+        const [left, right] = factor.split("/");
+        const numeratorFraction = decimalToFraction(Number(left));
+        const denominatorFraction = decimalToFraction(Number(right));
+        return {
+          coefficient: normalizeFraction(
+            numeratorFraction.numerator * denominatorFraction.denominator,
+            numeratorFraction.denominator * denominatorFraction.numerator,
+          ),
+          factors: [],
         };
+      }
+      return { coefficient: decimalToFraction(Number(factor)), factors: [] };
+    }
+    const sqrtMatch = factor.match(/^(-)?√(\d+)(?:\/(\d+))?$/);
+    if (sqrtMatch) {
+      const sign = sqrtMatch[1] ? -1 : 1;
+      const radicand = Number(sqrtMatch[2]);
+      const denominator = sqrtMatch[3] ? Number(sqrtMatch[3]) : 1;
+      const root = Math.sqrt(radicand);
+      if (Number.isInteger(root)) {
+        return { coefficient: normalizeFraction(sign * root, denominator), factors: [] };
+      }
+      return {
+        coefficient: normalizeFraction(sign, denominator),
+        factors: [`√${radicand}`],
+      };
+    }
+    return { coefficient: { numerator: 1, denominator: 1 }, factors: [factor] };
+  }
+
+  function makeMonomial(source) {
+    const trimmed = String(source || "").trim();
+    if (!trimmed || trimmed === "0") return [];
+    const pieces = trimmed.split("·").map((piece) => piece.trim()).filter(Boolean);
+    let coefficient = { numerator: 1, denominator: 1 };
+    const factors = [];
+    pieces.forEach((piece) => {
+      const parsed = parseAtomicFactor(piece);
+      coefficient = multiplyFractions(coefficient, parsed.coefficient);
+      factors.push(...parsed.factors);
+    });
+    if (coefficient.numerator === 0) return [];
+    return [{ coefficient, factors: factors.sort() }];
+  }
+
+  function normalizeExpression(expression) {
+    const combined = new Map();
+    expression.forEach((term) => {
+      if (!term || term.coefficient.numerator === 0) return;
+      const key = term.factors.join("·");
+      const current = combined.get(key) ?? { coefficient: { numerator: 0, denominator: 1 }, factors: term.factors.slice() };
+      current.coefficient = addFractions(current.coefficient, term.coefficient);
+      combined.set(key, current);
+    });
+    return Array.from(combined.values()).filter((term) => term.coefficient.numerator !== 0);
+  }
+
+  function addExpressions(expressions) {
+    return normalizeExpression(expressions.flat());
+  }
+
+  function multiplyExpressions(left, right) {
+    const result = [];
+    left.forEach((leftTerm) => {
+      right.forEach((rightTerm) => {
+        result.push({
+          coefficient: multiplyFractions(leftTerm.coefficient, rightTerm.coefficient),
+          factors: leftTerm.factors.concat(rightTerm.factors).sort(),
+        });
+      });
+    });
+    return normalizeExpression(result);
+  }
+
+  function multiplySymbolicMatrices(left, right) {
+    return left.map((row) =>
+      right[0].map((_, columnIndex) =>
+        addExpressions(row.map((value, rowIndex) => multiplyExpressions(value, right[rowIndex][columnIndex]))),
+      ),
+    );
+  }
+
+  function formatFraction(value) {
+    const numerator = Math.abs(value.numerator);
+    return value.denominator === 1 ? String(numerator) : `${numerator}/${value.denominator}`;
+  }
+
+  function renderExpression(expression) {
+    const normalized = normalizeExpression(expression);
+    if (normalized.length === 0) return "0";
+    return normalized.reduce((parts, term, index) => {
+      const sign = term.coefficient.numerator < 0 ? "-" : "+";
+      const magnitude = formatFraction(term.coefficient);
+      const factorText = term.factors.join("·");
+      let body = "";
+      if (!factorText) {
+        body = magnitude;
+      } else if (magnitude === "1") {
+        body = factorText;
+      } else {
+        body = `${magnitude}·${factorText}`;
+      }
+      if (index === 0) return sign === "-" ? `-${body}` : body;
+      return `${parts} ${sign} ${body}`;
+    }, "");
+  }
+
+  function symbolicScaleMatrix(transforms) {
+    const sx = normalizedSymbol(elements.scaleX.value);
+    const sy = normalizedSymbol(elements.scaleY.value);
+    if (state.dimension === 2) {
+      return [
+        [sx, "0", "0"],
+        ["0", sy, "0"],
+        ["0", "0", "1"],
+      ];
+    }
+    const sz = normalizedSymbol(elements.scaleZ.value);
+    return [
+      [sx, "0", "0", "0"],
+      ["0", sy, "0", "0"],
+      ["0", "0", sz, "0"],
+      ["0", "0", "0", "1"],
+    ];
+  }
+
+  function symbolicTranslateMatrix(transforms) {
+    const tx = normalizedSymbol(elements.translateX.value);
+    const ty = normalizedSymbol(elements.translateY.value);
+    if (state.dimension === 2) {
+      return [
+        ["1", "0", tx],
+        ["0", "1", ty],
+        ["0", "0", "1"],
+      ];
+    }
+    const tz = normalizedSymbol(elements.translateZ.value);
+    return [
+      ["1", "0", "0", tx],
+      ["0", "1", "0", ty],
+      ["0", "0", "1", tz],
+      ["0", "0", "0", "1"],
+    ];
+  }
+
+  function symbolicRotationMatrices(transforms) {
+    if (state.dimension === 2) {
+      const theta = sourceAngleLabel(elements.rotateAngle.value, transforms.rotate.angleUnit);
+      const trig = exactTrigStrings(transforms.rotate.angle, transforms.rotate.angleUnit, theta);
+      return [{
+        label: "R",
+        note: `θ = ${theta}`,
+        matrix: [
+          [trig.cos, negateSymbol(trig.sin), "0"],
+          [trig.sin, trig.cos, "0"],
+          ["0", "0", "1"],
+        ],
+      }];
+    }
+
+    const ax = sourceAngleLabel(elements.rotateAngleX.value, transforms.rotate.angleUnit);
+    const ay = sourceAngleLabel(elements.rotateAngleY.value, transforms.rotate.angleUnit);
+    const az = sourceAngleLabel(elements.rotateAngleZ.value, transforms.rotate.angleUnit);
+    const trigX = exactTrigStrings(transforms.rotate.angleX, transforms.rotate.angleUnit, ax);
+    const trigY = exactTrigStrings(transforms.rotate.angleY, transforms.rotate.angleUnit, ay);
+    const trigZ = exactTrigStrings(transforms.rotate.angleZ, transforms.rotate.angleUnit, az);
+    return [
+      {
+        label: "Rz",
+        note: `θz = ${az}`,
+        matrix: [
+          [trigZ.cos, negateSymbol(trigZ.sin), "0", "0"],
+          [trigZ.sin, trigZ.cos, "0", "0"],
+          ["0", "0", "1", "0"],
+          ["0", "0", "0", "1"],
+        ],
+      },
+      {
+        label: "Ry",
+        note: `θy = ${ay}`,
+        matrix: [
+          [trigY.cos, "0", trigY.sin, "0"],
+          ["0", "1", "0", "0"],
+          [negateSymbol(trigY.sin), "0", trigY.cos, "0"],
+          ["0", "0", "0", "1"],
+        ],
+      },
+      {
+        label: "Rx",
+        note: `θx = ${ax}`,
+        matrix: [
+          ["1", "0", "0", "0"],
+          ["0", trigX.cos, negateSymbol(trigX.sin), "0"],
+          ["0", trigX.sin, trigX.cos, "0"],
+          ["0", "0", "0", "1"],
+        ],
+      },
+    ];
+  }
+
+  function renderTransformMatrices(transforms) {
+    const translateMatrix = symbolicTranslateMatrix(transforms);
+    const scaleMatrix = symbolicScaleMatrix(transforms);
+    const rotationMatrices = symbolicRotationMatrices(transforms);
+    const numericComposite = compositeTransformMatrix(transforms);
+    const symbolicComposite = [translateMatrix, scaleMatrix, ...rotationMatrices.map((entry) => entry.matrix)]
+      .map((matrix) => matrix.map((row) => row.map((value) => makeMonomial(value))))
+      .reduce((current, matrix) => multiplySymbolicMatrices(current, matrix));
     return `
       <div class="transform-matrix-display">
-        <div class="math-matrix-term">
-          <span class="math-matrix-label">${labels.rotate}</span>
-          <span class="math-matrix-note">${symbolicRotate.label}</span>
-          ${renderMathMatrix(symbolicRotate.matrix, String)}
+        <div class="transform-matrix-chain">
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">T</span>
+            ${renderMathMatrix(translateMatrix, String)}
+          </div>
+          <span class="math-operator">×</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">S</span>
+            ${renderMathMatrix(scaleMatrix, String)}
+          </div>
+          ${rotationMatrices.map((entry) => `
+            <span class="math-operator">×</span>
+            <div class="math-matrix-term">
+              <span class="math-matrix-label">${entry.label}</span>
+              <span class="math-matrix-note">${entry.note}</span>
+              ${renderMathMatrix(entry.matrix, String)}
+            </div>
+          `).join("")}
+          <span class="math-operator">=</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">M</span>
+            <span class="math-matrix-note">合成変換行列</span>
+            ${renderMathMatrix(symbolicComposite, renderExpression)}
+          </div>
         </div>
-        <div class="math-matrix-term">
-          <span class="math-matrix-label">${labels.scale}</span>
-          ${renderMathMatrix(homogeneousScaleMatrix(transforms.scale))}
-        </div>
-        <div class="math-matrix-term">
-          <span class="math-matrix-label">${labels.translate}</span>
-          ${renderMathMatrix(homogeneousTranslateMatrix(transforms.translate))}
-        </div>
-        <div class="math-matrix-term">
-          <span class="math-matrix-label">${labels.composite}</span>
-          ${renderMathMatrix(composite)}
+        <div class="transform-matrix-numeric">
+          <span class="math-matrix-label">数値結果</span>
+          ${renderMathMatrix(numericComposite)}
         </div>
       </div>
     `;

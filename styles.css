@@ -929,8 +929,21 @@ select:focus-visible {
   white-space: normal;
 }
 
+.transform-matrix-chain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: max-content;
+}
+
 .transform-matrix-display .math-matrix-term {
   align-items: start;
+  justify-items: start;
+}
+
+.transform-matrix-numeric {
+  display: grid;
+  gap: 6px;
   justify-items: start;
 }
 
@@ -938,6 +951,13 @@ select:focus-visible {
   color: var(--muted);
   font-size: 0.92rem;
   font-weight: 800;
+}
+
+.math-operator {
+  color: var(--ink);
+  font-size: 1.6rem;
+  font-weight: 900;
+  flex: 0 0 auto;
 }
 
 .verification-band {

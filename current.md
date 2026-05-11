@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-05-08
+最終更新: 2026-05-11
 
 ## プロジェクト概要
 
@@ -90,7 +90,7 @@ python3 -m http.server 8100
 
 ## 現在の状態
 
-- Git 作業ツリーは通常 clean を維持して運用
+- Git 作業ツリーは通常 clean を維持して運用しているが、現在は `affine_transform.html`, `future_topics.js`, `styles.css` に未コミット変更あり
 - 主要な追加ページ群は commit / push 済み
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
@@ -164,8 +164,10 @@ python3 -m http.server 8100
     - 2D 回転角は度数 / ラジアン入力に対応
     - 3D 回転は x / y / z 軸の 3 角度を個別入力
     - 3D 回転は `R = Rz Ry Rx` の合成行列で計算
-    - 回転行列は `cos` / `sin` を残した形でも表示
-    - 拡大縮小行列、平行移動行列、最終合成行列 `M = T S R` を表示
+    - 回転行列は数値だけでなく `cos` / `sin` を残した形でも表示
+    - 角度が特殊角なら `√2/2`, `√3/2`, `1/2` などの既知値を優先表示
+    - 数式表示では `T × S × Rz × Ry × Rx = M` の形で合成過程を表示
+    - 最終的な合成変換行列 `M` は記号式と数値結果の両方を表示
     - 平行移動は通常座標ではアフィン写像、数式表示では同次座標の行列として表示
   - 同次座標系とグラフィックス
     - 2D は 3 x 3, 3D は 4 x 4
@@ -204,3 +206,4 @@ python3 -m http.server 8100
 - `future_topics.js` を使う future 側ページは、キャッシュ回避用の query string を必要に応じて更新する
 - `affine_transform.html` の 3D 回転合成順 `x → y → z` が説明文と表示行列で十分伝わるか
 - `affine_transform.html` の合成変換行列 `M = T S R` がモバイル幅でも読み切れるか
+- `affine_transform.html` の記号式行列 `T × S × Rz × Ry × Rx` が横幅的に崩れないか
