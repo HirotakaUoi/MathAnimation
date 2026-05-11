@@ -1845,38 +1845,36 @@ function initAffineTransform() {
     const trigX = exactTrigStrings(transforms.rotate.angleX, transforms.rotate.angleUnit, ax);
     const trigY = exactTrigStrings(transforms.rotate.angleY, transforms.rotate.angleUnit, ay);
     const trigZ = exactTrigStrings(transforms.rotate.angleZ, transforms.rotate.angleUnit, az);
-    return [
-      {
-        label: "Rz",
-        note: `θz = ${az}`,
-        matrix: [
-          [trigZ.cos, negateSymbol(trigZ.sin), "0", "0"],
-          [trigZ.sin, trigZ.cos, "0", "0"],
-          ["0", "0", "1", "0"],
-          ["0", "0", "0", "1"],
-        ],
-      },
-      {
-        label: "Ry",
-        note: `θy = ${ay}`,
-        matrix: [
-          [trigY.cos, "0", trigY.sin, "0"],
-          ["0", "1", "0", "0"],
-          [negateSymbol(trigY.sin), "0", trigY.cos, "0"],
-          ["0", "0", "0", "1"],
-        ],
-      },
-      {
-        label: "Rx",
-        note: `θx = ${ax}`,
-        matrix: [
-          ["1", "0", "0", "0"],
-          ["0", trigX.cos, negateSymbol(trigX.sin), "0"],
-          ["0", trigX.sin, trigX.cos, "0"],
-          ["0", "0", "0", "1"],
-        ],
-      },
+    const rz = [
+      [trigZ.cos, negateSymbol(trigZ.sin), "0", "0"],
+      [trigZ.sin, trigZ.cos, "0", "0"],
+      ["0", "0", "1", "0"],
+      ["0", "0", "0", "1"],
     ];
+    const ry = [
+      [trigY.cos, "0", trigY.sin, "0"],
+      ["0", "1", "0", "0"],
+      [negateSymbol(trigY.sin), "0", trigY.cos, "0"],
+      ["0", "0", "0", "1"],
+    ];
+    const rx = [
+      ["1", "0", "0", "0"],
+      ["0", trigX.cos, negateSymbol(trigX.sin), "0"],
+      ["0", trigX.sin, trigX.cos, "0"],
+      ["0", "0", "0", "1"],
+    ];
+    const combined = multiplySymbolicMatrices(
+      rz.map((row) => row.map((value) => makeMonomial(value))),
+      multiplySymbolicMatrices(
+        ry.map((row) => row.map((value) => makeMonomial(value))),
+        rx.map((row) => row.map((value) => makeMonomial(value))),
+      ),
+    ).map((row) => row.map((expression) => renderExpression(expression)));
+    return [{
+      label: "Rxyz",
+      note: `θx = ${ax}, θy = ${ay}, θz = ${az}`,
+      matrix: combined,
+    }];
   }
 
   function renderTransformMatrices(transforms) {
