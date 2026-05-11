@@ -167,14 +167,16 @@ const TopicShared = (() => {
     list.scrollTop = list.scrollHeight;
   }
 
-  function renderTrack(container, labels, activeIndex) {
+  function renderTrack(container, labels, activeIndex, onSelect = null) {
     container.innerHTML = "";
     labels.forEach((label, index) => {
-      const step = document.createElement("div");
+      const step = document.createElement(onSelect ? "button" : "div");
+      if (onSelect) step.type = "button";
       step.className = "track-step";
       if (index < activeIndex) step.classList.add("done");
       if (index === activeIndex) step.classList.add("active");
       step.textContent = label;
+      if (onSelect) step.addEventListener("click", () => onSelect(index));
       container.append(step);
     });
   }
@@ -2134,33 +2136,40 @@ function initAffineTransform() {
         });
       }
 
+      function applyStage(index) {
+        TopicShared.renderTrack(elements.animationTrack, labels, index, applyStage);
+        renderDiagramState(diagramStates[index]);
+        elements.formulaTitle.textContent = diagramStates[index].title;
+        if (index === 0) {
+          elements.formula.textContent = diagramStates[0].text;
+          return;
+        }
+        if (index === 1) {
+          elements.formula.textContent = `R(p) = ${formatPoint(applied.afterRotate)} / ${diagramStates[1].text}`;
+          return;
+        }
+        if (index === 2) {
+          elements.formula.textContent = `S(R(p)) = ${formatPoint(applied.afterScale)} / ${diagramStates[2].text}`;
+          return;
+        }
+        elements.formula.textContent = `T(S(R(p))) = ${formatPoint(applied.afterTranslate)} / ${diagramStates[3].text}`;
+      }
+
       const steps = [
         () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 0);
-          renderDiagramState(diagramStates[0]);
-          elements.formulaTitle.textContent = diagramStates[0].title;
-          elements.formula.textContent = diagramStates[0].text;
+          applyStage(0);
           TopicShared.pushHistory(elements.historyList, "元の図形", diagramStates[0].text);
         },
         () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 1);
-          renderDiagramState(diagramStates[1]);
-          elements.formulaTitle.textContent = diagramStates[1].title;
-          elements.formula.textContent = `R(p) = ${formatPoint(applied.afterRotate)} / ${diagramStates[1].text}`;
+          applyStage(1);
           TopicShared.pushHistory(elements.historyList, "回転", elements.formula.textContent);
         },
         () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 2);
-          renderDiagramState(diagramStates[2]);
-          elements.formulaTitle.textContent = diagramStates[2].title;
-          elements.formula.textContent = `S(R(p)) = ${formatPoint(applied.afterScale)} / ${diagramStates[2].text}`;
+          applyStage(2);
           TopicShared.pushHistory(elements.historyList, "拡大縮小", elements.formula.textContent);
         },
         () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 3);
-          renderDiagramState(diagramStates[3]);
-          elements.formulaTitle.textContent = diagramStates[3].title;
-          elements.formula.textContent = `T(S(R(p))) = ${formatPoint(applied.afterTranslate)} / ${diagramStates[3].text}`;
+          applyStage(3);
           TopicShared.pushHistory(elements.historyList, "平行移動", elements.formula.textContent);
         },
       ];
