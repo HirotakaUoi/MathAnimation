@@ -2475,6 +2475,313 @@ function initQuaternionVector() {
   refreshPreview();
 }
 
+function initConicOrthogonalTransform() {
+  const $ = (selector) => document.querySelector(selector);
+  const svgElement = (name, attrs = {}, text = null) => {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+    Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, String(value)));
+    if (text !== null) element.textContent = text;
+    return element;
+  };
+  const elements = {
+    conicType: $("#conicType"),
+    paramA: $("#paramA"),
+    parameterBGroup: $("#parameterBGroup"),
+    paramB: $("#paramB"),
+    angle: $("#angle"),
+    angleUnit: $("#angleUnit"),
+    randomize: $("#randomize"),
+    animate: $("#animate"),
+    message: $("#message"),
+    standardSummary: $("#standardSummary"),
+    rotationSummary: $("#rotationSummary"),
+    inverseSummary: $("#inverseSummary"),
+    equationDisplay: $("#equationDisplay"),
+    vectorDiagram: $("#vectorDiagram"),
+    typeStatus: $("#typeStatus"),
+    transformStatus: $("#transformStatus"),
+    animationTrack: $("#animationTrack"),
+    formulaTitle: $("#formulaTitle"),
+    formula: $("#formula"),
+    historyList: $("#historyList"),
+  };
+  const state = { timerIds: [] };
+
+  function updateParameterVisibility() {
+    elements.parameterBGroup.hidden = elements.conicType.value === "parabola";
+  }
+
+  function formatAngleSource() {
+    const trimmed = String(elements.angle.value || "").trim() || "0";
+    const normalized = trimmed.replace(/PI/g, "π").replace(/pi/g, "π");
+    return elements.angleUnit.value === "rad" ? normalized : `${normalized}°`;
+  }
+
+  function readState() {
+    const type = elements.conicType.value;
+    const a = TopicShared.parseExpressionValue(elements.paramA.value);
+    const b = type === "parabola" ? null : TopicShared.parseExpressionValue(elements.paramB.value);
+    const angle = TopicShared.parseExpressionValue(elements.angle.value);
+    if (!(a > 0)) throw new Error(type === "parabola" ? "p は正にしてください。" : "a は正にしてください。");
+    if (type !== "parabola" && !(b > 0)) throw new Error("b は正にしてください。");
+    const theta = elements.angleUnit.value === "rad" ? angle : (angle * Math.PI) / 180;
+    return { type, a, b, angle, theta };
+  }
+
+  function rotatePoint(point, theta) {
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+    return [point[0] * c - point[1] * s, point[0] * s + point[1] * c];
+  }
+
+  function sampleStandardCurves(config) {
+    const { type, a, b } = config;
+    if (type === "ellipse") {
+      const points = [];
+      for (let i = 0; i <= 120; i += 1) {
+        const t = (i / 120) * Math.PI * 2;
+        points.push([a * Math.cos(t), b * Math.sin(t)]);
+      }
+      return [points];
+    }
+    if (type === "hyperbola") {
+      const branches = [[], []];
+      for (let i = -48; i <= 48; i += 1) {
+        const t = i / 18;
+        branches[0].push([a * Math.cosh(t), b * Math.sinh(t)]);
+        branches[1].push([-a * Math.cosh(t), b * Math.sinh(t)]);
+      }
+      return branches;
+    }
+    const branch = [];
+    for (let i = -60; i <= 60; i += 1) {
+      const t = i / 10;
+      branch.push([a * t * t, 2 * a * t]);
+    }
+    return [branch];
+  }
+
+  function transformedCurves(curves, theta) {
+    return curves.map((curve) => curve.map((point) => rotatePoint(point, theta)));
+  }
+
+  function standardEquation(config) {
+    if (config.type === "ellipse") return `u^2/${TopicShared.formatNumber(config.a ** 2)} + v^2/${TopicShared.formatNumber(config.b ** 2)} = 1`;
+    if (config.type === "hyperbola") return `u^2/${TopicShared.formatNumber(config.a ** 2)} - v^2/${TopicShared.formatNumber(config.b ** 2)} = 1`;
+    return `v^2 = 4·${TopicShared.formatNumber(config.a)}·u`;
+  }
+
+  function transformedEquation(config) {
+    const angleLabel = formatAngleSource();
+    const uExpr = `(x cos(${angleLabel}) + y sin(${angleLabel}))`;
+    const vExpr = `(-x sin(${angleLabel}) + y cos(${angleLabel}))`;
+    if (config.type === "ellipse") return `${uExpr}^2/${TopicShared.formatNumber(config.a ** 2)} + ${vExpr}^2/${TopicShared.formatNumber(config.b ** 2)} = 1`;
+    if (config.type === "hyperbola") return `${uExpr}^2/${TopicShared.formatNumber(config.a ** 2)} - ${vExpr}^2/${TopicShared.formatNumber(config.b ** 2)} = 1`;
+    return `${vExpr}^2 = 4·${TopicShared.formatNumber(config.a)}·${uExpr}`;
+  }
+
+  function matrixHtml(theta, inverse = false) {
+    const angleLabel = formatAngleSource();
+    const c = `cos(${angleLabel})`;
+    const s = `sin(${angleLabel})`;
+    const matrix = inverse
+      ? [[c, s], [`-${s}`, c]]
+      : [[c, `-${s}`], [s, c]];
+    const columns = 2;
+    return `<div class="math-matrix" style="grid-template-columns: repeat(${columns}, auto);">${matrix.flat().map((value) => `<span class="math-matrix-cell">${value}</span>`).join("")}</div>`;
+  }
+
+  function renderEquationDisplay(config) {
+    elements.equationDisplay.innerHTML = `
+      <div class="equation-group">
+        <div class="equation-group-title">標準形</div>
+        <div class="equation-line math-text">${standardEquation(config)}</div>
+      </div>
+      <div class="equation-group">
+        <div class="equation-group-title">直交変換</div>
+        <div class="equation-line">
+          <span class="math-text">[x y]^T = </span>
+          ${matrixHtml(config.theta, false)}
+          <span class="math-text">[u v]^T</span>
+        </div>
+      </div>
+      <div class="equation-group">
+        <div class="equation-group-title">逆変換で戻す</div>
+        <div class="equation-line">
+          <span class="math-text">[u v]^T = </span>
+          ${matrixHtml(config.theta, true)}
+          <span class="math-text">[x y]^T</span>
+        </div>
+        <div class="equation-line math-text">${transformedEquation(config)}</div>
+      </div>
+    `;
+  }
+
+  function drawDiagram(config, stage = "preview") {
+    const standardCurves = sampleStandardCurves(config);
+    const transformed = transformedCurves(standardCurves, config.theta);
+    const allPoints = [...standardCurves.flat(), ...transformed.flat(), [0, 0]];
+    let minX = Math.min(...allPoints.map((p) => p[0]), -6);
+    let maxX = Math.max(...allPoints.map((p) => p[0]), 6);
+    let minY = Math.min(...allPoints.map((p) => p[1]), -6);
+    let maxY = Math.max(...allPoints.map((p) => p[1]), 6);
+    const padding = 42;
+    const width = 720;
+    const height = 360;
+    const spanX = Math.max(maxX - minX, 4);
+    const spanY = Math.max(maxY - minY, 4);
+    const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const extentX = (width / 2 - padding) / scale;
+    const extentY = (height / 2 - padding) / scale;
+    minX = centerX - extentX;
+    maxX = centerX + extentX;
+    minY = centerY - extentY;
+    maxY = centerY + extentY;
+
+    function toScreen(point) {
+      return {
+        x: padding + (point[0] - minX) * scale,
+        y: height - padding - (point[1] - minY) * scale,
+      };
+    }
+
+    function polyline(curve, className) {
+      const points = curve.map((point) => {
+        const screen = toScreen(point);
+        return `${screen.x},${screen.y}`;
+      }).join(" ");
+      elements.vectorDiagram.append(svgElement("polyline", { points, class: className }));
+    }
+
+    elements.vectorDiagram.innerHTML = "";
+    for (let x = Math.ceil(minX); x <= maxX; x += 1) {
+      const from = toScreen([x, minY]);
+      const to = toScreen([x, maxY]);
+      elements.vectorDiagram.append(svgElement("line", { x1: from.x, y1: from.y, x2: to.x, y2: to.y, class: "diagram-grid" }));
+    }
+    for (let y = Math.ceil(minY); y <= maxY; y += 1) {
+      const from = toScreen([minX, y]);
+      const to = toScreen([maxX, y]);
+      elements.vectorDiagram.append(svgElement("line", { x1: from.x, y1: from.y, x2: to.x, y2: to.y, class: "diagram-grid" }));
+    }
+    const xAxisFrom = toScreen([minX, 0]);
+    const xAxisTo = toScreen([maxX, 0]);
+    const yAxisFrom = toScreen([0, minY]);
+    const yAxisTo = toScreen([0, maxY]);
+    elements.vectorDiagram.append(svgElement("line", { x1: xAxisFrom.x, y1: xAxisFrom.y, x2: xAxisTo.x, y2: xAxisTo.y, class: "diagram-conic-axis" }));
+    elements.vectorDiagram.append(svgElement("line", { x1: yAxisFrom.x, y1: yAxisFrom.y, x2: yAxisTo.x, y2: yAxisTo.y, class: "diagram-conic-axis" }));
+
+    const standardAxisUFrom = toScreen(rotatePoint([minX, 0], config.theta));
+    const standardAxisUTo = toScreen(rotatePoint([maxX, 0], config.theta));
+    const standardAxisVFrom = toScreen(rotatePoint([0, minY], config.theta));
+    const standardAxisVTo = toScreen(rotatePoint([0, maxY], config.theta));
+
+    if (stage !== "standard") {
+      elements.vectorDiagram.append(svgElement("line", { x1: standardAxisUFrom.x, y1: standardAxisUFrom.y, x2: standardAxisUTo.x, y2: standardAxisUTo.y, class: "diagram-conic-rotated-axis" }));
+      elements.vectorDiagram.append(svgElement("line", { x1: standardAxisVFrom.x, y1: standardAxisVFrom.y, x2: standardAxisVTo.x, y2: standardAxisVTo.y, class: "diagram-conic-rotated-axis" }));
+    }
+
+    if (stage === "standard") {
+      standardCurves.forEach((curve) => polyline(curve, "diagram-conic-standard"));
+      return;
+    }
+    if (stage === "transformed") {
+      transformed.forEach((curve) => polyline(curve, "diagram-conic-transformed"));
+      return;
+    }
+    standardCurves.forEach((curve) => polyline(curve, "diagram-conic-standard"));
+    transformed.forEach((curve) => polyline(curve, "diagram-conic-transformed"));
+  }
+
+  function refreshPreview() {
+    TopicShared.clearTimers(state);
+    TopicShared.clearHistory(elements.historyList);
+    elements.message.textContent = "";
+    updateParameterVisibility();
+    try {
+      const config = readState();
+      const titles = { ellipse: "楕円", hyperbola: "双曲線", parabola: "放物線" };
+      elements.typeStatus.textContent = titles[config.type];
+      elements.transformStatus.textContent = "標準形 → 直交変換 → 逆変換";
+      elements.standardSummary.textContent = standardEquation(config);
+      elements.rotationSummary.textContent = `R(${formatAngleSource()})`;
+      elements.inverseSummary.textContent = `R^-1 = R^T で標準形に戻せます。`;
+      renderEquationDisplay(config);
+      elements.formulaTitle.textContent = "標準形の公式";
+      elements.formula.textContent = `${standardEquation(config)} を u-v 座標で見てから、回転行列で x-y 座標へ移します。`;
+      TopicShared.renderTrack(elements.animationTrack, ["標準形", "直交変換", "変形後の式", "逆変換"], -1);
+      drawDiagram(config, "preview");
+    } catch (error) {
+      elements.message.textContent = error.message;
+    }
+  }
+
+  function animate() {
+    TopicShared.clearTimers(state);
+    TopicShared.clearHistory(elements.historyList);
+    try {
+      const config = readState();
+      const labels = ["標準形", "直交変換", "変形後の式", "逆変換"];
+      const steps = [
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 0);
+          drawDiagram(config, "standard");
+          elements.formulaTitle.textContent = "標準形";
+          elements.formula.textContent = standardEquation(config);
+          TopicShared.pushHistory(elements.historyList, "標準形", "まずは u-v 座標での標準形を確認します。");
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 1);
+          drawDiagram(config, "preview");
+          elements.formulaTitle.textContent = "直交変換";
+          elements.formula.textContent = `[x y]^T = R [u v]^T, 角度 = ${formatAngleSource()}`;
+          TopicShared.pushHistory(elements.historyList, "直交変換", "回転行列 R で座標軸ごと回します。");
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 2);
+          drawDiagram(config, "transformed");
+          elements.formulaTitle.textContent = "変形後の式";
+          elements.formula.textContent = transformedEquation(config);
+          TopicShared.pushHistory(elements.historyList, "変形後", "u, v を x, y で書き換えると交差項を持つ式になります。");
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 3);
+          drawDiagram(config, "preview");
+          elements.formulaTitle.textContent = "逆変換";
+          elements.formula.textContent = `[u v]^T = R^T [x y]^T に戻すと ${standardEquation(config)} です。`;
+          TopicShared.pushHistory(elements.historyList, "逆変換", "R^-1 = R^T なので、逆回転で標準形へ戻せます。");
+        },
+      ];
+      steps.forEach((step, index) => state.timerIds.push(window.setTimeout(step, index * 1000)));
+    } catch (error) {
+      elements.message.textContent = error.message;
+    }
+  }
+
+  TopicShared.attachLiveRefresh(document.body, refreshPreview);
+  elements.conicType.addEventListener("change", () => {
+    if (elements.conicType.value === "parabola") {
+      elements.paramA.value = "2";
+    } else {
+      if (!elements.paramB.value) elements.paramB.value = "2";
+    }
+    refreshPreview();
+  });
+  elements.randomize.addEventListener("click", () => {
+    const types = ["ellipse", "hyperbola", "parabola"];
+    elements.conicType.value = types[TopicShared.randomInt(0, types.length - 1)];
+    elements.paramA.value = String(TopicShared.randomInt(1, 4));
+    elements.paramB.value = String(TopicShared.randomInt(1, 4));
+    elements.angle.value = String(TopicShared.randomInt(15, 75));
+    elements.angleUnit.value = "deg";
+    refreshPreview();
+  });
+  elements.animate.addEventListener("click", animate);
+  refreshPreview();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const topic = document.body.dataset.topic;
   if (topic === "linear-independence") initLinearIndependence();
@@ -2483,4 +2790,5 @@ document.addEventListener("DOMContentLoaded", () => {
   if (topic === "affine-transform") initAffineTransform();
   if (topic === "homogeneous-coordinates") initHomogeneousCoordinates();
   if (topic === "quaternion-vector") initQuaternionVector();
+  if (topic === "conic-orthogonal-transform") initConicOrthogonalTransform();
 });

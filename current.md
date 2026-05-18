@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-05-11
+最終更新: 2026-05-18
 
 ## プロジェクト概要
 
@@ -62,6 +62,8 @@ python3 -m http.server 8100
   - 2D / 3D の同次座標系とグラフィックス
 - `quaternion_vector.html`
   - クオータニオンとベクトル
+- `conic_orthogonal_transform.html`
+  - 2次曲線の標準形と直交変換
 
 ## 主要ファイル
 
@@ -80,7 +82,10 @@ python3 -m http.server 8100
 - `eigen.js`
   - `eigen.html` 用
 - `future_topics.js`
-  - 今回追加した future 側 6 ページの共通ロジック
+  - future 側ページの共通ロジック
+- `math_format.js`
+  - 全ページの数式テキストを肩付き・下付き・ベクトル表記へ後処理する共通整形
+  - 要素単位で整形し、Grid/Flex の子要素構造を壊さない方針に修正
 - `styles.css`
   - 共通スタイル
 - `README.md`
@@ -90,7 +95,7 @@ python3 -m http.server 8100
 
 ## 現在の状態
 
-- Git 作業ツリーは通常 clean を維持して運用しているが、現在は `affine_transform.html`, `future_topics.js`, `styles.css` に未コミット変更あり
+- Git 作業ツリーは通常 clean を維持して運用しているが、現在は複数 HTML と `future_topics.js`, `styles.css`, `current.md` に未コミット変更があり、`conic_orthogonal_transform.html`, `math_format.js` が未追跡
 - 主要な追加ページ群は commit / push 済み
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
@@ -176,17 +181,29 @@ python3 -m http.server 8100
   - クオータニオンとベクトル
     - q = (cos(θ/2), u sin(θ/2))
     - q p q^-1 で回転後のベクトルを表示
+  - 2次曲線の標準形と直交変換
+    - 楕円・双曲線・放物線に対応
+    - 標準形を u-v 座標で表示
+    - 回転行列による直交変換と逆変換を数式表示
+    - 標準形の曲線と、回転後の曲線を図解表示
+    - アニメーションで `標準形 → 直交変換 → 変形後の式 → 逆変換` を追える
 - トップページ構成
   - `index.html` は公開扱いのページ中心
   - `future_index.html` は追加ページやデバッグ中ページ用
   - `index.html` からは `future_index.html` へ直接リンクしない
   - `future_index.html` 配下のページの `一覧へ` は `future_index.html` へ戻す
+  - `future_index.html` には `2次曲線の標準形と直交変換` のカードを追加済み
 - デバッグ表示の状況
   - `determinant.html` はデバッグ表示を解除済み
   - `vector_add_sub.html` はデバッグ表示を解除済み
   - `future_index.html` に載せている各ページは基本的に `デバッグ中` バッジつき
 - 公式表示
   - 公式のあるページでは、初期表示の数式欄にも公式を出すよう統一
+  - 共通整形で `x^2`, `A^-1`, `R^T`, `x1` などを上付き・下付き表示へ寄せる
+  - ベクトルの `[x y]^T` などは `(x, y)^T` 形式へ寄せる
+  - 行列表示の括弧も角括弧や縦棒より丸括弧寄りの見た目に調整中
+  - 当初のテキストノード単位整形では一部ページでレイアウト崩れが出たため、現在は要素単位整形へ修正済み
+  - `conic_orthogonal_transform.html` では、数式行を横組みの `flex` にし、回転行列と前後のベクトル表示が崩れないよう調整
 
 ## 確認時の注意点
 
@@ -196,6 +213,7 @@ python3 -m http.server 8100
   - 起動ポート変更
   - 主要 JS ファイルの役割変更
   - 未解決の表示崩れや既知の問題
+- 数式整形の確認は `file://` 直開きより `http://localhost:8100/...` を優先する
 
 ## 次回確認するとよい点
 
@@ -209,3 +227,7 @@ python3 -m http.server 8100
 - `affine_transform.html` の 3D 回転合成順 `x → y → z` が説明文と表示行列で十分伝わるか
 - `affine_transform.html` の合成変換行列 `M = T S R` がモバイル幅でも読み切れるか
 - `affine_transform.html` の記号式行列 `T × S × Rxyz` が横幅的に崩れないか
+- `conic_orthogonal_transform.html` の数式帯が長い式でも読み切れるか
+- `conic_orthogonal_transform.html` の標準形と回転後の曲線が画面内で十分見分けやすいか
+- `math_format.js` の共通後処理が既存の HTML 構造を壊さないか
+- `math_format.js` の整形対象が強すぎて、今後ほかのページのレイアウトを再度壊さないか

@@ -30,6 +30,20 @@ body {
   background-size: 42px 42px;
 }
 
+sup,
+sub {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+sup {
+  vertical-align: super;
+}
+
+sub {
+  vertical-align: sub;
+}
+
 button,
 input,
 select {
@@ -729,8 +743,11 @@ select:focus-visible {
 }
 
 .topic-summary-box {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.08em;
   min-height: 112px;
   padding: 16px;
   border: 1px solid rgba(15, 118, 110, 0.25);
@@ -1126,6 +1143,30 @@ select:focus-visible {
   stroke: none;
 }
 
+.diagram-conic-standard {
+  fill: none;
+  stroke: rgba(100, 116, 139, 0.85);
+  stroke-width: 3.2;
+  stroke-dasharray: 8 6;
+}
+
+.diagram-conic-transformed {
+  fill: none;
+  stroke: rgba(13, 148, 136, 0.92);
+  stroke-width: 4;
+}
+
+.diagram-conic-axis {
+  stroke: rgba(29, 38, 51, 0.62);
+  stroke-width: 2.2;
+}
+
+.diagram-conic-rotated-axis {
+  stroke: rgba(37, 99, 235, 0.5);
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+
 .diagram-label-group {
   pointer-events: none;
 }
@@ -1352,7 +1393,7 @@ body[data-topic="affine-transform"] .diagram-axis-label {
   position: relative;
   display: grid;
   gap: 8px 12px;
-  padding: 10px 18px;
+  padding: 10px 20px;
   color: var(--ink);
   font-size: 1.34rem;
   font-weight: 900;
@@ -1364,23 +1405,21 @@ body[data-topic="affine-transform"] .diagram-axis-label {
   position: absolute;
   top: 4px;
   bottom: 4px;
-  width: 10px;
+  width: 12px;
   content: "";
   border-color: var(--ink);
 }
 
 .math-matrix::before {
   left: 0;
-  border-top: 3px solid;
-  border-bottom: 3px solid;
   border-left: 3px solid;
+  border-radius: 999px 0 0 999px;
 }
 
 .math-matrix::after {
   right: 0;
-  border-top: 3px solid;
   border-right: 3px solid;
-  border-bottom: 3px solid;
+  border-radius: 0 999px 999px 0;
 }
 
 .math-matrix-cell {
@@ -1427,9 +1466,12 @@ body[data-topic="affine-transform"] .diagram-axis-label {
 }
 
 .equation-line {
+  display: flex;
+  flex-wrap: wrap;
   min-height: 46px;
   align-items: center;
   column-gap: 10px;
+  row-gap: 8px;
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -1501,13 +1543,41 @@ body[data-topic="affine-transform"] .diagram-axis-label {
 
 .matrix-input,
 .matrix-output {
+  position: relative;
   display: grid;
   gap: 8px;
   align-content: stretch;
   min-height: auto;
-  padding: 12px;
-  border-left: 5px solid var(--ink);
-  border-right: 5px solid var(--ink);
+  padding: 12px 18px;
+  border-left: none;
+  border-right: none;
+}
+
+.matrix-input::before,
+.matrix-input::after,
+.matrix-output::before,
+.matrix-output::after {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 12px;
+  content: "";
+  border-color: var(--ink);
+  pointer-events: none;
+}
+
+.matrix-input::before,
+.matrix-output::before {
+  left: 0;
+  border-left: 4px solid;
+  border-radius: 999px 0 0 999px;
+}
+
+.matrix-input::after,
+.matrix-output::after {
+  right: 0;
+  border-right: 4px solid;
+  border-radius: 0 999px 999px 0;
 }
 
 .matrix-output {

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conic Orthogonal Transform Motion</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260518a" />
+    <style>
+      body[data-topic="conic-orthogonal-transform"] #parameterBGroup[hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body data-topic="conic-orthogonal-transform">
+    <main class="app-shell">
+      <section class="workspace has-vector-display has-vector-diagram" aria-label="2次曲線の標準形と直交変換">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Analytic Geometry</p>
+            <div class="title-row">
+              <h1>2次曲線の標準形と直交変換</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span id="typeStatus">楕円</span>
+            <span id="transformStatus">標準形 → 直交変換 → 逆変換</span>
+          </div>
+        </header>
+
+        <section class="control-band">
+          <div class="control-group">
+            <label for="conicType">曲線</label>
+            <select id="conicType">
+              <option value="ellipse">楕円</option>
+              <option value="hyperbola">双曲線</option>
+              <option value="parabola">放物線</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>標準形のパラメータ</label>
+            <div class="topic-inline-field-group">
+              <label class="topic-inline-field">
+                a
+                <input id="paramA" type="text" value="3" />
+              </label>
+              <label id="parameterBGroup" class="topic-inline-field">
+                b
+                <input id="paramB" type="text" value="2" />
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>直交変換</label>
+            <div class="topic-inline-field-group">
+              <label class="topic-inline-field">
+                回転角
+                <input id="angle" type="text" value="45" />
+              </label>
+              <label class="topic-inline-field">
+                単位
+                <select id="angleUnit">
+                  <option value="deg">度数</option>
+                  <option value="rad">ラジアン</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="topic-stage topic-stage-3">
+          <article class="matrix-panel">
+            <header><h2>標準形</h2><span>u-v 座標</span></header>
+            <div id="standardSummary" class="topic-summary-box">標準形を確認します。</div>
+          </article>
+          <article class="matrix-panel">
+            <header><h2>直交変換</h2><span>回転行列</span></header>
+            <div id="rotationSummary" class="topic-summary-box">回転行列 R を使います。</div>
+          </article>
+          <article class="matrix-panel result-panel">
+            <header><h2>逆変換</h2><span>戻し方</span></header>
+            <div id="inverseSummary" class="topic-summary-box">R^-1 = R^T で標準形へ戻します。</div>
+          </article>
+        </section>
+
+        <section class="vector-display-band">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>標準形、回転行列、逆変換後の式を対応させます</span>
+          </div>
+          <div id="equationDisplay" class="vector-equation"></div>
+        </section>
+
+        <section class="vector-diagram-band">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>灰色が標準形、青緑が直交変換後です</span>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360"></svg>
+        </section>
+
+        <section class="animation-band">
+          <div class="timeline"><div id="animationTrack" class="animation-track"></div></div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">標準形</div>
+            <div id="formula" class="formula">標準形の曲線を、回転行列で x-y 座標へ移します。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="./future_topics.js?v=20260518a"></script>
+      <script src="./math_format.js?v=20260518a"></script>
+  </body>
+</html>
