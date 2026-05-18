@@ -539,6 +539,21 @@ const TopicShared = (() => {
       };
     }
 
+    const placedLabelRects = [];
+
+    function overlaps(rect) {
+      return placedLabelRects.some((other) => !(
+        rect.x + rect.width < other.x ||
+        other.x + other.width < rect.x ||
+        rect.y + rect.height < other.y ||
+        other.y + other.height < rect.y
+      ));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
     if (dimension === 2) {
       for (let x = Math.ceil(minX / gridStep) * gridStep; x <= maxX; x += gridStep) {
         const from = toScreen([x, minY, 0]);
@@ -626,16 +641,74 @@ const TopicShared = (() => {
       ].join(" ");
       svg.append(svgElement("polygon", { points: arrowPoints, class: `diagram-arrow ${vector.className || "diagram-a"}` }));
       if (vector.label) {
-        const anchor = {
-          x: from.x + (to.x - from.x) * 0.62 + 14 * Math.sin(angle),
-          y: from.y + (to.y - from.y) * 0.62 - 14 * Math.cos(angle),
+        const textLength = String(vector.label).length;
+        const boxWidth = Math.max(34, 18 + textLength * 12);
+        const boxHeight = 34;
+        const base = {
+          x: from.x + (to.x - from.x) * 0.68,
+          y: from.y + (to.y - from.y) * 0.68,
+        };
+        const normal = {
+          x: Math.sin(angle),
+          y: -Math.cos(angle),
+        };
+        const tangent = {
+          x: Math.cos(angle),
+          y: Math.sin(angle),
+        };
+        const candidateOffsets = [
+          { n: 24, t: 0 },
+          { n: -24, t: 0 },
+          { n: 34, t: 12 },
+          { n: -34, t: 12 },
+          { n: 34, t: -12 },
+          { n: -34, t: -12 },
+          { n: 18, t: 28 },
+          { n: -18, t: 28 },
+          { n: 18, t: -28 },
+          { n: -18, t: -28 },
+          { n: 42, t: 0 },
+          { n: -42, t: 0 },
+        ];
+        let anchor = {
+          x: base.x + 24 * normal.x,
+          y: base.y + 24 * normal.y,
+        };
+        for (const offset of candidateOffsets) {
+          const candidate = {
+            x: base.x + normal.x * offset.n + tangent.x * offset.t,
+            y: base.y + normal.y * offset.n + tangent.y * offset.t,
+          };
+          const rect = {
+            x: candidate.x - boxWidth / 2,
+            y: candidate.y - boxHeight / 2,
+            width: boxWidth,
+            height: boxHeight,
+          };
+          if (!overlaps(rect)) {
+            anchor = candidate;
+            placedLabelRects.push(rect);
+            break;
+          }
+        }
+        if (placedLabelRects.length === 0 || placedLabelRects[placedLabelRects.length - 1].width !== boxWidth || placedLabelRects[placedLabelRects.length - 1].height !== boxHeight) {
+          placedLabelRects.push({
+            x: anchor.x - boxWidth / 2,
+            y: anchor.y - boxHeight / 2,
+            width: boxWidth,
+            height: boxHeight,
+          });
+        }
+        anchor = {
+          x: clamp(anchor.x, boxWidth / 2 + 6, VIEWBOX.width - boxWidth / 2 - 6),
+          y: clamp(anchor.y, boxHeight / 2 + 6, VIEWBOX.height - boxHeight / 2 - 6),
         };
         const group = svgElement("g", { class: "diagram-label-group" });
         group.append(svgElement("rect", {
-          x: anchor.x - 18,
-          y: anchor.y - 18,
-          width: 36,
-          height: 36,
+          x: anchor.x - boxWidth / 2,
+          y: anchor.y - boxHeight / 2,
+          width: boxWidth,
+          height: boxHeight,
           rx: 10,
           class: `diagram-label-box ${vector.className || "diagram-a"}`,
         }));
@@ -1234,6 +1307,53 @@ function initLinearMapMatrix() {
     };
   }
 
+  function presetLabel(key) {
+    const labels = {
+      shear: "せん断",
+      stretch: "拡大縮小",
+      reflection: "鏡映",
+      rotation: "回転",
+      scale: "拡大縮小",
+      rotationz: "z軸回転",
+      projection: "xy平面への射影",
+    };
+    return labels[key] || key;
+  }
+
+  function sampleVector(dim, key) {
+    if (dim === 2) {
+      const samples = {
+        shear: [2, 3],
+        stretch: [1, 3],
+        reflection: [3, 2],
+        rotation: [3, 2],
+      };
+      return samples[key] || [2, 3];
+    }
+    const samples = {
+      scale: [2, 3, 1],
+      rotationz: [3, 2, 1],
+      shear: [1, 3, 2],
+      projection: [2, 1, 3],
+    };
+    return samples[key] || [2, 3, 1];
+  }
+
+  function autoAxisExtent(dim, vector, result, images, zoom) {
+    const points = [
+      vector,
+      result,
+      ...images,
+      ...TopicShared.identity(dim),
+    ];
+    const maxAbs = Math.max(
+      1,
+      ...points.flatMap((entry) => entry.map((value) => Math.abs(value))),
+    );
+    const baseExtent = Math.max(3.5, Math.ceil(maxAbs + 1.5));
+    return baseExtent / zoom;
+  }
+
   function applyPreset() {
     state.dimension = Number(elements.dimension.value);
     const set = presets(state.dimension);
@@ -1241,7 +1361,9 @@ function initLinearMapMatrix() {
     if (!set[key]) {
       elements.preset.value = Object.keys(set)[0];
     }
-    TopicShared.writeMatrix(elements.matrixInput, state.dimension, state.dimension, set[elements.preset.value]);
+    const activeKey = elements.preset.value;
+    TopicShared.writeMatrix(elements.matrixInput, state.dimension, state.dimension, set[activeKey]);
+    TopicShared.writeVector(elements.vectorInput, sampleVector(state.dimension, activeKey));
     refreshPreview();
   }
 
@@ -1268,6 +1390,7 @@ function initLinearMapMatrix() {
     });
     try {
       const { vector, result, images } = readState();
+      const axisExtent = autoAxisExtent(state.dimension, vector, result, images, zoomFactor());
       elements.resultSummary.textContent = `T(x) = (${result.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
       elements.equationDisplay.textContent =
         state.dimension === 2
@@ -1295,7 +1418,7 @@ function initLinearMapMatrix() {
           { from: [0, 0, 0], to: vector, className: "diagram-cross", label: "x" },
           { from: [0, 0, 0], to: result, className: "diagram-result", label: "T(x)" },
         ],
-        axisExtent: 7 / zoomFactor(),
+        axisExtent,
         gridStep: 1,
         tickStep: 5,
       });
@@ -1351,10 +1474,10 @@ function initLinearMapMatrix() {
     state.dimension = Number(elements.dimension.value);
     const set = presets(state.dimension);
     elements.preset.innerHTML = Object.keys(set)
-      .map((key) => `<option value="${key}">${key}</option>`)
+      .map((key) => `<option value="${key}">${presetLabel(key)}</option>`)
       .join("");
     TopicShared.createMatrixInputs(elements.matrixInput, state.dimension, state.dimension, "a", set[Object.keys(set)[0]]);
-    TopicShared.createVectorInputs(elements.vectorInput, state.dimension, "x", state.dimension === 2 ? [2, 1] : [2, 1, 1]);
+    TopicShared.createVectorInputs(elements.vectorInput, state.dimension, "x", sampleVector(state.dimension, Object.keys(set)[0]));
     TopicShared.attachLiveRefresh(document.body, refreshPreview);
     applyPreset();
   });
@@ -2342,6 +2465,571 @@ function initHomogeneousCoordinates() {
   refreshPreview();
 }
 
+function initLinearShapeTransform() {
+  const $ = (selector) => document.querySelector(selector);
+  const elements = {
+    dimension: $("#dimension"),
+    symmetryPreset: $("#symmetryPreset"),
+    randomize: $("#randomize"),
+    animate: $("#animate"),
+    message: $("#message"),
+    shapeSummary: $("#shapeSummary"),
+    transformSummary: $("#transformSummary"),
+    resultSummary: $("#resultSummary"),
+    equationDisplay: $("#equationDisplay"),
+    vectorDiagram: $("#vectorDiagram"),
+    dimensionStatus: $("#dimensionStatus"),
+    presetStatus: $("#presetStatus"),
+    subControls: $("#subControls"),
+    rotate2DGroup: $("#rotate2DGroup"),
+    rotate3DGroup: $("#rotate3DGroup"),
+    rotateAngle: $("#rotateAngle"),
+    rotateAxis: $("#rotateAxis"),
+    rotateAngleUnit: $("#rotateAngleUnit"),
+    scaleX: $("#scaleX"),
+    scaleY: $("#scaleY"),
+    scaleZControl: $("#scaleZControl"),
+    scaleZ: $("#scaleZ"),
+    viewControls: $("#viewControls"),
+    zoomScale: $("#zoomScale"),
+    zoomScaleValue: $("#zoomScaleValue"),
+    rotateX: $("#rotateX"),
+    rotateY: $("#rotateY"),
+    rotateZ: $("#rotateZ"),
+    rotateXValue: $("#rotateXValue"),
+    rotateYValue: $("#rotateYValue"),
+    rotateZValue: $("#rotateZValue"),
+    animationTrack: $("#animationTrack"),
+    formulaTitle: $("#formulaTitle"),
+    formula: $("#formula"),
+    historyList: $("#historyList"),
+  };
+  const state = { dimension: 2, timerIds: [] };
+
+  function rotation() {
+    return {
+      x: (Number(elements.rotateX.value) * Math.PI) / 180,
+      y: (Number(elements.rotateY.value) * Math.PI) / 180,
+      z: (Number(elements.rotateZ.value) * Math.PI) / 180,
+    };
+  }
+
+  function zoomFactor() {
+    return Math.max(0.7, Math.min(1.8, Number(elements.zoomScale.value) / 100));
+  }
+
+  function toRadians(value, unit) {
+    return unit === "rad" ? value : (value * Math.PI) / 180;
+  }
+
+  function normalizedAngleSource(source, unit) {
+    const trimmed = String(source || "").trim() || "0";
+    const normalized = trimmed.replace(/PI/g, "π").replace(/pi/g, "π");
+    return unit === "rad" ? normalized : `${normalized}°`;
+  }
+
+  function renderMathMatrix(matrix, formatter = (value) => TopicShared.formatNumber(value)) {
+    const columns = matrix[0]?.length ?? 1;
+    return `<div class="math-matrix" style="grid-template-columns: repeat(${columns}, auto);">${matrix
+      .flat()
+      .map((value) => `<span class="math-matrix-cell">${formatter(value)}</span>`)
+      .join("")}</div>`;
+  }
+
+  function exactTrigStrings(angle, unit, label) {
+    const radians = toRadians(angle, unit);
+    const fullTurn = Math.PI * 2;
+    let normalized = ((radians % fullTurn) + fullTurn) % fullTurn;
+    if (Math.abs(normalized - fullTurn) < TopicShared.EPSILON) normalized = 0;
+    const exactTable = [
+      { radians: 0, cos: "1", sin: "0" },
+      { radians: Math.PI / 6, cos: "√3/2", sin: "1/2" },
+      { radians: Math.PI / 4, cos: "√2/2", sin: "√2/2" },
+      { radians: Math.PI / 3, cos: "1/2", sin: "√3/2" },
+      { radians: Math.PI / 2, cos: "0", sin: "1" },
+      { radians: (2 * Math.PI) / 3, cos: "-1/2", sin: "√3/2" },
+      { radians: (3 * Math.PI) / 4, cos: "-√2/2", sin: "√2/2" },
+      { radians: (5 * Math.PI) / 6, cos: "-√3/2", sin: "1/2" },
+      { radians: Math.PI, cos: "-1", sin: "0" },
+      { radians: (7 * Math.PI) / 6, cos: "-√3/2", sin: "-1/2" },
+      { radians: (5 * Math.PI) / 4, cos: "-√2/2", sin: "-√2/2" },
+      { radians: (4 * Math.PI) / 3, cos: "-1/2", sin: "-√3/2" },
+      { radians: (3 * Math.PI) / 2, cos: "0", sin: "-1" },
+      { radians: (5 * Math.PI) / 3, cos: "1/2", sin: "-√3/2" },
+      { radians: (7 * Math.PI) / 4, cos: "√2/2", sin: "-√2/2" },
+      { radians: (11 * Math.PI) / 6, cos: "√3/2", sin: "-1/2" },
+    ];
+    const exact = exactTable.find((entry) => Math.abs(entry.radians - normalized) < 1e-8);
+    if (exact) return exact;
+    return {
+      cos: `cos(${label})`,
+      sin: `sin(${label})`,
+    };
+  }
+
+  function symbolicRotationMatrix(dim, rotate) {
+    const angleLabel = normalizedAngleSource(elements.rotateAngle.value, rotate.unit);
+    const trig = exactTrigStrings(rotate.angle, rotate.unit, angleLabel);
+    if (dim === 2) {
+      return {
+        label: "R",
+        note: `θ = ${angleLabel}`,
+        matrix: [
+          [trig.cos, trig.sin.startsWith("-") ? trig.sin.slice(1) : `-${trig.sin}`],
+          [trig.sin, trig.cos],
+        ],
+      };
+    }
+    if (rotate.axis === "x") {
+      return {
+        label: "R",
+        note: `x軸まわり, θ = ${angleLabel}`,
+        matrix: [
+          ["1", "0", "0"],
+          ["0", trig.cos, trig.sin.startsWith("-") ? trig.sin.slice(1) : `-${trig.sin}`],
+          ["0", trig.sin, trig.cos],
+        ],
+      };
+    }
+    if (rotate.axis === "y") {
+      return {
+        label: "R",
+        note: `y軸まわり, θ = ${angleLabel}`,
+        matrix: [
+          [trig.cos, "0", trig.sin],
+          ["0", "1", "0"],
+          [trig.sin.startsWith("-") ? trig.sin.slice(1) : `-${trig.sin}`, "0", trig.cos],
+        ],
+      };
+    }
+    return {
+      label: "R",
+      note: `z軸まわり, θ = ${angleLabel}`,
+      matrix: [
+        [trig.cos, trig.sin.startsWith("-") ? trig.sin.slice(1) : `-${trig.sin}`, "0"],
+        [trig.sin, trig.cos, "0"],
+        ["0", "0", "1"],
+      ],
+    };
+  }
+
+  function renderTransformMatrices(symmetry, rotate, scale, composite, rotateMatrixValue, scaleMatrixValue) {
+    const symbolicRotation = symbolicRotationMatrix(state.dimension, rotate);
+    const scaleSymbolic = state.dimension === 2
+      ? [
+          [String(elements.scaleX.value).trim() || "1", "0"],
+          ["0", String(elements.scaleY.value).trim() || "1"],
+        ]
+      : [
+          [String(elements.scaleX.value).trim() || "1", "0", "0"],
+          ["0", String(elements.scaleY.value).trim() || "1", "0"],
+          ["0", "0", String(elements.scaleZ.value).trim() || "1"],
+        ];
+    const vectorSymbol = state.dimension === 2 ? "(x, y)<sup>T</sup>" : "(x, y, z)<sup>T</sup>";
+    return `
+      <div class="transform-matrix-display">
+        <div class="equation-line">
+          <span>T(x)</span>
+          <span class="math-equals">=</span>
+          <span>A x</span>
+          <span class="math-equals">=</span>
+          <span>S R F ${vectorSymbol}</span>
+        </div>
+        <div class="transform-matrix-chain">
+          <span class="math-matrix-note">適用順</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">F</span>
+            <span class="math-matrix-note">${symmetry.label}</span>
+            ${renderMathMatrix(symmetry.matrix, String)}
+          </div>
+          <span class="math-operator">→</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">${symbolicRotation.label}</span>
+            <span class="math-matrix-note">${symbolicRotation.note}</span>
+            ${renderMathMatrix(symbolicRotation.matrix, String)}
+          </div>
+          <span class="math-operator">→</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">S</span>
+            <span class="math-matrix-note">各軸方向の倍率</span>
+            ${renderMathMatrix(scaleSymbolic, String)}
+          </div>
+          <span class="math-operator">=</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">A</span>
+            <span class="math-matrix-note">合成変換行列</span>
+            ${renderMathMatrix(composite)}
+          </div>
+        </div>
+        <div class="transform-matrix-chain">
+          <span class="math-matrix-note">合成行列</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">S</span>
+            ${renderMathMatrix(scaleMatrixValue)}
+          </div>
+          <span class="math-operator">×</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">R</span>
+            ${renderMathMatrix(rotateMatrixValue)}
+          </div>
+          <span class="math-operator">×</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">F</span>
+            ${renderMathMatrix(symmetry.matrix)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function symmetryPresets(dim) {
+    if (dim === 2) {
+      return {
+        mirror_x: { label: "x軸対称", matrix: [[1, 0], [0, -1]], note: "x軸に関する対称移動" },
+        mirror_y: { label: "y軸対称", matrix: [[-1, 0], [0, 1]], note: "y軸に関する対称移動" },
+        mirror_origin: { label: "原点対称", matrix: [[-1, 0], [0, -1]], note: "原点に関する点対称" },
+        mirror_diag: { label: "直線 y = x に関する対称", matrix: [[0, 1], [1, 0]], note: "x と y を入れ替えます" },
+        mirror_anti_diag: { label: "直線 y = -x に関する対称", matrix: [[0, -1], [-1, 0]], note: "x と y を入れ替えて両方の符号を反転します" },
+      };
+    }
+    return {
+      mirror_xy: { label: "xy平面対称", matrix: [[1, 0, 0], [0, 1, 0], [0, 0, -1]], note: "z の符号だけ反転します" },
+      mirror_yz: { label: "yz平面対称", matrix: [[-1, 0, 0], [0, 1, 0], [0, 0, 1]], note: "x の符号だけ反転します" },
+      mirror_xz: { label: "xz平面対称", matrix: [[1, 0, 0], [0, -1, 0], [0, 0, 1]], note: "y の符号だけ反転します" },
+      mirror_origin: { label: "原点対称", matrix: [[-1, 0, 0], [0, -1, 0], [0, 0, -1]], note: "3軸すべての符号を反転します" },
+    };
+  }
+
+  function rotationMatrix(dim, params) {
+    if (dim === 2) {
+      const angle = toRadians(params.angle, params.unit);
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return [[c, -s], [s, c]];
+    }
+    const angle = toRadians(params.angle, params.unit);
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    if (params.axis === "x") return [[1, 0, 0], [0, c, -s], [0, s, c]];
+    if (params.axis === "y") return [[c, 0, s], [0, 1, 0], [-s, 0, c]];
+    return [[c, -s, 0], [s, c, 0], [0, 0, 1]];
+  }
+
+  function scaleMatrix(dim, params) {
+    if (dim === 2) return [[params.sx, 0], [0, params.sy]];
+    return [[params.sx, 0, 0], [0, params.sy, 0], [0, 0, params.sz]];
+  }
+
+  function sampleShape(dim) {
+    if (dim === 2) {
+      const points = [
+        [-3, -1],
+        [0, -1],
+        [0, -2],
+        [3, 0],
+        [0, 2],
+        [0, 1],
+        [-3, 1],
+      ];
+      const edges = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0]];
+      return { points, edges, faces: [points] };
+    }
+    const base = [
+      [-3, -2],
+      [0, -2],
+      [0, -1],
+      [2, -1],
+      [2, 1],
+      [-1, 1],
+      [-1, 2],
+      [-3, 2],
+    ];
+    const front = base.map(([x, y]) => [x, y, -1]);
+    const back = base.map(([x, y]) => [x, y, 1]);
+    const points = front.concat(back);
+    const edgeCount = base.length;
+    const edges = [];
+    for (let index = 0; index < edgeCount; index += 1) {
+      const next = (index + 1) % edgeCount;
+      edges.push([index, next]);
+      edges.push([index + edgeCount, next + edgeCount]);
+      edges.push([index, index + edgeCount]);
+    }
+    const faces = [
+      front,
+      back,
+      ...base.map((_, index) => {
+        const next = (index + 1) % edgeCount;
+        return [
+          front[index],
+          front[next],
+          back[next],
+          back[index],
+        ];
+      }),
+    ];
+    return { points, edges, faces };
+  }
+
+  function transformShape(shape, matrix) {
+    const transformPoint = (point) => TopicShared.multiplyMatrixVector(matrix, point);
+    return {
+      points: shape.points.map(transformPoint),
+      edges: shape.edges,
+      faces: shape.faces.map((face) => face.map(transformPoint)),
+    };
+  }
+
+  function shapeSegments(shape, className) {
+    return shape.edges.map(([fromIndex, toIndex]) => ({
+      from: shape.points[fromIndex],
+      to: shape.points[toIndex],
+      className,
+    }));
+  }
+
+  function syncPanels() {
+    state.dimension = Number(elements.dimension.value);
+    const presets = symmetryPresets(state.dimension);
+    const keys = Object.keys(presets);
+    if (!presets[elements.symmetryPreset.value]) elements.symmetryPreset.value = keys[0];
+    elements.symmetryPreset.innerHTML = keys
+      .map((key) => `<option value="${key}" ${key === elements.symmetryPreset.value ? "selected" : ""}>${presets[key].label}</option>`)
+      .join("");
+    elements.rotate3DGroup.hidden = state.dimension !== 3;
+    elements.scaleZControl.hidden = state.dimension !== 3;
+    elements.viewControls.hidden = state.dimension !== 3;
+    elements.subControls.classList.toggle("with-axis-control", state.dimension === 3);
+  }
+
+  function readState() {
+    state.dimension = Number(elements.dimension.value);
+    const symmetry = symmetryPresets(state.dimension)[elements.symmetryPreset.value];
+    if (!symmetry) throw new Error("対称移動を選んでください。");
+    const rotateValue = TopicShared.parseExpressionValue(elements.rotateAngle.value);
+    const rotate = {
+      angle: rotateValue,
+      unit: elements.rotateAngleUnit.value,
+      axis: state.dimension === 3 ? elements.rotateAxis.value : "z",
+    };
+    const scale = {
+      sx: TopicShared.parseExpressionValue(elements.scaleX.value),
+      sy: TopicShared.parseExpressionValue(elements.scaleY.value),
+      sz: state.dimension === 3 ? TopicShared.parseExpressionValue(elements.scaleZ.value) : 1,
+    };
+    const rotateMatrixValue = rotationMatrix(state.dimension, rotate);
+    const scaleMatrixValue = scaleMatrix(state.dimension, scale);
+    const composite = TopicShared.multiplyMatrices(
+      scaleMatrixValue,
+      TopicShared.multiplyMatrices(rotateMatrixValue, symmetry.matrix),
+    );
+    const sample = sampleShape(state.dimension);
+    const afterSymmetry = transformShape(sample, symmetry.matrix);
+    const rotateAfterSymmetry = TopicShared.multiplyMatrices(rotateMatrixValue, symmetry.matrix);
+    const afterRotate = transformShape(sample, rotateAfterSymmetry);
+    const transformed = transformShape(sample, composite);
+    return {
+      symmetry,
+      rotate,
+      scale,
+      rotateMatrixValue,
+      scaleMatrixValue,
+      composite,
+      sample,
+      afterSymmetry,
+      afterRotate,
+      transformed,
+    };
+  }
+
+  function axisExtent(...shapes) {
+    const maxAbs = Math.max(
+      1,
+      ...shapes.flatMap((shape) => shape.points).flatMap((point) => point.map((value) => Math.abs(value))),
+    );
+    return Math.max(5, Math.ceil(maxAbs + 1.5)) / zoomFactor();
+  }
+
+  function refreshPreview() {
+    TopicShared.clearTimers(state);
+    TopicShared.clearHistory(elements.historyList);
+    elements.message.textContent = "";
+    refreshPresetOptions();
+    elements.viewControls.hidden = state.dimension !== 3;
+    elements.dimensionStatus.textContent = `${state.dimension} 次元`;
+    elements.zoomScaleValue.textContent = `${elements.zoomScale.value}%`;
+    [elements.rotateXValue, elements.rotateYValue, elements.rotateZValue].forEach((output, index) => {
+      const values = [elements.rotateX.value, elements.rotateY.value, elements.rotateZ.value];
+      output.textContent = `${values[index]}°`;
+    });
+    try {
+      const {
+        symmetry,
+        rotate,
+        scale,
+        rotateMatrixValue,
+        scaleMatrixValue,
+        composite,
+        sample,
+        afterSymmetry,
+        afterRotate,
+        transformed,
+      } = readState();
+      const angleLabel = normalizedAngleSource(elements.rotateAngle.value, rotate.unit);
+      elements.presetStatus.textContent = "対称移動 → 回転 → 拡大縮小";
+      elements.shapeSummary.textContent = state.dimension === 2
+        ? "2D では矢印形を使って、向きや伸び方の変化を見ます。"
+        : "3D では非対称な押し出し形を使って、面の向きや伸び方の変化を見ます。";
+      elements.transformSummary.textContent = `${symmetry.label} → ${state.dimension === 2 ? `${angleLabel}回転` : `${elements.rotateAxis.value}軸まわり${angleLabel}回転`} → x${TopicShared.formatNumber(scale.sx)}, y${TopicShared.formatNumber(scale.sy)}${state.dimension === 3 ? `, z${TopicShared.formatNumber(scale.sz)}` : ""}`;
+      elements.resultSummary.textContent = "3つの写像を順にかけた結果を、最後は 1 個の合成行列 A としてまとめて見ます。";
+      elements.equationDisplay.innerHTML = renderTransformMatrices(symmetry, rotate, scale, composite, rotateMatrixValue, scaleMatrixValue);
+      elements.formulaTitle.textContent = "合成の考え方";
+      elements.formula.textContent = "線形写像どうしの合成は、対応する行列の積として 1 個の行列 A にまとめられます。";
+      TopicShared.renderTrack(elements.animationTrack, ["元の図形", "対称移動", "回転", "拡大縮小"], -1);
+      TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+        dimension: state.dimension,
+        rotation: rotation(),
+        polygons: [
+          ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+          ...transformed.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+        ],
+        segments: [
+          ...shapeSegments(sample, "diagram-guide-line"),
+          ...shapeSegments(transformed, "diagram-result-line"),
+        ],
+        axisExtent: axisExtent(sample, afterSymmetry, afterRotate, transformed),
+        gridStep: 1,
+        tickStep: 5,
+      });
+    } catch (error) {
+      elements.message.textContent = error.message;
+      elements.resultSummary.textContent = "入力を確認してください。";
+    }
+  }
+
+  function animate() {
+    TopicShared.clearTimers(state);
+    TopicShared.clearHistory(elements.historyList);
+    try {
+      const { symmetry, rotate, scale, sample, afterSymmetry, afterRotate, transformed } = readState();
+      const angleLabel = normalizedAngleSource(elements.rotateAngle.value, rotate.unit);
+      const labels = ["元の図形", "対称移動", "回転", "拡大縮小"];
+      const extent = axisExtent(sample, afterSymmetry, afterRotate, transformed);
+      const steps = [
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 0);
+          elements.formulaTitle.textContent = "元の図形";
+          elements.formula.textContent = "まずは原点まわりの元の図形を確認します。";
+          TopicShared.pushHistory(elements.historyList, "元の図形", "線形写像は原点を固定したまま働きます。");
+          TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+            dimension: state.dimension,
+            rotation: rotation(),
+            polygons: sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+            segments: shapeSegments(sample, "diagram-guide-line"),
+            axisExtent: extent,
+            gridStep: 1,
+            tickStep: 5,
+          });
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 1);
+          elements.formulaTitle.textContent = "対称移動";
+          elements.formula.textContent = `${symmetry.label}: ${symmetry.note}`;
+          TopicShared.pushHistory(elements.historyList, "対称移動", symmetry.note);
+          TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+            dimension: state.dimension,
+            rotation: rotation(),
+            polygons: [
+              ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+              ...afterSymmetry.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+            ],
+            segments: [
+              ...shapeSegments(sample, "diagram-guide-line"),
+              ...shapeSegments(afterSymmetry, "diagram-result-line"),
+            ],
+            axisExtent: extent,
+            gridStep: 1,
+            tickStep: 5,
+          });
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 2);
+          elements.formulaTitle.textContent = "回転";
+          elements.formula.textContent = state.dimension === 2
+            ? `${angleLabel} だけ回転します。`
+            : `${elements.rotateAxis.value}軸のまわりに ${angleLabel} 回転します。`;
+          TopicShared.pushHistory(elements.historyList, "回転", elements.formula.textContent);
+          TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+            dimension: state.dimension,
+            rotation: rotation(),
+            polygons: [
+              ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+              ...afterRotate.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+            ],
+            segments: [
+              ...shapeSegments(sample, "diagram-guide-line"),
+              ...shapeSegments(afterRotate, "diagram-result-line"),
+            ],
+            axisExtent: extent,
+            gridStep: 1,
+            tickStep: 5,
+          });
+        },
+        () => {
+          TopicShared.renderTrack(elements.animationTrack, labels, 3);
+          elements.formulaTitle.textContent = "拡大縮小";
+          elements.formula.textContent = `倍率 = (${TopicShared.formatNumber(scale.sx)}, ${TopicShared.formatNumber(scale.sy)}${state.dimension === 3 ? `, ${TopicShared.formatNumber(scale.sz)}` : ""})`;
+          TopicShared.pushHistory(elements.historyList, "拡大縮小", elements.formula.textContent);
+          TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
+            dimension: state.dimension,
+            rotation: rotation(),
+            polygons: [
+              ...sample.faces.map((face) => ({ points: face, className: "diagram-guide-surface" })),
+              ...transformed.faces.map((face) => ({ points: face, className: "diagram-surface" })),
+            ],
+            segments: [
+              ...shapeSegments(sample, "diagram-guide-line"),
+              ...shapeSegments(transformed, "diagram-result-line"),
+            ],
+            axisExtent: extent,
+            gridStep: 1,
+            tickStep: 5,
+          });
+        },
+      ];
+      steps.forEach((step, index) => state.timerIds.push(window.setTimeout(step, index * 900)));
+    } catch (error) {
+      elements.message.textContent = error.message;
+    }
+  }
+
+  elements.dimension.addEventListener("change", refreshPreview);
+  elements.symmetryPreset.addEventListener("change", refreshPreview);
+  elements.rotateAxis.addEventListener("change", refreshPreview);
+  elements.rotateAngle.addEventListener("input", refreshPreview);
+  elements.rotateAngleUnit.addEventListener("change", refreshPreview);
+  elements.scaleX.addEventListener("input", refreshPreview);
+  elements.scaleY.addEventListener("input", refreshPreview);
+  elements.scaleZ.addEventListener("input", refreshPreview);
+  elements.zoomScale.addEventListener("input", refreshPreview);
+  [elements.rotateX, elements.rotateY, elements.rotateZ].forEach((slider) => slider.addEventListener("input", refreshPreview));
+  elements.randomize.addEventListener("click", () => {
+    syncPanels();
+    const options = Array.from(elements.symmetryPreset.options);
+    elements.symmetryPreset.value = options[TopicShared.randomInt(0, options.length - 1)].value;
+    elements.rotateAngle.value = String(TopicShared.randomInt(15, 165));
+    if (state.dimension === 3) elements.rotateAxis.value = ["x", "y", "z"][TopicShared.randomInt(0, 2)];
+    elements.rotateAngleUnit.value = "deg";
+    elements.scaleX.value = String(TopicShared.randomNonZero(1, 3));
+    elements.scaleY.value = String(TopicShared.randomNonZero(1, 3));
+    if (state.dimension === 3) elements.scaleZ.value = String(TopicShared.randomNonZero(1, 3));
+    refreshPreview();
+  });
+  elements.animate.addEventListener("click", animate);
+  syncPanels();
+  refreshPreview();
+}
+
 function initQuaternionVector() {
   const $ = (selector) => document.querySelector(selector);
   const elements = {
@@ -2787,6 +3475,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (topic === "linear-independence") initLinearIndependence();
   if (topic === "basis-vectors") initBasisVectors();
   if (topic === "linear-map-matrix") initLinearMapMatrix();
+  if (topic === "linear-shape-transform") initLinearShapeTransform();
   if (topic === "affine-transform") initAffineTransform();
   if (topic === "homogeneous-coordinates") initHomogeneousCoordinates();
   if (topic === "quaternion-vector") initQuaternionVector();

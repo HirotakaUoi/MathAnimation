@@ -16,7 +16,7 @@ python3 -m http.server 8100
 
 - `index.html`
   - まとめページ
-  - 現在は行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角を掲載
+  - 現在は行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトルを掲載
 - `future_index.html`
   - 追加ページ用の別トップページ
   - 今後の追加ページやデバッグ中ページの置き場
@@ -56,6 +56,9 @@ python3 -m http.server 8100
 - `linear_map_matrix.html`
   - 線形写像と表現行列
   - 図解表示の拡大縮小スライダあり
+- `linear_shape_transform.html`
+  - 主な線形写像
+  - 対称移動・回転・拡大縮小の合成
 - `affine_transform.html`
   - 回転 / 拡大縮小 / 平行移動
 - `homogeneous_coordinates.html`
@@ -95,7 +98,6 @@ python3 -m http.server 8100
 
 ## 現在の状態
 
-- Git 作業ツリーは通常 clean を維持して運用しているが、現在は複数 HTML と `future_topics.js`, `styles.css`, `current.md` に未コミット変更があり、`conic_orthogonal_transform.html`, `math_format.js` が未追跡
 - 主要な追加ページ群は commit / push 済み
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
@@ -103,7 +105,7 @@ python3 -m http.server 8100
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
 - 今後の追加ページは `future_index.html` 側に置く運用に変更
-- `future_index.html` には、固有値・外積に加えて新しい 6 ページも掲載
+- `future_index.html` には、固有値・外積・線形写像系・2次曲線などの追加ページを掲載
 - `index.html` からは `future_index.html` へ直接リンクしていない
 
 ## 最近の重要な実装内容
@@ -163,6 +165,17 @@ python3 -m http.server 8100
     - T(e_i) を列に並べて表現行列を作る
     - T(x) = Ax を図解つきで表示
     - 図解表示に倍率スライダを追加
+    - プリセット名は日本語化
+    - サンプルベクトルは重なりにくい値を選ぶ
+    - 図解の縮尺は内容に応じて自動調整
+  - 主な線形写像
+    - 2D / 3D 対応
+    - 対称移動 → 回転 → 拡大縮小 を順に合成して 1 個の線形写像として表示
+    - 回転角は度数 / ラジアン入力に対応
+    - 3D は回転軸を選んで回転
+    - 数式表示では各段の行列 `F`, `R`, `S` と合成行列 `A = S R F` を表示
+    - 2D では `y = -x` に関する対称を含む
+    - 3D 図形は対称移動を見やすくするため非対称な押し出し形を使用
   - 回転 / 拡大縮小 / 平行移動
     - 回転 → 拡大縮小 → 平行移動 を縦並びパネルで順に適用
     - 2D は正方形、3D は立方体の変換前後を図解表示
@@ -193,6 +206,8 @@ python3 -m http.server 8100
   - `index.html` からは `future_index.html` へ直接リンクしない
   - `future_index.html` 配下のページの `一覧へ` は `future_index.html` へ戻す
   - `future_index.html` には `2次曲線の標準形と直交変換` のカードを追加済み
+  - `future_index.html` には `主な線形写像` のカードを追加済み
+  - `線形独立と線形従属` と `基底ベクトルと標準基底ベクトル` は `future_index.html` から外し、`index.html` 側へ移動
 - デバッグ表示の状況
   - `determinant.html` はデバッグ表示を解除済み
   - `vector_add_sub.html` はデバッグ表示を解除済み

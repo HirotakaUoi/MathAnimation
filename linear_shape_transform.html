@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>主な線形写像</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260518b" />
+    <style>
+      body[data-topic="linear-shape-transform"] .sub-control-band {
+        grid-row: 3;
+      }
+
+      body[data-topic="linear-shape-transform"] .workspace.has-sub-control-band .message {
+        grid-row: 4;
+      }
+
+      body[data-topic="linear-shape-transform"] .workspace.has-sub-control-band .vector-display-band {
+        grid-row: 5;
+      }
+
+      body[data-topic="linear-shape-transform"] .workspace.has-sub-control-band .vector-diagram-band {
+        grid-row: 6;
+      }
+
+      body[data-topic="linear-shape-transform"] .workspace.has-sub-control-band .animation-band {
+        grid-row: 7;
+      }
+
+      body[data-topic="linear-shape-transform"] #rotate3DGroup[hidden],
+      body[data-topic="linear-shape-transform"] #scaleZControl[hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body data-topic="linear-shape-transform">
+    <main class="app-shell">
+      <section class="workspace has-vector-display has-vector-diagram has-sub-control-band" aria-label="主な線形写像">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Linear Transformation</p>
+            <div class="title-row">
+              <h1>主な線形写像</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span id="dimensionStatus">2 次元</span>
+            <span id="presetStatus">対称移動 → 回転 → 拡大縮小</span>
+          </div>
+        </header>
+
+        <section class="control-band">
+          <div class="control-group">
+            <label for="dimension">次元</label>
+            <select id="dimension">
+              <option value="2">2 次元</option>
+              <option value="3">3 次元</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>適用順</label>
+            <div class="topic-inline-copy">1. 対称移動 → 2. 回転 → 3. 拡大縮小 の順に合成して 1 個の線形写像として見ます。</div>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="subControls" class="control-band sub-control-band transform-sequence-band">
+          <div class="transform-stack" aria-label="変換パネル">
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>1. 対称移動</strong>
+                <span>まず対称移動を適用します</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  対称移動
+                  <select id="symmetryPreset"></select>
+                </label>
+              </div>
+            </article>
+
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>2. 回転</strong>
+                <span>次に回転を適用します</span>
+              </div>
+              <div class="transform-step-fields">
+                <label id="rotate2DGroup" class="topic-inline-field">
+                  角度
+                  <input id="rotateAngle" type="text" value="45" placeholder="45 / PI/4 / π/4" />
+                </label>
+                <label id="rotate3DGroup" class="topic-inline-field" hidden>
+                  回転軸
+                  <select id="rotateAxis">
+                    <option value="x">x軸</option>
+                    <option value="y">y軸</option>
+                    <option value="z">z軸</option>
+                  </select>
+                </label>
+                <label class="topic-inline-field">
+                  単位
+                  <select id="rotateAngleUnit">
+                    <option value="deg">度数</option>
+                    <option value="rad">ラジアン</option>
+                  </select>
+                </label>
+              </div>
+            </article>
+
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>3. 拡大縮小</strong>
+                <span>最後に各軸方向の倍率をかけます</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  x 方向
+                  <input id="scaleX" type="text" value="2" />
+                </label>
+                <label class="topic-inline-field">
+                  y 方向
+                  <input id="scaleY" type="text" value="1" />
+                </label>
+                <label id="scaleZControl" class="topic-inline-field" hidden>
+                  z 方向
+                  <input id="scaleZ" type="text" value="1" />
+                </label>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="topic-stage topic-stage-3">
+          <article class="matrix-panel">
+            <header><h2>元の図形</h2><span>線形写像の前</span></header>
+            <div id="shapeSummary" class="topic-summary-box">2D では矢印形、3D では非対称な押し出し形を使います。</div>
+          </article>
+          <article class="matrix-panel">
+            <header><h2>写像 T</h2><span>表現行列</span></header>
+            <div id="transformSummary" class="topic-summary-box">対称移動・回転・拡大で、原点を固定したまま図形全体を動かします。</div>
+          </article>
+          <article class="matrix-panel result-panel">
+            <header><h2>移動後</h2><span>図形の像</span></header>
+            <div id="resultSummary" class="topic-summary-box">元の図形と変換後の図形を重ねて表示します。</div>
+          </article>
+        </section>
+
+        <section class="vector-display-band">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>線形写像では T(x) = A x です</span>
+          </div>
+          <div id="equationDisplay" class="vector-equation"></div>
+        </section>
+
+        <section class="vector-diagram-band">
+          <div class="vector-diagram-header">
+            <div class="inverse-display-header">
+              <h2>図解表示</h2>
+              <span>灰色が元の図形、青緑が線形写像後の図形です</span>
+            </div>
+            <div class="diagram-controls">
+              <div class="control-group view-controls">
+                <label>倍率</label>
+                <div class="view-slider-row"><span>拡大率</span><input id="zoomScale" type="range" min="70" max="180" step="5" value="100" /><output id="zoomScaleValue">100%</output></div>
+              </div>
+              <div id="viewControls" class="control-group view-controls" hidden>
+                <label>回転</label>
+                <div class="view-slider-row"><span>X軸</span><input id="rotateX" type="range" min="-180" max="180" value="0" /><output id="rotateXValue">0°</output></div>
+                <div class="view-slider-row"><span>Y軸</span><input id="rotateY" type="range" min="-180" max="180" value="0" /><output id="rotateYValue">0°</output></div>
+                <div class="view-slider-row"><span>Z軸</span><input id="rotateZ" type="range" min="-180" max="180" value="0" /><output id="rotateZValue">0°</output></div>
+              </div>
+            </div>
+          </div>
+          <svg id="vectorDiagram" class="vector-diagram" viewBox="0 0 720 360"></svg>
+        </section>
+
+        <section class="animation-band">
+          <div class="timeline"><div id="animationTrack" class="animation-track"></div></div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">線形写像</div>
+            <div id="formula" class="formula">対称移動・回転・拡大はいずれも原点を固定する線形写像です。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="./future_topics.js?v=20260518b"></script>
+    <script src="./math_format.js?v=20260518b"></script>
+  </body>
+</html>
