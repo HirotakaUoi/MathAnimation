@@ -430,6 +430,24 @@ h2 {
   justify-content: start;
 }
 
+body[data-topic="diagonalization"] .method-controls {
+  grid-template-columns: 140px minmax(320px, 1fr) auto;
+  align-items: end;
+}
+
+body[data-topic="diagonalization"] .method-controls .control-group {
+  min-width: 0;
+}
+
+body[data-topic="diagonalization"] #sampleMode {
+  min-width: 0;
+  width: 100%;
+}
+
+body[data-topic="diagonalization"] #sizePill {
+  width: 100%;
+}
+
 .control-group {
   display: grid;
   gap: 8px;
@@ -1725,9 +1743,73 @@ body[data-topic="affine-transform"] .diagram-axis-label {
   align-items: stretch;
 }
 
+body[data-topic="diagonalization"] .diagonal-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
 .diagonalization-summary {
   margin-top: 14px;
   min-height: 72px;
+}
+
+body[data-topic="diagonalization"] .eigen-info-card {
+  gap: 6px;
+  padding: 8px;
+}
+
+body[data-topic="diagonalization"] .eigen-text-block {
+  min-height: 64px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+body[data-topic="diagonalization"] .math-matrix {
+  gap: 4px 7px;
+  padding: 6px 12px;
+  font-size: 0.98rem;
+}
+
+body[data-topic="diagonalization"] .math-matrix-cell {
+  min-width: 24px;
+}
+
+body[data-topic="diagonalization"] .determinant-stage {
+  grid-template-columns: minmax(180px, 0.8fr) minmax(280px, 1.3fr) minmax(180px, 0.72fr);
+}
+
+body[data-topic="diagonalization"] .solution-output {
+  --matrix-cell-min: 88px;
+}
+
+body[data-topic="diagonalization"] .determinant-scalar {
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: clamp(0.88rem, 1.1vw, 1.2rem);
+}
+
+body[data-topic="diagonalization"] .result-note {
+  margin-top: 6px;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+body[data-topic="diagonalization"] .matrix-input .cell-input,
+body[data-topic="diagonalization"] .matrix-output .cell-output {
+  min-height: 54px;
+  padding: 0 6px;
+  font-size: clamp(0.92rem, 1.15vw, 1.15rem);
+}
+
+body[data-topic="diagonalization"] .method-wide {
+  min-width: 0;
+}
+
+body[data-topic="diagonalization"] .vector-equation,
+body[data-topic="diagonalization"] .formula {
+  font-size: 0.98rem;
 }
 
 .eigen-info-card {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>行列の対角化</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260520a" />
+    <link rel="stylesheet" href="./styles.css?v=20260520d" />
   </head>
   <body data-topic="diagonalization">
     <main class="app-shell">
@@ -28,7 +28,16 @@
         <section class="control-band method-controls" aria-label="設定">
           <div class="control-group">
             <label>サイズ</label>
-            <div class="static-pill">2 x 2</div>
+            <div id="sizePill" class="static-pill">2 x 2</div>
+          </div>
+          <div class="control-group">
+            <label for="sampleMode">モード</label>
+            <select id="sampleMode">
+              <option value="free2">2 x 2 自由入力</option>
+              <option value="sample3distinct">3 x 3 サンプル: 異なる3固有値</option>
+              <option value="sample3repeat">3 x 3 サンプル: 重複固有値でも対角化可</option>
+              <option value="sample3nondiag">3 x 3 サンプル: 対角化不可</option>
+            </select>
           </div>
           <div class="control-group">
             <label>入力</label>
@@ -75,7 +84,7 @@
           <article class="matrix-panel">
             <header>
               <h2>A</h2>
-              <span>2 x 2</span>
+              <span id="matrixSizeLabel">2 x 2</span>
             </header>
             <div id="matrixA" class="matrix-input" aria-label="行列A"></div>
           </article>
@@ -114,7 +123,7 @@
       </section>
     </main>
 
-    <script src="./diagonalization.js?v=20260520a"></script>
-    <script src="./math_format.js?v=20260520a"></script>
+    <script src="./diagonalization.js?v=20260520d"></script>
+    <script src="./math_format.js?v=20260520d"></script>
   </body>
 </html>
