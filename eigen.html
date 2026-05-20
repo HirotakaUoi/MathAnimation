@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Eigen Motion</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260520b" />
   </head>
-  <body>
+  <body data-topic="eigen">
     <main class="app-shell">
       <section class="workspace has-eigen-display" aria-label="固有値と固有ベクトルのアニメーション">
         <header class="topbar">
@@ -28,7 +28,16 @@
         <section class="control-band method-controls" aria-label="設定">
           <div class="control-group">
             <label>サイズ</label>
-            <div class="static-pill">2 x 2</div>
+            <div id="sizePill" class="static-pill">2 x 2</div>
+          </div>
+          <div class="control-group">
+            <label for="sampleMode">モード</label>
+            <select id="sampleMode">
+              <option value="free2">2 x 2 自由入力</option>
+              <option value="sample3distinct">3 x 3 サンプル: 異なる3固有値</option>
+              <option value="sample3repeat">3 x 3 サンプル: 重複固有値でも対角化可</option>
+              <option value="sample3nondiag">3 x 3 サンプル: 対角化不可</option>
+            </select>
           </div>
           <div class="control-group">
             <label>入力</label>
@@ -66,7 +75,7 @@
           <article class="matrix-panel">
             <header>
               <h2>A</h2>
-              <span>2 x 2</span>
+              <span id="matrixSizeLabel">2 x 2</span>
             </header>
             <div id="matrixA" class="matrix-input" aria-label="行列A"></div>
           </article>
@@ -105,7 +114,7 @@
       </section>
     </main>
 
-    <script src="./eigen.js"></script>
-      <script src="./math_format.js?v=20260518a"></script>
+    <script src="./eigen.js?v=20260520b"></script>
+    <script src="./math_format.js?v=20260520b"></script>
   </body>
 </html>

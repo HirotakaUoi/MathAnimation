@@ -435,7 +435,16 @@ body[data-topic="diagonalization"] .method-controls {
   align-items: end;
 }
 
+body[data-topic="eigen"] .method-controls {
+  grid-template-columns: 140px minmax(320px, 1fr) auto;
+  align-items: end;
+}
+
 body[data-topic="diagonalization"] .method-controls .control-group {
+  min-width: 0;
+}
+
+body[data-topic="eigen"] .method-controls .control-group {
   min-width: 0;
 }
 
@@ -444,7 +453,16 @@ body[data-topic="diagonalization"] #sampleMode {
   width: 100%;
 }
 
+body[data-topic="eigen"] #sampleMode {
+  min-width: 0;
+  width: 100%;
+}
+
 body[data-topic="diagonalization"] #sizePill {
+  width: 100%;
+}
+
+body[data-topic="eigen"] #sizePill {
   width: 100%;
 }
 

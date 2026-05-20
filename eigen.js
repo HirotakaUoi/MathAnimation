@@ -2,8 +2,10 @@ const EPSILON = 1e-9;
 const MAX_RATIONAL_DENOMINATOR = 1000;
 
 const elements = {
+  sampleMode: document.querySelector("#sampleMode"),
   randomize: document.querySelector("#randomize"),
   animate: document.querySelector("#animate"),
+  sizePill: document.querySelector("#sizePill"),
   matrixA: document.querySelector("#matrixA"),
   mathMatrixA: document.querySelector("#mathMatrixA"),
   characteristicEquation: document.querySelector("#characteristicEquation"),
@@ -15,6 +17,7 @@ const elements = {
   methodSubtitle: document.querySelector("#methodSubtitle"),
   labelR: document.querySelector("#labelR"),
   dimensionStatus: document.querySelector("#dimensionStatus"),
+  matrixSizeLabel: document.querySelector("#matrixSizeLabel"),
   message: document.querySelector("#message"),
   animationTrack: document.querySelector("#animationTrack"),
   formulaTitle: document.querySelector("#formulaTitle"),
@@ -24,6 +27,54 @@ const elements = {
 
 const state = {
   timerIds: [],
+};
+
+const SAMPLE_PRESETS = {
+  sample3distinct: {
+    dimension: 3,
+    matrix: [
+      [2, 1, 0],
+      [1, 2, 0],
+      [0, 0, 4],
+    ],
+    equation: "det(A - λI) = (4 - λ)((2 - λ)(2 - λ) - 1) = -λ^3 + 8λ^2 - 19λ + 12 = -(λ - 4)(λ - 3)(λ - 1) = 0",
+    summary: "λ₁ = 3, λ₂ = 1, λ₃ = 4",
+    eigenData: [
+      { lambda: 3, vector: [1, 1, 0], text: "λ = 3 に対して v₁ = (1, 1, 0) を取れます。" },
+      { lambda: 1, vector: [1, -1, 0], text: "λ = 1 に対して v₂ = (1, -1, 0) を取れます。" },
+      { lambda: 4, vector: [0, 0, 1], text: "λ = 4 に対して v₃ = (0, 0, 1) を取れます。" },
+    ],
+  },
+  sample3repeat: {
+    dimension: 3,
+    matrix: [
+      [2, 1, 0],
+      [1, 2, 0],
+      [0, 0, 3],
+    ],
+    equation: "det(A - λI) = (3 - λ)((2 - λ)(2 - λ) - 1) = -λ^3 + 7λ^2 - 15λ + 9 = -(λ - 3)^2(λ - 1) = 0",
+    summary: "λ = 3, 3, 1",
+    eigenData: [
+      { lambda: 3, vector: [1, 1, 0], text: "λ = 3 に対して v₁ = (1, 1, 0) を取れます。" },
+      { lambda: 1, vector: [1, -1, 0], text: "λ = 1 に対して v₂ = (1, -1, 0) を取れます。" },
+      { lambda: 3, vector: [0, 0, 1], text: "もう 1 本の λ = 3 の固有ベクトルとして v₃ = (0, 0, 1) を取れます。" },
+    ],
+  },
+  sample3nondiag: {
+    dimension: 3,
+    matrix: [
+      [2, 1, 0],
+      [0, 2, 0],
+      [0, 0, 3],
+    ],
+    equation: "det(A - λI) = (2 - λ)(2 - λ)(3 - λ) = -λ^3 + 7λ^2 - 16λ + 12 = -(λ - 2)^2(λ - 3) = 0",
+    summary: "λ = 2, 2, 3",
+    eigenData: [
+      { lambda: 2, vector: [1, 0, 0], text: "λ = 2 に対する固有ベクトルは v = (1, 0, 0) の方向だけです。" },
+      { lambda: 3, vector: [0, 0, 1], text: "λ = 3 に対しては v = (0, 0, 1) を取れます。" },
+    ],
+    reason: "重解 λ = 2 に対して独立な固有ベクトルが 2 本ないので、固有ベクトルは 3 本そろいません。",
+  },
 };
 
 function approximateRational(value) {
@@ -88,6 +139,33 @@ function polynomialString(trace, determinant) {
   const constant = Math.abs(determinant) < EPSILON ? "" : `${determinant >= 0 ? "+ " : "- "}${formatNumber(Math.abs(determinant))}`;
   const expression = `λ² ${linear}${constant}`.replace(/\s+/g, " ").trim();
   return expression.endsWith("+") || expression.endsWith("-") ? `${expression} 0` : expression;
+}
+
+function sqrtText(value) {
+  const cleaned = cleanNumber(value);
+  const root = Math.sqrt(cleaned);
+  if (Number.isFinite(root) && Math.abs(root - Math.round(root)) < EPSILON) {
+    return formatNumber(Math.round(root));
+  }
+  const text = formatNumber(cleaned);
+  return Number.isInteger(cleaned) ? `√${text}` : `√(${text})`;
+}
+
+function factorizedPolynomialString(trace, discriminant, eigenvalues) {
+  if (!eigenvalues.length) return "";
+  if (eigenvalues.length === 1) {
+    return `(λ - ${formatNumber(trace / 2)})^2`;
+  }
+  const root = Math.sqrt(cleanNumber(discriminant));
+  if (Number.isFinite(root) && Math.abs(root - Math.round(root)) < EPSILON) {
+    return eigenvalues.map((lambda) => `(λ ${lambda >= 0 ? "-" : "+"} ${formatNumber(Math.abs(lambda))})`).join("");
+  }
+  const traceText = formatNumber(trace);
+  const rootText = sqrtText(discriminant);
+  return [
+    `(λ - (${traceText} + ${rootText})/2)`,
+    `(λ - (${traceText} - ${rootText})/2)`,
+  ].join("");
 }
 
 function tokenizeExpression(source) {
@@ -243,26 +321,27 @@ function clearAnimation() {
   elements.historyList.innerHTML = "";
 }
 
-function createInputGrid() {
-  const defaults = [
-    [2, 1],
-    [1, 2],
-  ];
-  elements.matrixA.innerHTML = "";
-  setGrid(elements.matrixA, 2, 2);
+function currentDimension() {
+  return elements.sampleMode.value === "free2" ? 2 : SAMPLE_PRESETS[elements.sampleMode.value].dimension;
+}
 
-  for (let row = 0; row < 2; row += 1) {
-    for (let col = 0; col < 2; col += 1) {
+function createInputGrid(size = 2, defaults = [[2, 1], [1, 2]], readOnly = false) {
+  elements.matrixA.innerHTML = "";
+  setGrid(elements.matrixA, size, size);
+
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
       const input = document.createElement("input");
       input.type = "text";
       input.inputMode = "decimal";
       input.spellcheck = false;
       input.className = "cell-input";
       input.value = defaults[row][col];
+      input.readOnly = readOnly;
       input.dataset.row = row;
       input.dataset.col = col;
       input.ariaLabel = `A${row + 1}${col + 1}`;
-      input.addEventListener("input", updateLiveDisplays);
+      if (!readOnly) input.addEventListener("input", updateLiveDisplays);
       elements.matrixA.append(input);
     }
   }
@@ -270,11 +349,12 @@ function createInputGrid() {
 
 function readInputMatrix() {
   const cells = Array.from(elements.matrixA.querySelectorAll("input"));
+  const size = currentDimension();
   const matrix = [];
-  for (let row = 0; row < 2; row += 1) {
+  for (let row = 0; row < size; row += 1) {
     const line = [];
-    for (let col = 0; col < 2; col += 1) {
-      const cell = cells[row * 2 + col];
+    for (let col = 0; col < size; col += 1) {
+      const cell = cells[row * size + col];
       try {
         line.push(parseExpressionValue(cell.value));
         cell.classList.remove("invalid");
@@ -293,10 +373,9 @@ function determinant2(matrix) {
 }
 
 function matrixMinusLambdaI(matrix, lambda) {
-  return [
-    [cleanNumber(matrix[0][0] - lambda), cleanNumber(matrix[0][1])],
-    [cleanNumber(matrix[1][0]), cleanNumber(matrix[1][1] - lambda)],
-  ];
+  return matrix.map((row, rowIndex) =>
+    row.map((value, colIndex) => cleanNumber(value - (rowIndex === colIndex ? lambda : 0))),
+  );
 }
 
 function normalizeVector(vector) {
@@ -412,7 +491,7 @@ function analyzeMatrix(matrix) {
   const determinant = determinant2(matrix);
   const discriminant = trace ** 2 - 4 * determinant;
   const polynomial = polynomialString(trace, determinant);
-  const equation = `det(A - λI) = (${formatNumber(matrix[0][0])} - λ)(${formatNumber(matrix[1][1])} - λ) - ${formatNumber(matrix[0][1])} × ${formatNumber(matrix[1][0])} = ${polynomial} = 0`;
+  const rawEquation = `det(A - λI) = (${formatNumber(matrix[0][0])} - λ)(${formatNumber(matrix[1][1])} - λ) - ${formatNumber(matrix[0][1])} × ${formatNumber(matrix[1][0])}`;
 
   if (discriminant < -EPSILON) {
     const realPart = trace / 2;
@@ -421,7 +500,7 @@ function analyzeMatrix(matrix) {
       trace,
       determinant,
       discriminant,
-      equation,
+      equation: `${rawEquation} = ${polynomial} = 0`,
       realEigenvalues: [],
       summary: `D = ${formatNumber(discriminant)} < 0 なので、実数の固有値はありません。 λ = ${formatNumber(realPart)} ± ${formatNumber(imaginaryPart)}i`,
       complexSummary: `λ = ${formatNumber(realPart)} ± ${formatNumber(imaginaryPart)}i`,
@@ -432,6 +511,10 @@ function analyzeMatrix(matrix) {
   const lambda1 = cleanNumber((trace + root) / 2);
   const lambda2 = cleanNumber((trace - root) / 2);
   const realEigenvalues = Math.abs(lambda1 - lambda2) < EPSILON ? [lambda1] : [lambda1, lambda2];
+  const factorized = factorizedPolynomialString(trace, discriminant, realEigenvalues);
+  const equation = factorized
+    ? `${rawEquation} = ${polynomial} = ${factorized} = 0`
+    : `${rawEquation} = ${polynomial} = 0`;
   const summary = realEigenvalues.length === 1
     ? `D = ${formatNumber(discriminant)} なので重解です。 λ = ${formatNumber(realEigenvalues[0])}`
     : `D = ${formatNumber(discriminant)} なので、λ₁ = ${formatNumber(realEigenvalues[0])}, λ₂ = ${formatNumber(realEigenvalues[1])}`;
@@ -440,6 +523,61 @@ function analyzeMatrix(matrix) {
 }
 
 function buildCalculation(matrix) {
+  if (elements.sampleMode.value !== "free2") {
+    const preset = SAMPLE_PRESETS[elements.sampleMode.value];
+    const steps = [
+      {
+        title: "特性方程式を立てる",
+        text: "3 x 3 サンプル行列について、特性方程式を確認します。",
+        formula: preset.equation,
+        matrix: cloneMatrix(matrix),
+        sourceLabel: "det(A - λI)",
+      },
+      {
+        title: "固有値を読む",
+        text: preset.summary,
+        formula: preset.summary,
+        matrix: cloneMatrix(matrix),
+        sourceLabel: "固有値",
+      },
+    ];
+
+    preset.eigenData.forEach((entry, index) => {
+      steps.push({
+        title: `固有ベクトル v${index + 1} を取る`,
+        text: entry.text,
+        formula: `λ${index + 1} = ${formatNumber(entry.lambda)}`,
+        matrix: matrixMinusLambdaI(matrix, entry.lambda),
+        resultVector: entry.vector,
+        resultText: `固有ベクトルの一例: v${index + 1} = (${entry.vector.map((value) => formatNumber(value)).join(", ")})`,
+        sourceLabel: `λ = ${formatNumber(entry.lambda)}`,
+        eigenvalue: entry.lambda,
+      });
+    });
+
+    if (preset.reason) {
+      steps.push({
+        title: "固有ベクトルが足りない",
+        text: preset.reason,
+        formula: preset.reason,
+        matrix: cloneMatrix(matrix),
+        resultMessage: "独立な固有ベクトル不足",
+        resultText: preset.reason,
+        sourceLabel: "判定",
+      });
+    }
+
+    return {
+      analysis: {
+        equation: preset.equation,
+        realEigenvalues: preset.eigenData.map((entry) => entry.lambda),
+        summary: preset.summary,
+        reason: preset.reason,
+      },
+      steps,
+    };
+  }
+
   const analysis = analyzeMatrix(matrix);
   const steps = [
     {
@@ -488,7 +626,7 @@ function buildCalculation(matrix) {
 
 function renderMathMatrix(matrix) {
   elements.mathMatrixA.innerHTML = "";
-  elements.mathMatrixA.style.gridTemplateColumns = "repeat(2, minmax(44px, auto))";
+  elements.mathMatrixA.style.gridTemplateColumns = `repeat(${matrix[0].length}, minmax(44px, auto))`;
   matrix.forEach((row) => {
     row.forEach((value) => {
       const cell = document.createElement("span");
@@ -500,7 +638,18 @@ function renderMathMatrix(matrix) {
 }
 
 function renderEquationSummary(matrix) {
-  const analysis = analyzeMatrix(matrix);
+  let analysis;
+  if (elements.sampleMode.value === "free2") {
+    analysis = analyzeMatrix(matrix);
+  } else {
+    const preset = SAMPLE_PRESETS[elements.sampleMode.value];
+    analysis = {
+      equation: preset.equation,
+      summary: preset.summary,
+      realEigenvalues: preset.eigenData.map((entry) => entry.lambda),
+      reason: preset.reason,
+    };
+  }
   renderMathMatrix(matrix);
   elements.characteristicEquation.textContent = analysis.equation;
   elements.eigenvalueSummary.textContent = analysis.summary;
@@ -523,8 +672,9 @@ function renderMethodMatrix(matrix, step = {}) {
 
 function renderPendingResult() {
   elements.resultMatrix.innerHTML = "";
-  setGrid(elements.resultMatrix, 2, 1);
-  for (let index = 0; index < 2; index += 1) {
+  const size = currentDimension();
+  setGrid(elements.resultMatrix, size, 1);
+  for (let index = 0; index < size; index += 1) {
     const cell = document.createElement("div");
     cell.className = "cell-output determinant-scalar pending-solution";
     cell.textContent = "?";
@@ -643,6 +793,12 @@ function setMatrixValues(values) {
 }
 
 function randomizeInputs() {
+  if (elements.sampleMode.value !== "free2") {
+    const keys = Object.keys(SAMPLE_PRESETS);
+    elements.sampleMode.value = keys[Math.floor(Math.random() * keys.length)];
+    applyMode();
+    return;
+  }
   const patterns = ["real", "repeated", "complex"];
   const target = patterns[Math.floor(Math.random() * patterns.length)];
 
@@ -676,15 +832,30 @@ function updateLiveDisplays() {
     renderPendingResult();
     elements.formulaTitle.textContent = "固有値の公式";
     elements.formula.textContent = "det(A - λI) = 0,  (A - λI)v = 0";
-    elements.message.textContent = analysis.realEigenvalues.length ? "" : "この行列は実数の固有値を持ちません。";
+    elements.message.textContent = analysis.reason || (analysis.realEigenvalues.length ? "" : "この行列は実数の固有値を持ちません。");
   } catch (error) {
     elements.message.textContent = error.message;
   }
 }
 
+function applyMode() {
+  const preset = SAMPLE_PRESETS[elements.sampleMode.value];
+  if (elements.sampleMode.value === "free2") {
+    createInputGrid(2, [[2, 1], [1, 2]], false);
+    elements.sizePill.textContent = "2 x 2";
+    elements.dimensionStatus.textContent = "2 x 2";
+    elements.matrixSizeLabel.textContent = "2 x 2";
+  } else {
+    createInputGrid(preset.dimension, preset.matrix, true);
+    elements.sizePill.textContent = `${preset.dimension} x ${preset.dimension}`;
+    elements.dimensionStatus.textContent = `${preset.dimension} x ${preset.dimension}`;
+    elements.matrixSizeLabel.textContent = `${preset.dimension} x ${preset.dimension}`;
+  }
+  updateLiveDisplays();
+}
+
+elements.sampleMode.addEventListener("change", applyMode);
 elements.randomize.addEventListener("click", randomizeInputs);
 elements.animate.addEventListener("click", animate);
 
-createInputGrid();
-elements.dimensionStatus.textContent = "2 x 2";
-updateLiveDisplays();
+applyMode();
