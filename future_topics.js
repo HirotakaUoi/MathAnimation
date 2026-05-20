@@ -1293,28 +1293,49 @@ function initLinearMapMatrix() {
   function presets(dim) {
     if (dim === 2) {
       return {
-        shear: [[1, 1], [0, 1]],
-        stretch: [[2, 0], [0, 1]],
-        reflection: [[1, 0], [0, -1]],
-        rotation: [[0, -1], [1, 0]],
+        shearx: [[1, 1], [0, 1]],
+        sheary: [[1, 0], [1, 1]],
+        stretchx: [[2, 0], [0, 1]],
+        stretchxy: [[2, 0], [0, 0.5]],
+        reflectx: [[1, 0], [0, -1]],
+        reflecty: [[-1, 0], [0, 1]],
+        reflectdiag: [[0, 1], [1, 0]],
+        rotation90: [[0, -1], [1, 0]],
+        projectx: [[1, 0], [0, 0]],
       };
     }
     return {
       scale: [[2, 0, 0], [0, 1, 0], [0, 0, 1]],
       rotationz: [[0, -1, 0], [1, 0, 0], [0, 0, 1]],
-      shear: [[1, 1, 0], [0, 1, 0], [0, 0, 1]],
+      rotationx: [[1, 0, 0], [0, 0, -1], [0, 1, 0]],
+      rotationy: [[0, 0, 1], [0, 1, 0], [-1, 0, 0]],
+      shearxy: [[1, 1, 0], [0, 1, 0], [0, 0, 1]],
+      shearxz: [[1, 0, 1], [0, 1, 0], [0, 0, 1]],
+      shearyz: [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
+      reflectxy: [[1, 0, 0], [0, 1, 0], [0, 0, -1]],
       projection: [[1, 0, 0], [0, 1, 0], [0, 0, 0]],
     };
   }
 
   function presetLabel(key) {
     const labels = {
-      shear: "せん断",
-      stretch: "拡大縮小",
-      reflection: "鏡映",
-      rotation: "回転",
+      shearx: "x方向にずらす",
+      sheary: "y方向にずらす",
+      stretchx: "x方向拡大",
+      stretchxy: "異方拡大縮小",
+      reflectx: "x軸対称",
+      reflecty: "y軸対称",
+      reflectdiag: "直線 y=x 対称",
+      rotation90: "90°回転",
+      projectx: "x軸への射影",
       scale: "拡大縮小",
       rotationz: "z軸回転",
+      rotationx: "x軸回転",
+      rotationy: "y軸回転",
+      shearxy: "xをy方向へずらす",
+      shearxz: "xをz方向へずらす",
+      shearyz: "yをz方向へずらす",
+      reflectxy: "xy平面対称",
       projection: "xy平面への射影",
     };
     return labels[key] || key;
@@ -1323,17 +1344,27 @@ function initLinearMapMatrix() {
   function sampleVector(dim, key) {
     if (dim === 2) {
       const samples = {
-        shear: [2, 3],
-        stretch: [1, 3],
-        reflection: [3, 2],
-        rotation: [3, 2],
+        shearx: [2, 3],
+        sheary: [3, 2],
+        stretchx: [1, 3],
+        stretchxy: [2, 3],
+        reflectx: [3, 2],
+        reflecty: [3, 2],
+        reflectdiag: [3, 1],
+        rotation90: [3, 2],
+        projectx: [2, 3],
       };
       return samples[key] || [2, 3];
     }
     const samples = {
       scale: [2, 3, 1],
       rotationz: [3, 2, 1],
-      shear: [1, 3, 2],
+      rotationx: [1, 2, 3],
+      rotationy: [2, 1, 3],
+      shearxy: [1, 3, 2],
+      shearxz: [2, 1, 3],
+      shearyz: [1, 2, 3],
+      reflectxy: [2, 1, 3],
       projection: [2, 1, 3],
     };
     return samples[key] || [2, 3, 1];

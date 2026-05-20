@@ -7,6 +7,8 @@
     "#resultText",
     "#characteristicEquation",
     "#eigenvalueSummary",
+    "#eigenSummary",
+    "#diagonalizationSummary",
     "#standardSummary",
     "#rotationSummary",
     "#inverseSummary",

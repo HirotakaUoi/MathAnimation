@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-05-18
+最終更新: 2026-05-20
 
 ## プロジェクト概要
 
@@ -49,6 +49,9 @@ python3 -m http.server 8100
   - 2 x 2 行列の固有値と固有ベクトル
   - 特性方程式
   - 実数固有値がない場合の表示
+- `diagonalization.html`
+  - 行列の対角化
+  - `P^-1 A P = D` の確認
 - `linear_independence.html`
   - 2 次元 / 3 次元の線形独立と線形従属
 - `basis_vectors.html`
@@ -56,6 +59,7 @@ python3 -m http.server 8100
 - `linear_map_matrix.html`
   - 線形写像と表現行列
   - 図解表示の拡大縮小スライダあり
+  - 2D / 3D ともに代表的な写像プリセットを拡充
 - `linear_shape_transform.html`
   - 主な線形写像
   - 対称移動・回転・拡大縮小の合成
@@ -84,6 +88,8 @@ python3 -m http.server 8100
   - `vector_cross.html` 用
 - `eigen.js`
   - `eigen.html` 用
+- `diagonalization.js`
+  - `diagonalization.html` 用
 - `future_topics.js`
   - future 側ページの共通ロジック
 - `math_format.js`
@@ -148,12 +154,17 @@ python3 -m http.server 8100
   - 入力変更時は図解プレビューを即時更新
   - 再生後に回転を変えた場合は結果ベクトル表示を維持
   - `vector_add_sub.html` と `determinant.html` はデバッグ表示を解除済み
-- 固有値ページ
-  - 2 x 2 行列専用
-  - det(A - λI) = 0 から特性方程式を作成
-  - 判別式で実数固有値の有無を表示
-  - (A - λI)v = 0 を自由変数で解いて固有ベクトルを表示
-  - A = λI のときは 0 でない任意のベクトルが固有ベクトルであることを表示
+  - 固有値ページ
+    - 2 x 2 行列専用
+    - det(A - λI) = 0 から特性方程式を作成
+    - 判別式で実数固有値の有無を表示
+    - (A - λI)v = 0 を自由変数で解いて固有ベクトルを表示
+    - A = λI のときは 0 でない任意のベクトルが固有ベクトルであることを表示
+  - 対角化ページ
+    - 2 x 2 行列専用
+    - 固有値と固有ベクトルから P, D を作る
+    - `P^-1 A P = D` を数式表示とアニメーションで確認
+    - 実固有値がない場合、重解で独立な固有ベクトルが 2 本取れない場合は対角化できないことを表示
 - future 側の新規ページ
   - 線形独立と線形従属
     - 2D / 3D 対応
@@ -166,6 +177,8 @@ python3 -m http.server 8100
     - T(x) = Ax を図解つきで表示
     - 図解表示に倍率スライダを追加
     - プリセット名は日本語化
+    - 2D は x方向せん断 / y方向せん断 / x方向拡大 / 異方拡大縮小 / x軸対称 / y軸対称 / 直線 y=x 対称 / 90°回転 / x軸への射影
+    - 3D は拡大縮小 / x軸回転 / y軸回転 / z軸回転 / 各種せん断 / xy平面対称 / xy平面への射影
     - サンプルベクトルは重なりにくい値を選ぶ
     - 図解の縮尺は内容に応じて自動調整
   - 主な線形写像
@@ -207,6 +220,7 @@ python3 -m http.server 8100
   - `future_index.html` 配下のページの `一覧へ` は `future_index.html` へ戻す
   - `future_index.html` には `2次曲線の標準形と直交変換` のカードを追加済み
   - `future_index.html` には `主な線形写像` のカードを追加済み
+  - `future_index.html` には `行列の対角化` のカードを追加済み
   - `線形独立と線形従属` と `基底ベクトルと標準基底ベクトル` は `future_index.html` から外し、`index.html` 側へ移動
 - デバッグ表示の状況
   - `determinant.html` はデバッグ表示を解除済み

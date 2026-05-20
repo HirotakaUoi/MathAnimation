@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>行列の対角化</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260520a" />
+  </head>
+  <body data-topic="diagonalization">
+    <main class="app-shell">
+      <section class="workspace has-eigen-display has-diagonalization-display" aria-label="行列の対角化のアニメーション">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Diagonalization</p>
+            <div class="title-row">
+              <h1>行列の対角化</h1>
+              <span class="debug-badge">デバッグ中</span>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span id="dimensionStatus">2 x 2</span>
+            <span>P^-1 A P = D</span>
+          </div>
+        </header>
+
+        <section class="control-band method-controls" aria-label="設定">
+          <div class="control-group">
+            <label>サイズ</label>
+            <div class="static-pill">2 x 2</div>
+          </div>
+          <div class="control-group">
+            <label>入力</label>
+            <div class="button-row">
+              <button id="randomize" type="button" class="secondary">ランダム</button>
+              <button id="animate" type="button" class="primary">再生</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="eigen-display-band diagonalization-display-band" aria-label="対角化の数式表示">
+          <div class="inverse-display-header">
+            <h2>数式表示</h2>
+            <span>固有値・固有ベクトルから P, D を作ります</span>
+          </div>
+          <div class="diagonal-summary-grid">
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">A</div>
+              <div id="mathMatrixA" class="math-matrix" aria-label="元行列A"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">det(A - λI) = 0</div>
+              <div id="characteristicEquation" class="eigen-text-block"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">固有値・固有ベクトル</div>
+              <div id="eigenSummary" class="eigen-text-block"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">P</div>
+              <div id="mathMatrixP" class="math-matrix" aria-label="対角化行列P"></div>
+            </article>
+            <article class="eigen-info-card">
+              <div class="math-matrix-label">D</div>
+              <div id="mathMatrixD" class="math-matrix" aria-label="対角行列D"></div>
+            </article>
+          </div>
+          <div id="diagonalizationSummary" class="eigen-text-block diagonalization-summary"></div>
+        </section>
+
+        <section class="matrix-stage determinant-stage" aria-label="対角化の途中経過">
+          <article class="matrix-panel">
+            <header>
+              <h2>A</h2>
+              <span>2 x 2</span>
+            </header>
+            <div id="matrixA" class="matrix-input" aria-label="行列A"></div>
+          </article>
+
+          <article class="matrix-panel method-wide">
+            <header>
+              <div class="panel-title-row">
+                <h2 id="methodTitle">特性方程式</h2>
+              </div>
+              <span id="methodSubtitle">固有値を調べます</span>
+            </header>
+            <div id="methodMatrix" class="matrix-output method-matrix" aria-label="途中経過"></div>
+          </article>
+
+          <article class="matrix-panel result-panel">
+            <header>
+              <h2>Result</h2>
+              <span id="labelR">P, D</span>
+            </header>
+            <div id="resultMatrix" class="matrix-output solution-output" aria-label="対角化結果"></div>
+            <div id="resultText" class="result-note">再生すると対角化の結果を表示します。</div>
+          </article>
+        </section>
+
+        <section class="animation-band" aria-label="計算状況表示">
+          <div class="timeline">
+            <div id="animationTrack" class="animation-track"></div>
+          </div>
+          <div class="formula-box">
+            <div id="formulaTitle" class="formula-title">対角化</div>
+            <div id="formula" class="formula">固有値を対角成分に並べ、対応する固有ベクトルを列にした P を作ると、P^-1 A P = D が成り立つかを確認します。</div>
+            <div class="history-title">計算履歴</div>
+            <ol id="historyList" class="history-list" aria-label="計算履歴"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./diagonalization.js?v=20260520a"></script>
+    <script src="./math_format.js?v=20260520a"></script>
+  </body>
+</html>
