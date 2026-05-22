@@ -114,7 +114,7 @@ http://localhost:8100/homogeneous_coordinates.html
 http://localhost:8100/quaternion_vector.html
 ```
 
-現在 `デバッグ中` のページや、今後の追加ページは `future_index.html` 側にまとめています。`index.html` からは直接リンクしていません。
+現在 `デバッグ中` のページや、今後の追加ページは `future_index.html` 側にまとめています。公開扱いにしたページは `index.html` 側へ移しています。
 
 各 HTML、CSS、JS はすべて相対パスでつながっているため、フォルダごと別の場所へ移動しても同じ手順で動きます。
 
@@ -168,7 +168,7 @@ PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`
 - 同次座標系とグラフィックスを表示
   - 2D は 3 x 3
   - 3D は 4 x 4
-  - 最後に 1 を足して平行移動を行列積に入れる
+  - 最後に 1 を足して平行移動・拡大縮小・回転を行列積に入れる
 - クオータニオンとベクトルを表示
   - 回転軸と角度から q を作る
   - q p q^-1 で回転後のベクトルを出す

@@ -2373,13 +2373,19 @@ function initHomogeneousCoordinates() {
 
   function defaultMatrix(dim, mode) {
     if (dim === 2) {
-      return mode === "translate"
-        ? [[1, 0, 3], [0, 1, -2], [0, 0, 1]]
-        : [[0, -1, 2], [1, 0, 1], [0, 0, 1]];
+      if (mode === "translate") return [[1, 0, 3], [0, 1, -2], [0, 0, 1]];
+      if (mode === "scale") return [[2, 0, 0], [0, 0.5, 0], [0, 0, 1]];
+      return [[0, -1, 2], [1, 0, 1], [0, 0, 1]];
     }
-    return mode === "translate"
-      ? [[1, 0, 0, 2], [0, 1, 0, -1], [0, 0, 1, 3], [0, 0, 0, 1]]
-      : [[0, -1, 0, 1], [1, 0, 0, 2], [0, 0, 1, 1], [0, 0, 0, 1]];
+    if (mode === "translate") return [[1, 0, 0, 2], [0, 1, 0, -1], [0, 0, 1, 3], [0, 0, 0, 1]];
+    if (mode === "scale") return [[2, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 1.5, 0], [0, 0, 0, 1]];
+    return [[0, -1, 0, 1], [1, 0, 0, 2], [0, 0, 1, 1], [0, 0, 0, 1]];
+  }
+
+  function modeDescription(mode) {
+    if (mode === "translate") return "平行移動では、最後の列に移動量を入れます。";
+    if (mode === "scale") return "拡大・縮小では、対角成分に各軸方向の倍率を入れます。";
+    return "回転と平行移動を 1 つの同次変換行列にまとめます。";
   }
 
   function readState() {
@@ -2410,8 +2416,8 @@ function initHomogeneousCoordinates() {
       elements.resultSummary.textContent = `同次座標 = (${resultH.map((value) => TopicShared.formatNumber(value)).join(", ")}) → (${pointResult.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
       elements.equationDisplay.textContent =
         state.dimension === 2
-          ? "[x y 1]^T にすると、平行移動も 3 x 3 行列で扱えます。"
-          : "[x y z 1]^T にすると、3D の平行移動と回転を 4 x 4 行列にまとめられます。";
+          ? `[x y 1]^T にすると、${modeDescription(elements.mode.value)}`
+          : `[x y z 1]^T にすると、${modeDescription(elements.mode.value)}`;
       elements.formulaTitle.textContent = "同次座標";
       elements.formula.textContent = "グラフィックスでは、平行移動・回転・拡大縮小を同じ行列積にのせるために最後に 1 を足します。";
       TopicShared.renderTrack(elements.animationTrack, ["1 を足す", "行列をかける", "w で読む", "グラフィックスで使う"], -1);
@@ -2443,7 +2449,7 @@ function initHomogeneousCoordinates() {
           TopicShared.renderTrack(elements.animationTrack, labels, 0);
           elements.formulaTitle.textContent = "同次化";
           elements.formula.textContent = `p = (${point.map((value) => TopicShared.formatNumber(value)).join(", ")}) → p~ = (${homogeneous.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "同次化", "最後に 1 を足して、平行移動も行列に入れます。");
+          TopicShared.pushHistory(elements.historyList, "同次化", "最後に 1 を足して、平行移動・回転・拡大縮小を同じ形の行列で扱います。");
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 1);
