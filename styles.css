@@ -1006,6 +1006,14 @@ select:focus-visible {
   font-weight: 800;
 }
 
+.affine-matrix-display .transform-matrix-chain {
+  align-items: flex-start;
+}
+
+.affine-matrix-display .math-matrix-note {
+  min-height: 1.48em;
+}
+
 .math-operator {
   color: var(--ink);
   font-size: 1.6rem;

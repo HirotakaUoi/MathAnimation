@@ -5,11 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Homogeneous Coordinates Motion</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260522a" />
+    <style>
+      body[data-topic="homogeneous-coordinates"] .sub-control-band {
+        grid-row: 3;
+      }
+
+      body[data-topic="homogeneous-coordinates"] .workspace.has-sub-control-band .message {
+        grid-row: 4;
+      }
+
+      body[data-topic="homogeneous-coordinates"] .workspace.has-sub-control-band .vector-display-band {
+        grid-row: 5;
+      }
+
+      body[data-topic="homogeneous-coordinates"] .workspace.has-sub-control-band .vector-diagram-band {
+        grid-row: 6;
+      }
+
+      body[data-topic="homogeneous-coordinates"] .workspace.has-sub-control-band .animation-band {
+        grid-row: 7;
+      }
+
+      body[data-topic="homogeneous-coordinates"] .diagram-label-group,
+      body[data-topic="homogeneous-coordinates"] .diagram-axis-label,
+      body[data-topic="homogeneous-coordinates"] .diagram-axis-name {
+        display: none;
+      }
+
+      body[data-topic="homogeneous-coordinates"] #rotate2DGroup[hidden],
+      body[data-topic="homogeneous-coordinates"] #rotateXYGroup[hidden],
+      body[data-topic="homogeneous-coordinates"] #rotateZGroup[hidden],
+      body[data-topic="homogeneous-coordinates"] #rotateYZGroup[hidden],
+      body[data-topic="homogeneous-coordinates"] #scaleZControl[hidden],
+      body[data-topic="homogeneous-coordinates"] #translateZControl[hidden] {
+        display: none !important;
+      }
+    </style>
   </head>
   <body data-topic="homogeneous-coordinates">
     <main class="app-shell">
-      <section class="workspace has-vector-display has-vector-diagram" aria-label="同次座標系とグラフィックス">
+      <section class="workspace has-vector-display has-vector-diagram has-sub-control-band" aria-label="同次座標系とグラフィックス">
         <header class="topbar">
           <div>
             <p class="eyebrow">Graphics Math</p>
@@ -21,7 +57,7 @@
           <div class="status-strip">
             <a class="home-link" href="./future_index.html">一覧へ</a>
             <span id="dimensionStatus">2 次元</span>
-            <span id="modeStatus">平行移動</span>
+            <span id="transformStatus">同次変換</span>
           </div>
         </header>
 
@@ -34,38 +70,105 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="mode">変換例</label>
-            <select id="mode">
-              <option value="translate">平行移動</option>
-              <option value="scale">拡大・縮小</option>
-              <option value="affine">回転＋平行移動</option>
-            </select>
+            <label>適用順</label>
+            <div class="topic-inline-copy">点に 1 を足した同次座標で、回転・拡大縮小・平行移動を 1 つの行列積にまとめます。</div>
           </div>
           <div class="control-group">
             <label>入力</label>
             <div class="button-row">
-              <button id="randomize" type="button" class="secondary">初期化</button>
+              <button id="randomize" type="button" class="secondary">ランダム</button>
               <button id="animate" type="button" class="primary">再生</button>
             </div>
           </div>
         </section>
 
-        <section id="message" class="message" role="status"></section>
+        <section id="subControls" class="control-band sub-control-band transform-sequence-band">
+          <div class="transform-stack" aria-label="変換パネル">
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>1. 回転</strong>
+                <span>先に向きを変えます</span>
+              </div>
+              <div class="transform-step-fields">
+                <label id="rotate2DGroup" class="topic-inline-field">
+                  角度
+                  <input id="rotateAngle" type="text" value="45" placeholder="45 / PI/2 / π/2" />
+                </label>
+                <label id="rotateXYGroup" class="topic-inline-field" hidden>
+                  x 軸回転
+                  <input id="rotateAngleX" type="text" value="30" placeholder="30 / PI/6 / π/6" />
+                </label>
+                <label id="rotateZGroup" class="topic-inline-field" hidden>
+                  y 軸回転
+                  <input id="rotateAngleY" type="text" value="20" placeholder="20 / PI/9 / π/9" />
+                </label>
+                <label id="rotateYZGroup" class="topic-inline-field" hidden>
+                  z 軸回転
+                  <input id="rotateAngleZ" type="text" value="45" placeholder="45 / PI/4 / π/4" />
+                </label>
+                <label class="topic-inline-field">
+                  単位
+                  <select id="rotateAngleUnit">
+                    <option value="deg">度数</option>
+                    <option value="rad">ラジアン</option>
+                  </select>
+                </label>
+              </div>
+            </article>
 
-        <section class="topic-stage topic-stage-3">
-          <article class="matrix-panel vector-panel">
-            <header><h2>p</h2><span>点</span></header>
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>2. 拡大縮小</strong>
+                <span>各軸ごとに倍率をかけます</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  x 方向
+                  <input id="scaleX" type="text" value="2" />
+                </label>
+                <label class="topic-inline-field">
+                  y 方向
+                  <input id="scaleY" type="text" value="0.5" />
+                </label>
+                <label id="scaleZControl" class="topic-inline-field" hidden>
+                  z 方向
+                  <input id="scaleZ" type="text" value="1" />
+                </label>
+              </div>
+            </article>
+
+            <article class="transform-step-card">
+              <div class="transform-step-header">
+                <strong>3. 平行移動</strong>
+                <span>最後に位置をずらします</span>
+              </div>
+              <div class="transform-step-fields">
+                <label class="topic-inline-field">
+                  x 方向
+                  <input id="translateX" type="text" value="3" />
+                </label>
+                <label class="topic-inline-field">
+                  y 方向
+                  <input id="translateY" type="text" value="-2" />
+                </label>
+                <label id="translateZControl" class="topic-inline-field" hidden>
+                  z 方向
+                  <input id="translateZ" type="text" value="2" />
+                </label>
+              </div>
+            </article>
+          </div>
+
+          <article class="transform-point-card">
+            <div class="transform-step-header">
+              <strong>対象点 p</strong>
+              <span>同次座標 p~ = (p, 1) として変換します</span>
+            </div>
             <div id="pointInput" class="vector-input"></div>
           </article>
-          <article class="matrix-panel">
-            <header><h2>H</h2><span>同次変換行列</span></header>
-            <div id="matrixInput" class="matrix-input"></div>
-          </article>
-          <article class="matrix-panel result-panel">
-            <header><h2>結果</h2><span>同次座標</span></header>
-            <div id="resultSummary" class="topic-summary-box">H p~ を表示します。</div>
-          </article>
         </section>
+
+        <section id="message" class="message" role="status"></section>
 
         <section class="vector-display-band">
           <div class="inverse-display-header">
@@ -73,13 +176,14 @@
             <span>最後に 1 を足して平行移動を行列に入れます</span>
           </div>
           <div id="equationDisplay" class="vector-equation"></div>
+          <div id="resultSummary" class="topic-summary-box">最終的な変換後の点を表示します。</div>
         </section>
 
         <section class="vector-diagram-band">
           <div class="vector-diagram-header">
             <div class="inverse-display-header">
               <h2>図解表示</h2>
-              <span>元の点と変換後の点を比べます</span>
+              <span>元の図形と変換後の図形を重ねて見ます</span>
             </div>
             <div id="viewControls" class="control-group view-controls" hidden>
               <label>回転</label>
@@ -94,15 +198,15 @@
         <section class="animation-band">
           <div class="timeline"><div id="animationTrack" class="animation-track"></div></div>
           <div class="formula-box">
-            <div id="formulaTitle" class="formula-title">同次座標</div>
-            <div id="formula" class="formula">2D では [x y 1]^T、3D では [x y z 1]^T にします。</div>
+            <div id="formulaTitle" class="formula-title">変換</div>
+            <div id="formula" class="formula">回転と拡大縮小は線形写像、平行移動はアフィン写像です。</div>
             <div class="history-title">計算履歴</div>
             <ol id="historyList" class="history-list"></ol>
           </div>
         </section>
       </section>
     </main>
-    <script src="./future_topics.js"></script>
+    <script src="./future_topics.js?v=20260522c"></script>
       <script src="./math_format.js?v=20260518a"></script>
   </body>
 </html>

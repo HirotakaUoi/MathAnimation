@@ -1522,6 +1522,7 @@ function initLinearMapMatrix() {
 
 function initAffineTransform() {
   const $ = (selector) => document.querySelector(selector);
+  const useHomogeneousDisplay = document.body.dataset.topic === "homogeneous-coordinates";
   const elements = {
     dimension: $("#dimension"),
     subControls: $("#subControls"),
@@ -2081,6 +2082,70 @@ function initAffineTransform() {
     `;
   }
 
+  function linearScaleMatrix(params) {
+    if (state.dimension === 2) return [[params.sx, 0], [0, params.sy]];
+    return [[params.sx, 0, 0], [0, params.sy, 0], [0, 0, params.sz]];
+  }
+
+  function renderColumnVector(values, label) {
+    return `
+      <div class="math-matrix-term">
+        <span class="math-matrix-label">${label}</span>
+        <span class="math-matrix-note" aria-hidden="true">&nbsp;</span>
+        ${renderMathMatrix(values.map((value) => [value]))}
+      </div>
+    `;
+  }
+
+  function renderAffineTransformMatrices(transforms) {
+    const rotateMatrix = linearRotationMatrix(transforms.rotate);
+    const scaleMatrix = linearScaleMatrix(transforms.scale);
+    const affineMatrix = multiplyMatrices(scaleMatrix, rotateMatrix);
+    const translation = state.dimension === 2
+      ? [transforms.translate.tx, transforms.translate.ty]
+      : [transforms.translate.tx, transforms.translate.ty, transforms.translate.tz];
+    const inputVector = state.dimension === 2 ? [["x"], ["y"]] : [["x"], ["y"], ["z"]];
+    const outputVector = state.dimension === 2 ? [["x'"], ["y'"]] : [["x'"], ["y'"], ["z'"]];
+    return `
+      <div class="transform-matrix-display affine-matrix-display">
+        <div class="transform-matrix-chain">
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">S</span>
+            <span class="math-matrix-note">拡大縮小</span>
+            ${renderMathMatrix(scaleMatrix)}
+          </div>
+          <span class="math-operator">×</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">R</span>
+            <span class="math-matrix-note">回転</span>
+            ${renderMathMatrix(rotateMatrix)}
+          </div>
+          <span class="math-operator">=</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">A = S R</span>
+            <span class="math-matrix-note">線形部分の合成</span>
+            ${renderMathMatrix(affineMatrix)}
+          </div>
+          <span class="math-operator">×</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">x</span>
+            <span class="math-matrix-note" aria-hidden="true">&nbsp;</span>
+            ${renderMathMatrix(inputVector, String)}
+          </div>
+          <span class="math-operator">+</span>
+          ${renderColumnVector(translation, "b")}
+          <span class="math-operator">=</span>
+          <div class="math-matrix-term">
+            <span class="math-matrix-label">x'</span>
+            <span class="math-matrix-note" aria-hidden="true">&nbsp;</span>
+            ${renderMathMatrix(outputVector, String)}
+          </div>
+        </div>
+        <div class="math-matrix-note">回転と拡大縮小の合成を線形部分 A = S R とし、平行移動は同次座標に入れず x' = A x + b の移動ベクトル b として扱います。</div>
+      </div>
+    `;
+  }
+
   function applyTransformSequence(point, transforms) {
     const afterRotate = rotatePoint(point, transforms.rotate);
     const afterScale = scalePoint(afterRotate, transforms.scale);
@@ -2232,17 +2297,17 @@ function initAffineTransform() {
       output.textContent = `${values[index]}°`;
     });
     elements.dimensionStatus.textContent = `${state.dimension} 次元`;
-    elements.transformStatus.textContent = "回転 → 拡大縮小 → 平行移動";
+    elements.transformStatus.textContent = useHomogeneousDisplay ? "同次変換行列" : "回転 → 拡大縮小 → 平行移動";
     try {
       const point = readShape();
       const transforms = readTransforms();
       const applied = applyTransformSequence(point, transforms);
       elements.resultSummary.textContent = `最終像 = ${formatPoint(applied.afterTranslate)}`;
-      elements.equationDisplay.innerHTML = renderTransformMatrices(transforms);
+      elements.equationDisplay.innerHTML = useHomogeneousDisplay ? renderTransformMatrices(transforms) : renderAffineTransformMatrices(transforms);
       elements.formulaTitle.textContent = "変換の考え方";
-      elements.formula.textContent = state.dimension === 2
-        ? "回転・拡大縮小・平行移動は、同次座標ではそれぞれ行列として表せます。"
-        : "3D 回転は x → y → z の順に回転を合成した 1 個の回転行列で表しています。";
+      elements.formula.textContent = useHomogeneousDisplay
+        ? "同次座標では、回転・拡大縮小・平行移動を 1 つの行列積として表せます。"
+        : "回転と拡大縮小を線形行列 A にまとめ、平行移動を移動ベクトル b として x' = A x + b で表します。";
       const sample = sampleShape(state.dimension);
       const transformedSample = transformShape(sample, transforms);
       const labels = ["元の図形", "回転後", "拡大縮小後", "平行移動後"];
@@ -2331,174 +2396,6 @@ function initAffineTransform() {
   [elements.rotateX, elements.rotateY, elements.rotateZ].forEach((control) => control.addEventListener("input", refreshPreview));
   elements.randomize.addEventListener("click", randomize);
   elements.animate.addEventListener("click", animate);
-  refreshPreview();
-}
-
-function initHomogeneousCoordinates() {
-  const $ = (selector) => document.querySelector(selector);
-  const elements = {
-    dimension: $("#dimension"),
-    mode: $("#mode"),
-    randomize: $("#randomize"),
-    animate: $("#animate"),
-    message: $("#message"),
-    pointInput: $("#pointInput"),
-    matrixInput: $("#matrixInput"),
-    resultSummary: $("#resultSummary"),
-    equationDisplay: $("#equationDisplay"),
-    vectorDiagram: $("#vectorDiagram"),
-    dimensionStatus: $("#dimensionStatus"),
-    modeStatus: $("#modeStatus"),
-    viewControls: $("#viewControls"),
-    rotateX: $("#rotateX"),
-    rotateY: $("#rotateY"),
-    rotateZ: $("#rotateZ"),
-    rotateXValue: $("#rotateXValue"),
-    rotateYValue: $("#rotateYValue"),
-    rotateZValue: $("#rotateZValue"),
-    animationTrack: $("#animationTrack"),
-    formulaTitle: $("#formulaTitle"),
-    formula: $("#formula"),
-    historyList: $("#historyList"),
-  };
-  const state = { dimension: 2, timerIds: [] };
-
-  function rotation() {
-    return {
-      x: (Number(elements.rotateX.value) * Math.PI) / 180,
-      y: (Number(elements.rotateY.value) * Math.PI) / 180,
-      z: (Number(elements.rotateZ.value) * Math.PI) / 180,
-    };
-  }
-
-  function defaultMatrix(dim, mode) {
-    if (dim === 2) {
-      if (mode === "translate") return [[1, 0, 3], [0, 1, -2], [0, 0, 1]];
-      if (mode === "scale") return [[2, 0, 0], [0, 0.5, 0], [0, 0, 1]];
-      return [[0, -1, 2], [1, 0, 1], [0, 0, 1]];
-    }
-    if (mode === "translate") return [[1, 0, 0, 2], [0, 1, 0, -1], [0, 0, 1, 3], [0, 0, 0, 1]];
-    if (mode === "scale") return [[2, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 1.5, 0], [0, 0, 0, 1]];
-    return [[0, -1, 0, 1], [1, 0, 0, 2], [0, 0, 1, 1], [0, 0, 0, 1]];
-  }
-
-  function modeDescription(mode) {
-    if (mode === "translate") return "平行移動では、最後の列に移動量を入れます。";
-    if (mode === "scale") return "拡大・縮小では、対角成分に各軸方向の倍率を入れます。";
-    return "回転と平行移動を 1 つの同次変換行列にまとめます。";
-  }
-
-  function readState() {
-    const point = TopicShared.readVector(elements.pointInput, "p");
-    const size = state.dimension + 1;
-    const matrix = TopicShared.readMatrix(elements.matrixInput, size, size, "H");
-    const homogeneous = point.concat(1);
-    const resultH = TopicShared.multiplyMatrixVector(matrix, homogeneous);
-    const pointResult = resultH.slice(0, state.dimension).map((value) => value / resultH[state.dimension]);
-    return { point, homogeneous, matrix, resultH, pointResult };
-  }
-
-  function refreshPreview() {
-    TopicShared.clearTimers(state);
-    TopicShared.clearHistory(elements.historyList);
-    elements.message.textContent = "";
-    state.dimension = Number(elements.dimension.value);
-    const size = state.dimension + 1;
-    elements.viewControls.hidden = state.dimension !== 3;
-    [elements.rotateXValue, elements.rotateYValue, elements.rotateZValue].forEach((output, index) => {
-      const values = [elements.rotateX.value, elements.rotateY.value, elements.rotateZ.value];
-      output.textContent = `${values[index]}°`;
-    });
-    elements.dimensionStatus.textContent = `${state.dimension} 次元`;
-    elements.modeStatus.textContent = elements.mode.selectedOptions[0].textContent;
-    try {
-      const { point, homogeneous, resultH, pointResult } = readState();
-      elements.resultSummary.textContent = `同次座標 = (${resultH.map((value) => TopicShared.formatNumber(value)).join(", ")}) → (${pointResult.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-      elements.equationDisplay.textContent =
-        state.dimension === 2
-          ? `[x y 1]^T にすると、${modeDescription(elements.mode.value)}`
-          : `[x y z 1]^T にすると、${modeDescription(elements.mode.value)}`;
-      elements.formulaTitle.textContent = "同次座標";
-      elements.formula.textContent = "グラフィックスでは、平行移動・回転・拡大縮小を同じ行列積にのせるために最後に 1 を足します。";
-      TopicShared.renderTrack(elements.animationTrack, ["1 を足す", "行列をかける", "w で読む", "グラフィックスで使う"], -1);
-      TopicShared.drawSpaceDiagram(elements.vectorDiagram, {
-        dimension: state.dimension,
-        rotation: rotation(),
-        vectors: [
-          { from: [0, 0, 0], to: point, className: "diagram-cross", label: "p" },
-          { from: [0, 0, 0], to: pointResult, className: "diagram-result", label: "H p" },
-        ],
-        axisExtent: 8,
-        gridStep: 1,
-        tickStep: 5,
-      });
-    } catch (error) {
-      elements.message.textContent = error.message;
-      elements.resultSummary.textContent = "入力を確認してください。";
-    }
-  }
-
-  function animate() {
-    TopicShared.clearTimers(state);
-    TopicShared.clearHistory(elements.historyList);
-    try {
-      const { point, homogeneous, resultH, pointResult } = readState();
-      const labels = ["1 を足す", "行列をかける", "w で読む", "グラフィックスで使う"];
-      const steps = [
-        () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 0);
-          elements.formulaTitle.textContent = "同次化";
-          elements.formula.textContent = `p = (${point.map((value) => TopicShared.formatNumber(value)).join(", ")}) → p~ = (${homogeneous.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "同次化", "最後に 1 を足して、平行移動・回転・拡大縮小を同じ形の行列で扱います。");
-        },
-        () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 1);
-          elements.formulaTitle.textContent = "行列積";
-          elements.formula.textContent = `H p~ = (${resultH.map((value) => TopicShared.formatNumber(value)).join(", ")})`;
-          TopicShared.pushHistory(elements.historyList, "行列積", "1 本の行列積で変換をまとめて計算します。");
-        },
-        () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 2);
-          elements.formulaTitle.textContent = "通常座標へ戻す";
-          elements.formula.textContent = `最後の成分 w = ${TopicShared.formatNumber(resultH[state.dimension])} を使って (${pointResult.map((value) => TopicShared.formatNumber(value)).join(", ")}) と読みます。`;
-          TopicShared.pushHistory(elements.historyList, "読み戻し", "アフィン変換では通常 w = 1 のままです。");
-        },
-        () => {
-          TopicShared.renderTrack(elements.animationTrack, labels, 3);
-          elements.formulaTitle.textContent = "グラフィックス";
-          elements.formula.textContent = "モデル変換・ビュー変換・射影変換を同じ 4 x 4 行列積でつなげるため、同次座標が使われます。";
-          TopicShared.pushHistory(elements.historyList, "用途", "グラフィックスでは変換の合成を効率よく行えます。");
-        },
-      ];
-      steps.forEach((step, index) => state.timerIds.push(window.setTimeout(step, index * 900)));
-    } catch (error) {
-      elements.message.textContent = error.message;
-    }
-  }
-
-  function resetInputs() {
-    state.dimension = Number(elements.dimension.value);
-    TopicShared.createVectorInputs(elements.pointInput, state.dimension, "p", state.dimension === 2 ? [2, 1] : [2, 1, 3]);
-    TopicShared.createMatrixInputs(elements.matrixInput, state.dimension + 1, state.dimension + 1, "h", defaultMatrix(state.dimension, elements.mode.value));
-  }
-
-  TopicShared.attachLiveRefresh(document.body, refreshPreview);
-  elements.dimension.addEventListener("change", () => {
-    resetInputs();
-    TopicShared.attachLiveRefresh(document.body, refreshPreview);
-    refreshPreview();
-  });
-  elements.mode.addEventListener("change", () => {
-    TopicShared.writeMatrix(elements.matrixInput, state.dimension + 1, state.dimension + 1, defaultMatrix(state.dimension, elements.mode.value));
-    refreshPreview();
-  });
-  [elements.rotateX, elements.rotateY, elements.rotateZ].forEach((slider) => slider.addEventListener("input", refreshPreview));
-  elements.randomize.addEventListener("click", () => {
-    resetInputs();
-    refreshPreview();
-  });
-  elements.animate.addEventListener("click", animate);
-  resetInputs();
   refreshPreview();
 }
 
@@ -3514,7 +3411,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (topic === "linear-map-matrix") initLinearMapMatrix();
   if (topic === "linear-shape-transform") initLinearShapeTransform();
   if (topic === "affine-transform") initAffineTransform();
-  if (topic === "homogeneous-coordinates") initHomogeneousCoordinates();
+  if (topic === "homogeneous-coordinates") initAffineTransform();
   if (topic === "quaternion-vector") initQuaternionVector();
   if (topic === "conic-orthogonal-transform") initConicOrthogonalTransform();
 });
