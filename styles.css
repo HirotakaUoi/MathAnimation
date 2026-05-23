@@ -194,15 +194,26 @@ select {
 }
 
 .hub-footer-link a {
-  color: rgba(102, 112, 133, 0.84);
-  font-size: 0.95rem;
-  font-weight: 800;
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
   text-decoration: none;
 }
 
+.hub-footer-link a span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(102, 112, 133, 0.38);
+}
+
 .hub-footer-link a:hover {
-  color: var(--teal);
-  text-decoration: underline;
+  text-decoration: none;
+}
+
+.hub-footer-link a:hover span {
+  background: var(--teal);
 }
 
 .animation-card strong {
