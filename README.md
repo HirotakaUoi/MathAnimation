@@ -1,6 +1,6 @@
-# Matrix Motion
+# Math Animation Lab
 
-行列の加算・減算・乗算・除算をブラウザでアニメーション表示する小さなローカルアプリです。
+数学の計算過程や概念をブラウザでアニメーション表示する小さなローカルアプリです。現在は線形代数を中心に、離散数学の基礎知識ページを追加ページとして作成中です。
 
 ## 使い方
 
@@ -18,13 +18,54 @@ python3 -m http.server 8100
 http://localhost:8100/
 ```
 
+メインページは分野別タブで切り替えます。現在は `線形代数` と `離散数学` のタブがあります。
+
 追加ページ用のトップページは次です。
 
 ```text
 http://localhost:8100/future_index.html
 ```
 
-行列演算アニメーターを直接開く場合は次です。
+## ページ構成
+
+### メインページ
+
+`index.html` は公開扱いのページ一覧です。分野別タブで `線形代数` と `離散数学` を切り替えます。
+
+現在、`離散数学` タブはプレースホルダーです。調整中の離散数学ページは `future_index.html` に置いています。
+
+線形代数タブには次のページがあります。
+
+- `matrix_operation.html` - 行列演算アニメーター
+- `inverse_matrix.html` - 逆行列と求め方
+- `linear_system.html` - 掃き出し法で解く連立一次方程式
+- `determinant.html` - 行列式と求め方
+- `vector_add_sub.html` - ベクトルの加減算
+- `vector_dot.html` - ベクトルの内積
+- `vector_angle.html` - ベクトルのなす角
+- `linear_independence.html` - 線形独立と線形従属
+- `basis_vectors.html` - 基底ベクトルと標準基底ベクトル
+- `linear_map_matrix.html` - 線形写像と表現行列
+- `linear_shape_transform.html` - 主な線形写像
+- `affine_transform.html` - 回転・拡大縮小・平行移動
+- `homogeneous_coordinates.html` - 同次座標系とグラフィックス
+
+### 追加ページ
+
+`future_index.html` はデバッグ中・調整中の追加ページ一覧です。
+
+現在の主な追加ページは次です。
+
+- `discrete_sets.html` - 集合とベン図
+- `discrete_relations_functions.html` - 関係と関数
+- `discrete_permutations_combinations.html` - 順列と組み合わせ
+- `vector_cross.html` - ベクトルの外積
+- `eigen.html` - 固有値と固有ベクトル
+- `diagonalization.html` - 行列の対角化
+- `quaternion_vector.html` - クオータニオンとベクトル
+- `conic_orthogonal_transform.html` - 2次曲線の標準形と直交変換
+
+各ページを直接開くこともできます。例として、行列演算アニメーターを直接開く場合は次です。
 
 ```text
 http://localhost:8100/matrix_operation.html
@@ -54,7 +95,7 @@ http://localhost:8100/determinant.html
 http://localhost:8100/vector_dot.html
 ```
 
-ベクトルの外積をアニメーションするページは次です。
+追加ページに置いているベクトルの外積を直接開く場合は次です。
 
 ```text
 http://localhost:8100/vector_cross.html
@@ -72,7 +113,7 @@ http://localhost:8100/vector_angle.html
 http://localhost:8100/vector_add_sub.html
 ```
 
-固有値と固有ベクトルをアニメーションするページは次です。
+追加ページに置いている固有値と固有ベクトルを直接開く場合は次です。
 
 ```text
 http://localhost:8100/eigen.html
@@ -112,6 +153,24 @@ http://localhost:8100/homogeneous_coordinates.html
 
 ```text
 http://localhost:8100/quaternion_vector.html
+```
+
+集合とベン図をアニメーションするページは次です。
+
+```text
+http://localhost:8100/discrete_sets.html
+```
+
+関係と関数をアニメーションするページは次です。
+
+```text
+http://localhost:8100/discrete_relations_functions.html
+```
+
+順列と組み合わせをアニメーションするページは次です。
+
+```text
+http://localhost:8100/discrete_permutations_combinations.html
 ```
 
 現在 `デバッグ中` のページや、今後の追加ページは `future_index.html` 側にまとめています。公開扱いにしたページは `index.html` 側へ移しています。
@@ -172,6 +231,21 @@ PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`
 - クオータニオンとベクトルを表示
   - 回転軸と角度から q を作る
   - q p q^-1 で回転後のベクトルを出す
+- 離散数学の基礎知識を表示
+  - 集合とベン図
+    - U は `{1,2,3,4,5,6,7,8,9}` 固定
+    - A/B/C は 1 から 9 の範囲で入力可能
+    - 和集合・積集合・補集合・差集合をベン図と要素列挙で表示
+    - 所属領域に応じて要素位置と文字サイズを自動調整
+  - 関係と関数
+    - 順序対の集合
+    - 関係行列
+    - 関数・関数でない例、単射、全射
+  - 順列と組み合わせ
+    - 積の法則
+    - 順列 5P3
+    - 組合せ 5C3
+    - 二項係数
 - 公式のある計算ページでは、初期表示の数式欄にも公式を表示
 
 除算では B が正方行列かつ逆行列を持つ必要があります。
