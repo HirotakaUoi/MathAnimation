@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>関係と関数</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-topic="discrete-math" data-discrete-topic="relations-functions">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace" aria-label="関係と関数アニメーション">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>関係と関数</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./index.html">一覧へ</a>
+            <span id="chapterStatus">基礎知識</span>
+            <span id="topicStatus">関係と関数</span>
+          </div>
+        </header>
+
+        <section class="control-band discrete-controls discrete-controls-compact" aria-label="設定">
+          <div class="control-group">
+            <label for="exampleSelect">例</label>
+            <select id="exampleSelect"></select>
+          </div>
+          <div class="control-group">
+            <label>操作</label>
+            <div class="button-row">
+              <button id="stepBack" class="secondary" type="button">戻る</button>
+              <button id="playPause" class="primary" type="button">再生</button>
+              <button id="stepForward" class="secondary" type="button">進む</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="discrete-board" aria-label="アニメーション表示">
+          <article class="discrete-visual-panel">
+            <header class="discrete-panel-header">
+              <div>
+                <h2 id="visualTitle">関係と関数</h2>
+                <span id="visualSubtitle">順序対・関係行列・写像の条件</span>
+              </div>
+              <output id="stepBadge">Step 1 / 1</output>
+            </header>
+            <div id="visualStage" class="discrete-visual-stage" aria-live="polite"></div>
+          </article>
+
+          <aside class="discrete-side-panel" aria-label="説明">
+            <div class="formula-box discrete-formula-box">
+              <div id="formulaTitle" class="formula-title">定義</div>
+              <div id="formula" class="formula"></div>
+              <div class="history-title">ステップ</div>
+              <ol id="historyList" class="history-list" aria-label="ステップ一覧"></ol>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./discrete_math.js?v=20260523i"></script>
+    <script src="./math_format.js?v=20260518a"></script>
+  </body>
+</html>

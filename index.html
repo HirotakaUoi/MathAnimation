@@ -17,81 +17,120 @@
         <p class="hub-lead">作成した数学アニメーションをここから開けます。</p>
       </section>
 
-      <section class="animation-grid" aria-label="アニメーション">
-        <a class="animation-card" href="./matrix_operation.html">
-          <span class="card-kicker">Linear Algebra</span>
-          <strong>行列演算アニメーター</strong>
-          <span>加算・減算・乗算・除算を、要素ごとの参照セルと計算履歴つきで表示します。</span>
-        </a>
+      <section class="hub-tabs" aria-label="分野">
+        <div class="hub-tab-list" role="tablist" aria-label="分野を選択">
+          <button id="tab-linear-algebra" class="hub-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-linear-algebra" data-tab-target="linear-algebra">線形代数</button>
+          <button id="tab-discrete-math" class="hub-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-discrete-math" data-tab-target="discrete-math">離散数学</button>
+        </div>
 
-        <a class="animation-card" href="./inverse_matrix.html">
-          <span class="card-kicker">Gauss-Jordan</span>
-          <strong>逆行列と求め方</strong>
-          <span>[ A | I ] を掃き出して、右側に A^-1 が現れる過程を表示します。</span>
-        </a>
+        <section id="panel-linear-algebra" class="hub-tab-panel is-active" role="tabpanel" aria-labelledby="tab-linear-algebra" data-tab-panel="linear-algebra">
+          <div class="animation-grid" aria-label="線形代数">
+            <a class="animation-card" href="./matrix_operation.html">
+              <span class="card-kicker">Linear Algebra</span>
+              <strong>行列演算アニメーター</strong>
+              <span>加算・減算・乗算・除算を、要素ごとの参照セルと計算履歴つきで表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./linear_system.html">
-          <span class="card-kicker">Linear System</span>
-          <strong>掃き出し法で解く連立一次方程式</strong>
-          <span>[ A | b ] を行基本変形し、解 x が出る過程を表示します。</span>
-        </a>
+            <a class="animation-card" href="./inverse_matrix.html">
+              <span class="card-kicker">Gauss-Jordan</span>
+              <strong>逆行列と求め方</strong>
+              <span>[ A | I ] を掃き出して、右側に A^-1 が現れる過程を表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./determinant.html">
-          <span class="card-kicker">Determinant</span>
-          <strong>行列式と求め方</strong>
-          <span>2 x 2 から 4 x 4 まで、行基本変形で上三角化しながら det(A) を求めます。</span>
-        </a>
+            <a class="animation-card" href="./linear_system.html">
+              <span class="card-kicker">Linear System</span>
+              <strong>掃き出し法で解く連立一次方程式</strong>
+              <span>[ A | b ] を行基本変形し、解 x が出る過程を表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./vector_add_sub.html">
-          <span class="card-kicker">Vector</span>
-          <strong>ベクトルの加減算</strong>
-          <span>2次元・3次元で、成分計算と図解を並べて加算と減算の流れを表示します。</span>
-        </a>
+            <a class="animation-card" href="./determinant.html">
+              <span class="card-kicker">Determinant</span>
+              <strong>行列式と求め方</strong>
+              <span>2 x 2 から 4 x 4 まで、行基本変形で上三角化しながら det(A) を求めます。</span>
+            </a>
 
-        <a class="animation-card" href="./vector_dot.html">
-          <span class="card-kicker">Vector</span>
-          <strong>ベクトルの内積</strong>
-          <span>2次元・3次元で、成分入力と大きさ・なす角入力を同期しながら、2通りの内積の求め方を図解つきで表示します。</span>
-        </a>
+            <a class="animation-card" href="./vector_add_sub.html">
+              <span class="card-kicker">Vector</span>
+              <strong>ベクトルの加減算</strong>
+              <span>2次元・3次元で、成分計算と図解を並べて加算と減算の流れを表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./vector_angle.html">
-          <span class="card-kicker">Vector</span>
-          <strong>ベクトルのなす角</strong>
-          <span>内積とベクトルの長さから、cos θ と角度 θ を求める流れを表示します。</span>
-        </a>
+            <a class="animation-card" href="./vector_dot.html">
+              <span class="card-kicker">Vector</span>
+              <strong>ベクトルの内積</strong>
+              <span>2次元・3次元で、成分入力と大きさ・なす角入力を同期しながら、2通りの内積の求め方を図解つきで表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./linear_independence.html">
-          <span class="card-kicker">Linear Algebra</span>
-          <strong>線形独立と線形従属</strong>
-          <span>2 次元と 3 次元で、一次結合と行列式の両方から線形独立・線形従属の違いを表示します。</span>
-        </a>
+            <a class="animation-card" href="./vector_angle.html">
+              <span class="card-kicker">Vector</span>
+              <strong>ベクトルのなす角</strong>
+              <span>内積とベクトルの長さから、cos θ と角度 θ を求める流れを表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./basis_vectors.html">
-          <span class="card-kicker">Linear Algebra</span>
-          <strong>基底ベクトルと標準基底ベクトル</strong>
-          <span>標準基底と任意の基底の違いを、同じベクトルの座標表示として比較します。</span>
-        </a>
+            <a class="animation-card" href="./linear_independence.html">
+              <span class="card-kicker">Linear Algebra</span>
+              <strong>線形独立と線形従属</strong>
+              <span>2 次元と 3 次元で、一次結合と行列式の両方から線形独立・線形従属の違いを表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./linear_map_matrix.html">
-          <span class="card-kicker">Linear Algebra</span>
-          <strong>線形写像と表現行列</strong>
-          <span>基底ベクトルの像から表現行列を作り、T(x)=Ax の意味を図解で表示します。</span>
-        </a>
+            <a class="animation-card" href="./basis_vectors.html">
+              <span class="card-kicker">Linear Algebra</span>
+              <strong>基底ベクトルと標準基底ベクトル</strong>
+              <span>標準基底と任意の基底の違いを、同じベクトルの座標表示として比較します。</span>
+            </a>
 
-        <a class="animation-card" href="./linear_shape_transform.html">
-          <span class="card-kicker">Linear Transformation</span>
-          <strong>主な線形写像</strong>
-          <span>2D/3D で、主な対称移動・回転・拡大の線形写像が図形をどう動かすかをアニメーションで表示します。</span>
-        </a>
+            <a class="animation-card" href="./linear_map_matrix.html">
+              <span class="card-kicker">Linear Algebra</span>
+              <strong>線形写像と表現行列</strong>
+              <span>基底ベクトルの像から表現行列を作り、T(x)=Ax の意味を図解で表示します。</span>
+            </a>
 
-        <a class="animation-card" href="./homogeneous_coordinates.html">
-          <span class="card-kicker">Graphics</span>
-          <strong>同次座標系とグラフィックス</strong>
-          <span>2D/3D で最後に 1 を足し、平行移動を 1 本の行列積に入れる流れを表示します。</span>
-        </a>
+            <a class="animation-card" href="./linear_shape_transform.html">
+              <span class="card-kicker">Linear Transformation</span>
+              <strong>主な線形写像</strong>
+              <span>2D/3D で、主な対称移動・回転・拡大の線形写像が図形をどう動かすかをアニメーションで表示します。</span>
+            </a>
 
+            <a class="animation-card" href="./affine_transform.html">
+              <span class="card-kicker">Transformation</span>
+              <strong>回転・拡大縮小・平行移動</strong>
+              <span>回転と拡大縮小を線形写像として、平行移動をアフィン写像として比較表示します。</span>
+            </a>
+
+            <a class="animation-card" href="./homogeneous_coordinates.html">
+              <span class="card-kicker">Graphics</span>
+              <strong>同次座標系とグラフィックス</strong>
+              <span>2D/3D で最後に 1 を足し、平行移動を 1 本の行列積に入れる流れを表示します。</span>
+            </a>
+          </div>
+        </section>
+
+        <section id="panel-discrete-math" class="hub-tab-panel" role="tabpanel" aria-labelledby="tab-discrete-math" data-tab-panel="discrete-math" hidden>
+          <div class="hub-empty-state">
+            <span class="card-kicker">Discrete Math</span>
+            <strong>離散数学</strong>
+            <span>ここに離散数学のアニメーションを追加していきます。</span>
+          </div>
+        </section>
       </section>
     </main>
       <script src="./math_format.js?v=20260518a"></script>
+      <script>
+        document.querySelectorAll("[data-tab-target]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const target = button.dataset.tabTarget;
+            document.querySelectorAll("[data-tab-target]").forEach((tab) => {
+              const active = tab.dataset.tabTarget === target;
+              tab.classList.toggle("is-active", active);
+              tab.setAttribute("aria-selected", String(active));
+            });
+            document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
+              const active = panel.dataset.tabPanel === target;
+              panel.classList.toggle("is-active", active);
+              panel.hidden = !active;
+            });
+          });
+        });
+      </script>
   </body>
 </html>
