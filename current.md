@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-05-20
+最終更新: 2026-05-23
 
 ## プロジェクト概要
 
@@ -16,10 +16,13 @@ python3 -m http.server 8100
 
 - `index.html`
   - まとめページ
-  - 現在は行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・同次座標系とグラフィックスを掲載
+  - 分野別タブ構成
+  - `線形代数` タブには、行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・回転/拡大縮小/平行移動・同次座標系とグラフィックスを掲載
+  - `離散数学` タブは現在プレースホルダー
 - `future_index.html`
   - 追加ページ用の別トップページ
   - 今後の追加ページやデバッグ中ページの置き場
+  - 離散数学の基礎知識ページ、外積、固有値、対角化、クオータニオン、2次曲線などを掲載
 - `matrix_operation.html`
   - 行列の加算・減算・乗算・除算
 - `inverse_matrix.html`
@@ -70,6 +73,17 @@ python3 -m http.server 8100
   - 回転 / 拡大縮小 / 平行移動
 - `homogeneous_coordinates.html`
   - 2D / 3D の同次座標系とグラフィックス
+- `discrete_sets.html`
+  - 集合とベン図
+  - U は 1 から 9 固定
+  - A/B/C は 1 から 9 の範囲で入力可能
+  - 所属領域に応じて要素位置と文字サイズを自動調整
+- `discrete_relations_functions.html`
+  - 関係と関数
+  - 順序対、関係行列、写像の矢印表示
+- `discrete_permutations_combinations.html`
+  - 順列と組み合わせ
+  - 積の法則、順列、組合せ、二項係数
 - `quaternion_vector.html`
   - クオータニオンとベクトル
 - `conic_orthogonal_transform.html`
@@ -93,6 +107,8 @@ python3 -m http.server 8100
   - `eigen.html` 用
 - `diagonalization.js`
   - `diagonalization.html` 用
+- `discrete_math.js`
+  - `discrete_sets.html`, `discrete_relations_functions.html`, `discrete_permutations_combinations.html` 用
 - `future_topics.js`
   - future 側ページの共通ロジック
 - `math_format.js`
@@ -114,7 +130,7 @@ python3 -m http.server 8100
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
 - 今後の追加ページや調整中ページは `future_index.html` 側に置く運用
-- `future_index.html` には、固有値・外積・対角化・アフィン変換・クオータニオン・2次曲線などの追加ページを掲載
+- `future_index.html` には、離散数学の基礎知識・固有値・外積・対角化・クオータニオン・2次曲線などの追加ページを掲載
 - `index.html` からは `future_index.html` へ直接リンクしていない
 
 ## 最近の重要な実装内容
@@ -177,6 +193,16 @@ python3 -m http.server 8100
     - 固有値・固有ベクトル欄は 1 行に 1 組ずつ表示
     - 3 x 3 表示に合わせて、コントロール帯・数式帯・結果欄は小さめのレイアウトに調整
 - future 側の新規ページ
+  - 集合とベン図
+    - U は `{1,2,3,4,5,6,7,8,9}` 固定
+    - A/B/C は 1 から 9 の範囲で入力可能
+    - 和集合・積集合・補集合・差集合をベン図と要素列挙で表示
+    - 極端な入力でも所属領域が曖昧にならないよう、候補点を自動生成し文字サイズを調整
+  - 関係と関数
+    - 関係を矢印と 0-1 行列で表示
+    - 関数・関数でない例、単射、全射を表示
+  - 順列と組み合わせ
+    - 積の法則、順列 5P3、組合せ 5C3、二項係数を表示
   - 線形独立と線形従属
     - 2D / 3D 対応
     - 一次結合と行列式の両方から判定
