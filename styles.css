@@ -186,6 +186,25 @@ select {
   line-height: 1.55;
 }
 
+.hub-footer-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding: 0 4px 12px;
+}
+
+.hub-footer-link a {
+  color: rgba(102, 112, 133, 0.84);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.hub-footer-link a:hover {
+  color: var(--teal);
+  text-decoration: underline;
+}
+
 .animation-card strong {
   font-size: 1.55rem;
   line-height: 1.2;
