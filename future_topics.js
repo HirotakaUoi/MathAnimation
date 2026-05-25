@@ -853,6 +853,19 @@ function initLinearIndependence() {
       const scalar = TopicShared.randomNonZero(-3, 3);
       return { vectors: [base, TopicShared.scaleVector(base, scalar)], relation: { scalar } };
     }
+    if (TopicShared.randomInt(0, 1) === 0) {
+      const base = [
+        TopicShared.randomNonZero(),
+        TopicShared.randomNonZero(),
+        TopicShared.randomNonZero(),
+      ];
+      const s2 = TopicShared.randomNonZero(-3, 3);
+      const s3 = TopicShared.randomNonZero(-3, 3);
+      return {
+        vectors: [base, TopicShared.scaleVector(base, s2), TopicShared.scaleVector(base, s3)],
+        relation: { type: "rank1", s2, s3 },
+      };
+    }
     let v1 = [TopicShared.randomNonZero(), TopicShared.randomNonZero(), TopicShared.randomNonZero()];
     let v2 = [TopicShared.randomNonZero(), TopicShared.randomNonZero(), TopicShared.randomNonZero()];
     while (TopicShared.norm(TopicShared.cross(v1, v2)) < TopicShared.EPSILON) {
@@ -861,7 +874,7 @@ function initLinearIndependence() {
     const a = TopicShared.randomNonZero(-2, 2);
     const b = TopicShared.randomNonZero(-2, 2);
     const v3 = TopicShared.addVectors(TopicShared.scaleVector(v1, a), TopicShared.scaleVector(v2, b));
-    return { vectors: [v1, v2, v3], relation: { a, b } };
+    return { vectors: [v1, v2, v3], relation: { type: "rank2", a, b } };
   }
 
   function applyExample() {
@@ -980,7 +993,9 @@ function initLinearIndependence() {
             elements.formula.textContent = "行列式が 0 でないので、0 ベクトルを作るのは c1 = c2 (= c3) = 0 だけです。";
           } else if (state.dimension === 2 && state.meta?.scalar !== undefined) {
             elements.formula.textContent = `v2 = ${TopicShared.formatNumber(state.meta.scalar)} v1 と書けるので線形従属です。`;
-          } else if (state.dimension === 3 && state.meta) {
+          } else if (state.dimension === 3 && state.meta?.type === "rank1") {
+            elements.formula.textContent = `v2 = ${TopicShared.formatNumber(state.meta.s2)} v1, v3 = ${TopicShared.formatNumber(state.meta.s3)} v1 と書けるので、3 本とも同一直線上にあり線形従属です。`;
+          } else if (state.dimension === 3 && state.meta?.type === "rank2") {
             elements.formula.textContent = `v3 = ${TopicShared.formatNumber(state.meta.a)} v1 + ${TopicShared.formatNumber(state.meta.b)} v2 と書けるので線形従属です。`;
           } else {
             elements.formula.textContent = "行列式が 0 なので、0 でない係数でも 0 ベクトルを作れます。";

@@ -26,9 +26,9 @@ const state = {
   step: 0,
   timerId: null,
   sets: {
-    A: [1, 2, 3, 4],
-    B: [3, 4, 5, 6],
-    C: [2, 4, 6, 8],
+    A: [1, 3, 5, 7],
+    B: [2, 3, 6, 7],
+    C: [4, 5, 6, 7, 9],
   },
 };
 
@@ -38,7 +38,7 @@ const TOPICS = {
     title: "集合とベン図",
     subtitle: "和集合・積集合・補集合・差集合を領域で見る",
     formulaTitle: "集合演算",
-    formula: "U = {1,2,3,4,5,6,7,8,9}\nA = {1,2,3,4}\nB = {3,4,5,6}\nC = {2,4,6,8}",
+    formula: "U = {1,2,3,4,5,6,7,8,9}\nA = {1,3,5,7}\nB = {2,3,6,7}\nC = {4,5,6,7,9}",
     examples: ["A∪B", "A∩B", "A-B", "A∩B∩C", "Aの補集合"],
     input: "",
   },
@@ -48,7 +48,7 @@ const TOPICS = {
     subtitle: "順序対の集合を矢印と0-1行列で見る",
     formulaTitle: "関係R",
     formula: "R ⊆ A×B。a∈A と b∈B の間に関係があるとき (a,b)∈R と書く。",
-    examples: ["約数関係", "mod 2が等しい", "小なり関係"],
+    examples: ["約数関係", "3で割った余りが等しい", "差が2以下"],
     input: "",
   },
   functions: {
@@ -66,7 +66,7 @@ const TOPICS = {
     subtitle: "順序対・関係行列・写像の条件",
     formulaTitle: "関係と関数",
     formula: "関係は A×B の部分集合。関数は A の各要素から B の要素へちょうど1本の矢印を持つ関係。",
-    examples: ["関係: 約数関係", "関係: mod 2が等しい", "関係: 小なり関係", "関数: 関数", "関数: 関数でない", "関数: 単射", "関数: 全射"],
+    examples: ["関係: 約数関係", "関係: 3で割った余りが等しい", "関係: 差が2以下", "関数: 関数", "関数: 関数でない", "関数: 単射", "関数: 全射"],
     input: "",
   },
   counting: {
@@ -75,7 +75,7 @@ const TOPICS = {
     subtitle: "積の法則・順列・組み合わせ・二項係数",
     formulaTitle: "数え上げ",
     formula: "順列 nPr = n!/(n-r)!、組合せ nCr = n!/(r!(n-r)!)。",
-    examples: ["積の法則", "順列 5P3", "組合せ 5C3", "二項定理"],
+    examples: ["積の法則", "順列 6P2", "組合せ 6C2", "二項定理"],
     input: "",
   },
   logic: {
@@ -370,13 +370,13 @@ function relationMatrix(left, right, pairs) {
 }
 
 function framesForRelations(example) {
-  const A = [1, 2, 3, 4];
-  const B = [1, 2, 3, 4, 6];
+  const A = [2, 3, 5, 6];
+  const B = [1, 3, 4, 6, 8];
   const pairs = example === "約数関係"
     ? A.flatMap((a) => B.filter((b) => b % a === 0).map((b) => [a, b]))
-    : example === "mod 2が等しい"
-      ? A.flatMap((a) => B.filter((b) => a % 2 === b % 2).map((b) => [a, b]))
-      : A.flatMap((a) => B.filter((b) => a < b).map((b) => [a, b]));
+    : example === "3で割った余りが等しい"
+      ? A.flatMap((a) => B.filter((b) => a % 3 === b % 3).map((b) => [a, b]))
+      : A.flatMap((a) => B.filter((b) => Math.abs(a - b) <= 2).map((b) => [a, b]));
   return [
     { note: "A×Bの中から条件を満たす順序対を選ぶ", html: arrowDiagram(A, B, pairs.slice(0, 1), 0) },
     { note: "関係Rを矢印の集合として表示する", html: arrowDiagram(A, B, pairs, pairs.length - 1) },
@@ -385,16 +385,16 @@ function framesForRelations(example) {
 }
 
 function framesForFunctions(example) {
-  const A = ["a", "b", "c"];
-  const B = [1, 2, 3];
+  const A = ["p", "q", "r"];
+  const B = [2, 4, 6];
   const pairsByExample = {
-    "関数": [["a", 1], ["b", 2], ["c", 2]],
-    "関数でない": [["a", 1], ["a", 2], ["b", 2], ["c", 3]],
-    "単射": [["a", 1], ["b", 2], ["c", 3]],
-    "全射": [["a", 1], ["b", 2], ["c", 3]],
+    "関数": [["p", 2], ["q", 4], ["r", 4]],
+    "関数でない": [["p", 2], ["p", 4], ["q", 4], ["r", 6]],
+    "単射": [["p", 2], ["q", 4], ["r", 6]],
+    "全射": [["p", 2], ["q", 4], ["r", 6]],
   };
   const pairs = pairsByExample[example];
-  const verdict = example === "関数でない" ? "aから矢印が2本出るので関数ではない" : `${example}の条件を満たす`;
+  const verdict = example === "関数でない" ? "pから矢印が2本出るので関数ではない" : `${example}の条件を満たす`;
   return [
     { note: "入力集合Aの各要素を見る", html: arrowDiagram(A, B, pairs.slice(0, 1), 0) },
     { note: "すべての対応を矢印で表示する", html: arrowDiagram(A, B, pairs, pairs.length - 1) },
@@ -412,16 +412,16 @@ function framesForRelationsFunctions(example) {
 function framesForCounting(example) {
   if (example === "積の法則") {
     return [
-      { note: "服が3通りある", html: choiceGrid(["赤", "青", "緑"], []) },
-      { note: "靴が2通りあるので枝が分かれる", html: choiceGrid(["赤", "青", "緑"], ["白", "黒"]) },
-      { note: "合計は 3×2=6 通り", html: `<div class="count-result">3 × 2 = 6</div>${choiceGrid(["赤", "青", "緑"], ["白", "黒"])}` },
+      { note: "主菜が2通りある", html: choiceGrid(["カレー", "パスタ"], []) },
+      { note: "飲み物が3通りあるので枝が分かれる", html: choiceGrid(["カレー", "パスタ"], ["水", "茶", "ジュース"]) },
+      { note: "合計は 2×3=6 通り", html: `<div class="count-result">2 × 3 = 6</div>${choiceGrid(["カレー", "パスタ"], ["水", "茶", "ジュース"])}` },
     ];
   }
-  if (example === "順列 5P3") {
-    return countFormulaFrames("5P3", "5個から順に3個選んで並べる", ["1番目: 5通り", "2番目: 4通り", "3番目: 3通り"], 5 * 4 * 3);
+  if (example === "順列 6P2") {
+    return countFormulaFrames("6P2", "6個から順に2個選んで並べる", ["1番目: 6通り", "2番目: 5通り"], 6 * 5);
   }
-  if (example === "組合せ 5C3") {
-    return countFormulaFrames("5C3", "並び順を区別しないので 3! で割る", ["まず 5P3 = 60", "同じ組を 3! = 6 回数えている", "60 / 6 = 10"], 10);
+  if (example === "組合せ 6C2") {
+    return countFormulaFrames("6C2", "並び順を区別しないので 2! で割る", ["まず 6P2 = 30", "同じ組を 2! = 2 回数えている", "30 / 2 = 15"], 15);
   }
   return countFormulaFrames("(a+b)^4", "係数は二項係数で並ぶ", ["1", "4", "6", "4", "1"], 16);
 }
