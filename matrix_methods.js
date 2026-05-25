@@ -498,10 +498,16 @@ function gaussJordanSteps(augmented) {
     if (pivotRow >= state.n) break;
   }
 
-  const rank = matrix.reduce((count, row) => {
+  const rankA = matrix.reduce((count, row) => {
     const hasCoefficient = row.slice(0, state.n).some((value) => Math.abs(value) >= EPSILON);
     return count + (hasCoefficient ? 1 : 0);
   }, 0);
+  const rankAugmented = pageType === "linear-system"
+    ? matrix.reduce((count, row) => {
+        const hasAugmentedEntry = row.some((value) => Math.abs(value) >= EPSILON);
+        return count + (hasAugmentedEntry ? 1 : 0);
+      }, 0)
+    : rankA;
   const inconsistent = pageType === "linear-system" && matrix.some((row) =>
     row.slice(0, state.n).every((value) => Math.abs(value) < EPSILON) && Math.abs(row[state.n]) >= EPSILON,
   );
@@ -509,7 +515,7 @@ function gaussJordanSteps(augmented) {
     ? "unique"
     : inconsistent
       ? "none"
-      : rank < state.n
+      : rankA < state.n
         ? "multiple"
         : "unique";
 
@@ -521,11 +527,11 @@ function gaussJordanSteps(augmented) {
         ? "掃き出しが終わりました。左側が I なので、右側が一意の解です。"
         : solutionType === "multiple"
           ? "掃き出しは終わりましたが、ピボットが足りないので自由変数が残ります。一意な解にはなりません。"
-          : "掃き出しは終わりましたが、0 = 0 ではない行が出たのでこの連立方程式は解を持ちません。",
+          : `掃き出しは終わりましたが、0 = 0 ではない行が出たのでこの連立方程式は解を持ちません。rank(A) = ${rankA}, rank([A|b]) = ${rankAugmented} です。`,
     matrix: cloneMatrix(matrix),
   });
 
-  return { steps, finalMatrix: matrix, solutionType, rank };
+  return { steps, finalMatrix: matrix, solutionType, rankA, rankAugmented };
 }
 
 function renderMethodMatrix(matrix, step = {}) {
@@ -759,7 +765,7 @@ function renderSolutionCell(cell, row, valueText) {
   cell.append(document.createTextNode(` = ${valueText}`));
 }
 
-function renderResult(finalMatrix, solutionType = "unique") {
+function renderResult(finalMatrix, solutionType = "unique", calculation = null) {
   if (!elements.resultMatrix) return;
   elements.resultMatrix.innerHTML = "";
 
@@ -780,7 +786,22 @@ function renderResult(finalMatrix, solutionType = "unique") {
     setGrid(elements.resultMatrix, 1, 1);
     const cell = document.createElement("div");
     cell.className = "cell-output solution-cell pending-solution";
-    cell.textContent = solutionType === "multiple" ? "一意な解なし（自由変数あり）" : "解なし";
+    if (solutionType === "multiple") {
+      cell.textContent = "一意な解なし（自由変数あり）";
+    } else {
+      const lines = [
+        "解なし",
+        `rank(A) = ${calculation?.rankA ?? "?"}`,
+        `rank([A|b]) = ${calculation?.rankAugmented ?? "?"}`,
+      ];
+      lines.forEach((line, index) => {
+        const span = document.createElement("span");
+        span.className = "solution-note-line";
+        span.textContent = line;
+        cell.append(span);
+        if (index < lines.length - 1) cell.append(document.createElement("br"));
+      });
+    }
     elements.resultMatrix.append(cell);
     return;
   }
@@ -878,7 +899,7 @@ function animate() {
       renderEquationSystem(step.matrix, step);
       renderTrack(step);
       if (index === calculation.steps.length - 1) {
-        renderResult(calculation.finalMatrix, calculation.solutionType);
+        renderResult(calculation.finalMatrix, calculation.solutionType, calculation);
         if (pageType === "inverse") {
           const inverse = calculation.finalMatrix.map((row) => row.slice(state.n));
           const inputMatrix = readInputMatrix();
