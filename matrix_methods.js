@@ -526,7 +526,7 @@ function gaussJordanSteps(augmented) {
       : solutionType === "unique"
         ? "掃き出しが終わりました。左側が I なので、右側が一意の解です。"
         : solutionType === "multiple"
-          ? "掃き出しは終わりましたが、ピボットが足りないので自由変数が残ります。一意な解にはなりません。"
+          ? `掃き出しは終わりましたが、ピボットが足りないので自由変数が残ります。一意な解にはなりません。rank(A) = rank([A|b]) = ${rankA} です。`
           : `掃き出しは終わりましたが、0 = 0 ではない行が出たのでこの連立方程式は解を持ちません。rank(A) = ${rankA}, rank([A|b]) = ${rankAugmented} です。`,
     matrix: cloneMatrix(matrix),
   });
@@ -787,8 +787,19 @@ function renderResult(finalMatrix, solutionType = "unique", calculation = null) 
     const cell = document.createElement("div");
     cell.className = "cell-output solution-cell pending-solution";
     if (solutionType === "multiple") {
-      cell.textContent = "一意な解なし（自由変数あり）";
+      cell.classList.add("solution-cell-multiline");
+      const lines = [
+        "一意な解なし（自由変数あり）",
+        `rank(A) = rank([A|b]) = ${calculation?.rankA ?? "?"}`,
+      ];
+      lines.forEach((line) => {
+        const span = document.createElement("span");
+        span.className = "solution-note-line";
+        span.textContent = line;
+        cell.append(span);
+      });
     } else {
+      cell.classList.add("solution-cell-multiline");
       const lines = [
         "解なし",
         `rank(A) = ${calculation?.rankA ?? "?"}`,
@@ -799,7 +810,6 @@ function renderResult(finalMatrix, solutionType = "unique", calculation = null) 
         span.className = "solution-note-line";
         span.textContent = line;
         cell.append(span);
-        if (index < lines.length - 1) cell.append(document.createElement("br"));
       });
     }
     elements.resultMatrix.append(cell);

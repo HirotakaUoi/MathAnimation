@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Linear System Motion</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260525c" />
   </head>
   <body>
     <main class="app-shell">
@@ -75,6 +75,14 @@
             </header>
             <div id="methodMatrix" class="matrix-output method-matrix" aria-label="掃き出し法の途中経過"></div>
           </article>
+
+          <article class="matrix-panel result-panel">
+            <header>
+              <h2>解</h2>
+              <span id="labelR">x</span>
+            </header>
+            <div id="resultMatrix" class="matrix-output solution-output" aria-label="連立一次方程式の解"></div>
+          </article>
         </section>
 
         <section class="animation-band" aria-label="計算状況表示">
@@ -91,7 +99,7 @@
       </section>
     </main>
 
-    <script src="./matrix_methods.js?v=20260506a"></script>
-      <script src="./math_format.js?v=20260518a"></script>
+    <script src="./matrix_methods.js?v=20260525c"></script>
+    <script src="./math_format.js?v=20260525c"></script>
   </body>
 </html>

@@ -781,6 +781,11 @@ select:focus-visible {
   grid-template-columns: minmax(260px, 0.45fr) minmax(720px, 1.55fr);
 }
 
+.workspace.has-equation-band .method-stage {
+  grid-template-columns: minmax(260px, 0.45fr) minmax(720px, 1.55fr) minmax(240px, 0.5fr);
+  align-items: start;
+}
+
 .topic-stage {
   display: grid;
   grid-template-columns: repeat(3, minmax(240px, 1fr));
@@ -2264,6 +2269,21 @@ body[data-topic="diagonalization"] .formula {
   min-width: 180px;
 }
 
+.solution-cell-multiline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.35;
+  padding: 12px 14px;
+}
+
+.solution-note-line {
+  display: block;
+  width: 100%;
+}
+
 .pending-solution {
   color: var(--muted);
   background: var(--paper);
@@ -2288,6 +2308,31 @@ body[data-topic="diagonalization"] .formula {
 
 .result-panel {
   border-color: rgba(15, 118, 110, 0.42);
+}
+
+body:not([data-topic]) .solution-output {
+  --matrix-cell-min: 0px;
+}
+
+body:not([data-topic]) .result-panel {
+  min-width: 0;
+}
+
+body:not([data-topic]) .solution-cell {
+  min-width: 0;
+}
+
+body:not([data-topic]) .solution-cell-multiline {
+  gap: 4px;
+  padding: 10px 12px;
+  font-size: 0.96rem;
+  line-height: 1.28;
+}
+
+body:not([data-topic]) .solution-note-line {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .division-detail {
