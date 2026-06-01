@@ -2195,6 +2195,26 @@ body[data-topic="diagonalization"] .diagonal-summary-grid {
   min-height: 72px;
 }
 
+.power-summary-intro {
+  font-weight: 900;
+}
+
+.power-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.power-summary-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(125, 148, 176, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
 body[data-topic="diagonalization"] .eigen-info-card {
   gap: 6px;
   padding: 8px;
@@ -2216,6 +2236,11 @@ body[data-topic="diagonalization"] .math-matrix {
 
 body[data-topic="diagonalization"] .math-matrix-cell {
   min-width: 24px;
+}
+
+body[data-topic="diagonalization"] .power-summary-card .math-matrix {
+  width: max-content;
+  margin-inline: auto;
 }
 
 body[data-topic="diagonalization"] .determinant-stage {

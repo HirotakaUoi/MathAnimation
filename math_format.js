@@ -5,6 +5,7 @@
     "#resultSummary",
     "#resultDetail",
     "#resultText",
+    "#labelR",
     "#characteristicEquation",
     "#eigenvalueSummary",
     "#eigenSummary",

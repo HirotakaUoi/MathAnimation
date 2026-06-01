@@ -9,10 +9,12 @@ const elements = {
   matrixA: document.querySelector("#matrixA"),
   mathMatrixA: document.querySelector("#mathMatrixA"),
   mathMatrixP: document.querySelector("#mathMatrixP"),
+  mathMatrixPinv: document.querySelector("#mathMatrixPinv"),
   mathMatrixD: document.querySelector("#mathMatrixD"),
   characteristicEquation: document.querySelector("#characteristicEquation"),
   eigenSummary: document.querySelector("#eigenSummary"),
   diagonalizationSummary: document.querySelector("#diagonalizationSummary"),
+  powerSummary: document.querySelector("#powerSummary"),
   methodMatrix: document.querySelector("#methodMatrix"),
   resultMatrix: document.querySelector("#resultMatrix"),
   resultText: document.querySelector("#resultText"),
@@ -382,6 +384,24 @@ function multiplyMatrices(left, right) {
   );
 }
 
+function identityMatrix(size) {
+  return Array.from({ length: size }, (_, rowIndex) =>
+    Array.from({ length: size }, (_, colIndex) => (rowIndex === colIndex ? 1 : 0)),
+  );
+}
+
+function matrixPower(matrix, exponent) {
+  let result = identityMatrix(matrix.length);
+  let base = cloneMatrix(matrix);
+  let power = exponent;
+  while (power > 0) {
+    if (power % 2 === 1) result = multiplyMatrices(result, base);
+    power = Math.floor(power / 2);
+    if (power > 0) base = multiplyMatrices(base, base);
+  }
+  return result;
+}
+
 function inverseMatrix(matrix) {
   const size = matrix.length;
   const working = matrix.map((row, rowIndex) => row.concat(
@@ -635,6 +655,55 @@ function renderMatrixTo(container, matrix) {
   });
 }
 
+function buildPowerExample(diagonalization) {
+  if (!diagonalization.diagonalizable || !diagonalization.Pinv || !diagonalization.D) {
+    return null;
+  }
+  const power = 10;
+  const Dpower = matrixPower(diagonalization.D, power);
+  const Apower = multiplyMatrices(diagonalization.P, multiplyMatrices(Dpower, diagonalization.Pinv));
+  return { power, Dpower, Apower };
+}
+
+function renderPowerSummary(diagonalization) {
+  elements.powerSummary.innerHTML = "";
+  const powerExample = buildPowerExample(diagonalization);
+  if (!powerExample) {
+    elements.powerSummary.textContent = "A^10 の例は、対角化できるときに A^10 = P D^10 P^-1 として表示します。";
+    return;
+  }
+
+  const intro = document.createElement("div");
+  intro.className = "power-summary-intro";
+  intro.innerHTML = `A<sup>${powerExample.power}</sup> = P D<sup>${powerExample.power}</sup> P<sup>-1</sup>`;
+
+  const grid = document.createElement("div");
+  grid.className = "power-summary-grid";
+
+  const dPowerCard = document.createElement("div");
+  dPowerCard.className = "power-summary-card";
+  const dPowerLabel = document.createElement("div");
+  dPowerLabel.className = "math-matrix-label";
+  dPowerLabel.innerHTML = `D<sup>${powerExample.power}</sup>`;
+  const dPowerMatrix = document.createElement("div");
+  dPowerMatrix.className = "math-matrix";
+  renderMatrixTo(dPowerMatrix, powerExample.Dpower);
+  dPowerCard.append(dPowerLabel, dPowerMatrix);
+
+  const aPowerCard = document.createElement("div");
+  aPowerCard.className = "power-summary-card";
+  const aPowerLabel = document.createElement("div");
+  aPowerLabel.className = "math-matrix-label";
+  aPowerLabel.innerHTML = `A<sup>${powerExample.power}</sup>`;
+  const aPowerMatrix = document.createElement("div");
+  aPowerMatrix.className = "math-matrix";
+  renderMatrixTo(aPowerMatrix, powerExample.Apower);
+  aPowerCard.append(aPowerLabel, aPowerMatrix);
+
+  grid.append(dPowerCard, aPowerCard);
+  elements.powerSummary.append(intro, grid);
+}
+
 function renderEquationSummary(matrix, diagonalization) {
   renderMatrixTo(elements.mathMatrixA, matrix);
   elements.characteristicEquation.textContent = diagonalization.analysis.equation;
@@ -645,14 +714,18 @@ function renderEquationSummary(matrix, diagonalization) {
 
   if (diagonalization.diagonalizable) {
     renderMatrixTo(elements.mathMatrixP, diagonalization.P);
+    renderMatrixTo(elements.mathMatrixPinv, diagonalization.Pinv);
     renderMatrixTo(elements.mathMatrixD, diagonalization.D);
     const scalarIdentity = diagonalization.D.every((row, rowIndex) => row.every((value, colIndex) => (rowIndex === colIndex ? Math.abs(value - diagonalization.D[0][0]) < EPSILON : Math.abs(value) < EPSILON)));
     elements.diagonalizationSummary.textContent = `P^-1 A P = D = ${scalarIdentity ? `${formatNumber(diagonalization.D[0][0])}I` : "diag(固有値)" } になります。 ${diagonalization.summary}`;
+    renderPowerSummary(diagonalization);
   } else {
     const size = matrix.length;
     renderMatrixTo(elements.mathMatrixP, Array.from({ length: size }, () => Array.from({ length: size }, () => "?")));
+    renderMatrixTo(elements.mathMatrixPinv, Array.from({ length: size }, () => Array.from({ length: size }, () => "?")));
     renderMatrixTo(elements.mathMatrixD, Array.from({ length: size }, () => Array.from({ length: size }, () => "?")));
     elements.diagonalizationSummary.textContent = diagonalization.reason;
+    renderPowerSummary(diagonalization);
   }
 }
 
@@ -1037,7 +1110,7 @@ function updateLiveDisplays() {
     renderPendingResult();
     elements.formulaTitle.textContent = "対角化の公式";
     elements.formula.textContent = diagonalization.diagonalizable
-      ? "P^-1 A P = D"
+      ? "P^-1 A P = D, A^10 = P D^10 P^-1"
       : `まず実数の固有値と独立な固有ベクトル ${matrix.length} 本が必要です。`;
     elements.message.textContent = diagonalization.diagonalizable ? "" : diagonalization.reason;
   } catch (error) {

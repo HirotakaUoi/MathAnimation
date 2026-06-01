@@ -20,7 +20,7 @@
           <div class="status-strip" aria-live="polite">
             <a class="home-link" href="./index.html">一覧へ</a>
             <span id="dimensionStatus">2 x 2</span>
-            <span>P^-1 A P = D</span>
+            <span>P<sup>-1</sup> A P = D</span>
           </div>
         </header>
 
@@ -72,11 +72,16 @@
               <div id="mathMatrixP" class="math-matrix" aria-label="対角化行列P"></div>
             </article>
             <article class="eigen-info-card">
+              <div class="math-matrix-label">P<sup>-1</sup></div>
+              <div id="mathMatrixPinv" class="math-matrix" aria-label="対角化行列の逆行列P^-1"></div>
+            </article>
+            <article class="eigen-info-card">
               <div class="math-matrix-label">D</div>
               <div id="mathMatrixD" class="math-matrix" aria-label="対角行列D"></div>
             </article>
           </div>
           <div id="diagonalizationSummary" class="eigen-text-block diagonalization-summary"></div>
+          <div id="powerSummary" class="eigen-text-block diagonalization-summary" data-math-skip="true"></div>
         </section>
 
         <section class="matrix-stage determinant-stage" aria-label="対角化の途中経過">
@@ -122,7 +127,7 @@
       </section>
     </main>
 
-    <script src="./diagonalization.js?v=20260520d"></script>
-    <script src="./math_format.js?v=20260520d"></script>
+    <script src="./diagonalization.js?v=20260601a"></script>
+    <script src="./math_format.js?v=20260601a"></script>
   </body>
 </html>
