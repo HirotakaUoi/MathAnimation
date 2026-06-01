@@ -525,6 +525,7 @@ function analyzeMatrix(matrix) {
 function buildCalculation(matrix) {
   if (elements.sampleMode.value !== "free2") {
     const preset = SAMPLE_PRESETS[elements.sampleMode.value];
+    const collectedPairs = [];
     const steps = [
       {
         title: "特性方程式を立てる",
@@ -543,6 +544,7 @@ function buildCalculation(matrix) {
     ];
 
     preset.eigenData.forEach((entry, index) => {
+      collectedPairs.push({ lambda: entry.lambda, vector: entry.vector });
       steps.push({
         title: `固有ベクトル v${index + 1} を取る`,
         text: entry.text,
@@ -554,6 +556,19 @@ function buildCalculation(matrix) {
         eigenvalue: entry.lambda,
       });
     });
+
+    if (collectedPairs.length > 1) {
+      steps.push({
+        title: "固有値と固有ベクトルを並べる",
+        text: `固有値と対応する固有ベクトルを ${collectedPairs.length} 組並べて確認します。`,
+        formula: collectedPairs.map((entry, index) => `λ${index + 1} = ${formatNumber(entry.lambda)}, v${index + 1} = (${entry.vector.map((value) => formatNumber(value)).join(", ")})`).join(" , "),
+        matrix: cloneMatrix(matrix),
+        resultPairs: collectedPairs,
+        resultText: `固有値と固有ベクトルを ${collectedPairs.length} 組同時に表示しています。`,
+        resultLabel: "固有値と固有ベクトル",
+        sourceLabel: "まとめ",
+      });
+    }
 
     if (preset.reason) {
       steps.push({
@@ -579,6 +594,7 @@ function buildCalculation(matrix) {
   }
 
   const analysis = analyzeMatrix(matrix);
+  const collectedPairs = [];
   const steps = [
     {
       title: "特性方程式を立てる",
@@ -618,8 +634,24 @@ function buildCalculation(matrix) {
       sourceLabel: `λ${analysis.realEigenvalues.length === 1 ? "" : index + 1}`,
       eigenvalue: lambda,
     });
-    steps.push(...solveEigenvector(matrix, lambda).steps);
+    const solved = solveEigenvector(matrix, lambda);
+    const resultStep = solved.steps.find((step) => step.resultVector);
+    if (resultStep?.resultVector) collectedPairs.push({ lambda, vector: resultStep.resultVector });
+    steps.push(...solved.steps);
   });
+
+  if (collectedPairs.length > 1) {
+    steps.push({
+      title: "固有値と固有ベクトルを並べる",
+      text: `固有値ごとに取れた固有ベクトルを ${collectedPairs.length} 組並べて確認します。`,
+      formula: collectedPairs.map((entry, index) => `λ${index + 1} = ${formatNumber(entry.lambda)}, v${index + 1} = (${entry.vector.map((value) => formatNumber(value)).join(", ")})`).join(" , "),
+      matrix: cloneMatrix(matrix),
+      resultPairs: collectedPairs,
+      resultText: `固有値と固有ベクトルを ${collectedPairs.length} 組同時に表示しています。`,
+      resultLabel: "固有値と固有ベクトル",
+      sourceLabel: "まとめ",
+    });
+  }
 
   return { analysis, steps };
 }
@@ -687,12 +719,44 @@ function renderPendingResult() {
 function renderResult(step) {
   elements.resultMatrix.innerHTML = "";
   if (step.resultMessage) {
+    elements.resultMatrix.classList.remove("eigen-pair-list");
     setGrid(elements.resultMatrix, 1, 1);
     const cell = document.createElement("div");
     cell.className = "cell-output determinant-scalar pending-solution";
     cell.textContent = step.resultMessage;
     elements.resultMatrix.append(cell);
+  } else if (step.resultPairs?.length) {
+    elements.resultMatrix.classList.add("eigen-pair-list");
+    elements.resultMatrix.style.gridTemplateColumns = "";
+    elements.resultMatrix.dataset.rows = step.resultPairs.length;
+    elements.resultMatrix.dataset.cols = 1;
+    step.resultPairs.forEach((entry, index) => {
+      const pair = document.createElement("div");
+      pair.className = "eigen-pair-card";
+
+      const header = document.createElement("div");
+      header.className = "eigen-pair-header";
+      header.textContent = `λ${step.resultPairs.length > 1 ? index + 1 : ""} = ${formatNumber(entry.lambda)}`;
+
+      const vectorLabel = document.createElement("div");
+      vectorLabel.className = "eigen-pair-vector-label";
+      vectorLabel.textContent = `v${step.resultPairs.length > 1 ? index + 1 : ""}`;
+
+      const vectorGrid = document.createElement("div");
+      vectorGrid.className = "eigen-pair-vector";
+      setGrid(vectorGrid, entry.vector.length, 1);
+      entry.vector.forEach((value) => {
+        const cell = document.createElement("div");
+        cell.className = "cell-output determinant-scalar";
+        cell.textContent = formatNumber(value);
+        vectorGrid.append(cell);
+      });
+
+      pair.append(header, vectorLabel, vectorGrid);
+      elements.resultMatrix.append(pair);
+    });
   } else if (step.resultVector) {
+    elements.resultMatrix.classList.remove("eigen-pair-list");
     setGrid(elements.resultMatrix, step.resultVector.length, 1);
     step.resultVector.forEach((value) => {
       const cell = document.createElement("div");
@@ -701,10 +765,12 @@ function renderResult(step) {
       elements.resultMatrix.append(cell);
     });
   } else {
+    elements.resultMatrix.classList.remove("eigen-pair-list");
     renderPendingResult();
     return;
   }
-  if (step.eigenvalue !== undefined) elements.labelR.textContent = `λ = ${formatNumber(step.eigenvalue)}`;
+  if (step.resultLabel) elements.labelR.textContent = step.resultLabel;
+  else if (step.eigenvalue !== undefined) elements.labelR.textContent = `λ = ${formatNumber(step.eigenvalue)}`;
   elements.resultText.textContent = step.resultText || "固有ベクトルを表示します。";
 }
 

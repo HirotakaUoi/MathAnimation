@@ -2104,6 +2104,54 @@ body[data-topic="affine-transform"] .diagram-axis-label {
   align-items: stretch;
 }
 
+body[data-topic="eigen"] .determinant-stage {
+  grid-template-columns: minmax(220px, 0.75fr) minmax(360px, 1.1fr) minmax(320px, 1.2fr);
+}
+
+body[data-topic="eigen"] .solution-output {
+  --matrix-cell-min: 120px;
+}
+
+body[data-topic="eigen"] .solution-output.eigen-pair-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-content: start;
+}
+
+.eigen-pair-card {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(84px, auto) minmax(120px, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(125, 148, 176, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.eigen-pair-header,
+.eigen-pair-vector-label {
+  min-height: 52px;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(125, 148, 176, 0.28);
+  border-radius: 8px;
+  background: rgba(236, 244, 255, 0.88);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  white-space: nowrap;
+}
+
+.eigen-pair-vector {
+  --matrix-cell-min: 0px;
+  display: grid;
+  gap: 8px;
+}
+
 .determinant-value-box {
   display: grid;
   gap: 10px;

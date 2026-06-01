@@ -49,6 +49,8 @@ http://localhost:8100/future_index.html
 - `linear_shape_transform.html` - 主な線形写像
 - `affine_transform.html` - 回転・拡大縮小・平行移動
 - `homogeneous_coordinates.html` - 同次座標系とグラフィックス
+- `eigen.html` - 固有値と固有ベクトル
+- `diagonalization.html` - 行列の対角化
 
 ### 追加ページ
 
@@ -60,8 +62,6 @@ http://localhost:8100/future_index.html
 - `discrete_relations_functions.html` - 関係と関数
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
 - `vector_cross.html` - ベクトルの外積
-- `eigen.html` - 固有値と固有ベクトル
-- `diagonalization.html` - 行列の対角化
 - `quaternion_vector.html` - クオータニオンとベクトル
 - `conic_orthogonal_transform.html` - 2次曲線の標準形と直交変換
 
@@ -113,10 +113,16 @@ http://localhost:8100/vector_angle.html
 http://localhost:8100/vector_add_sub.html
 ```
 
-追加ページに置いている固有値と固有ベクトルを直接開く場合は次です。
+固有値と固有ベクトルを直接開く場合は次です。
 
 ```text
 http://localhost:8100/eigen.html
+```
+
+行列の対角化を直接開く場合は次です。
+
+```text
+http://localhost:8100/diagonalization.html
 ```
 
 線形独立と線形従属の違いをアニメーションするページは次です。
@@ -205,10 +211,17 @@ PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`
   - 図解表示つき
 - ベクトルのなす角を内積と長さから表示
 - ベクトルの加減算を 2 次元・3 次元で図解つき表示
-- 2 x 2 行列の固有値と固有ベクトルを表示
+- 固有値と固有ベクトルを表示
+  - 2 x 2 は自由入力
+  - 3 x 3 はサンプルモードあり
   - det(A - λI) = 0 から特性方程式を作る
   - 実数固有値がない場合も表示
   - (A - λI)v = 0 を自由変数で解いて固有ベクトルを作る
+  - 複数の固有値がある場合は最後に組をまとめて表示
+- 行列の対角化を表示
+  - 固有値と固有ベクトルから `P`, `D` を構成
+  - `P^-1 A P = D` を確認
+  - 3 x 3 はサンプルモードあり
 - 線形独立と線形従属の違いを 2 次元・3 次元で表示
   - 一次結合
   - 行列式
