@@ -3208,6 +3208,17 @@ function initConicOrthogonalTransform() {
     return `v^2 = 4·${TopicShared.formatNumber(config.a)}·u`;
   }
 
+  function formatConicMathHtml(text) {
+    return text
+      .replace(/\^(-?\d+)/g, '<sup class="conic-exp-sup">$1</sup>')
+      .replace(/\^T/g, '<sup class="conic-transpose-sup">T</sup>')
+      .replace(/\b([A-Za-zα-ωΑ-Ωλθuvxy])(\d+)\b/g, "$1<sub>$2</sub>");
+  }
+
+  function columnVectorHtml(left, right) {
+    return `<span class="math-text">(${left}, ${right})<sup class="conic-transpose-sup">T</sup></span>`;
+  }
+
   function transformedEquation(config) {
     const angleLabel = formatAngleSource();
     const uExpr = `(x cos(${angleLabel}) + y sin(${angleLabel}))`;
@@ -3232,24 +3243,24 @@ function initConicOrthogonalTransform() {
     elements.equationDisplay.innerHTML = `
       <div class="equation-group">
         <div class="equation-group-title">標準形</div>
-        <div class="equation-line math-text">${standardEquation(config)}</div>
+        <div class="equation-line math-text">${formatConicMathHtml(standardEquation(config))}</div>
       </div>
       <div class="equation-group">
         <div class="equation-group-title">直交変換</div>
         <div class="equation-line">
-          <span class="math-text">[x y]^T = </span>
+          <span class="math-text">${columnVectorHtml("x", "y")} = </span>
           ${matrixHtml(config.theta, false)}
-          <span class="math-text">[u v]^T</span>
+          <span class="math-text">${columnVectorHtml("u", "v")}</span>
         </div>
       </div>
       <div class="equation-group">
         <div class="equation-group-title">逆変換で戻す</div>
         <div class="equation-line">
-          <span class="math-text">[u v]^T = </span>
+          <span class="math-text">${columnVectorHtml("u", "v")} = </span>
           ${matrixHtml(config.theta, true)}
-          <span class="math-text">[x y]^T</span>
+          <span class="math-text">${columnVectorHtml("x", "y")}</span>
         </div>
-        <div class="equation-line math-text">${transformedEquation(config)}</div>
+        <div class="equation-line math-text">${formatConicMathHtml(transformedEquation(config))}</div>
       </div>
     `;
   }
@@ -3342,12 +3353,12 @@ function initConicOrthogonalTransform() {
       const titles = { ellipse: "楕円", hyperbola: "双曲線", parabola: "放物線" };
       elements.typeStatus.textContent = titles[config.type];
       elements.transformStatus.textContent = "標準形 → 直交変換 → 逆変換";
-      elements.standardSummary.textContent = standardEquation(config);
+      elements.standardSummary.innerHTML = formatConicMathHtml(standardEquation(config));
       elements.rotationSummary.textContent = `R(${formatAngleSource()})`;
-      elements.inverseSummary.textContent = `R^-1 = R^T で標準形に戻せます。`;
+      elements.inverseSummary.innerHTML = 'R<sup class="conic-exp-sup">-1</sup> = R<sup class="conic-transpose-sup">T</sup> で標準形に戻せます。';
       renderEquationDisplay(config);
       elements.formulaTitle.textContent = "標準形の公式";
-      elements.formula.textContent = `${standardEquation(config)} を u-v 座標で見てから、回転行列で x-y 座標へ移します。`;
+      elements.formula.innerHTML = `${formatConicMathHtml(standardEquation(config))} を u-v 座標で見てから、回転行列で x-y 座標へ移します。`;
       TopicShared.renderTrack(elements.animationTrack, ["標準形", "直交変換", "変形後の式", "逆変換"], -1);
       drawDiagram(config, "preview");
     } catch (error) {
@@ -3366,28 +3377,28 @@ function initConicOrthogonalTransform() {
           TopicShared.renderTrack(elements.animationTrack, labels, 0);
           drawDiagram(config, "standard");
           elements.formulaTitle.textContent = "標準形";
-          elements.formula.textContent = standardEquation(config);
+          elements.formula.innerHTML = formatConicMathHtml(standardEquation(config));
           TopicShared.pushHistory(elements.historyList, "標準形", "まずは u-v 座標での標準形を確認します。");
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 1);
           drawDiagram(config, "preview");
           elements.formulaTitle.textContent = "直交変換";
-          elements.formula.textContent = `[x y]^T = R [u v]^T, 角度 = ${formatAngleSource()}`;
+          elements.formula.innerHTML = `${columnVectorHtml("x", "y")} = R ${columnVectorHtml("u", "v")}, 角度 = ${formatAngleSource()}`;
           TopicShared.pushHistory(elements.historyList, "直交変換", "回転行列 R で座標軸ごと回します。");
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 2);
           drawDiagram(config, "transformed");
           elements.formulaTitle.textContent = "変形後の式";
-          elements.formula.textContent = transformedEquation(config);
+          elements.formula.innerHTML = formatConicMathHtml(transformedEquation(config));
           TopicShared.pushHistory(elements.historyList, "変形後", "u, v を x, y で書き換えると交差項を持つ式になります。");
         },
         () => {
           TopicShared.renderTrack(elements.animationTrack, labels, 3);
           drawDiagram(config, "preview");
           elements.formulaTitle.textContent = "逆変換";
-          elements.formula.textContent = `[u v]^T = R^T [x y]^T に戻すと ${standardEquation(config)} です。`;
+          elements.formula.innerHTML = `${columnVectorHtml("u", "v")} = R<sup class="conic-transpose-sup">T</sup> ${columnVectorHtml("x", "y")} に戻すと ${formatConicMathHtml(standardEquation(config))} です。`;
           TopicShared.pushHistory(elements.historyList, "逆変換", "R^-1 = R^T なので、逆回転で標準形へ戻せます。");
         },
       ];

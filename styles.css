@@ -2279,6 +2279,21 @@ body[data-topic="diagonalization"] .formula {
   font-size: 0.98rem;
 }
 
+body[data-topic="conic-orthogonal-transform"] .equation-line sup,
+body[data-topic="conic-orthogonal-transform"] .formula sup,
+body[data-topic="conic-orthogonal-transform"] .topic-summary-box sup {
+  font-size: 0.64em;
+  line-height: 0;
+}
+
+body[data-topic="conic-orthogonal-transform"] .conic-exp-sup {
+  display: inline-block;
+  margin-left: -0.22em;
+  margin-right: -0.14em;
+  vertical-align: baseline;
+  transform: translateY(-0.62em);
+}
+
 .eigen-info-card {
   min-width: 0;
   display: grid;
