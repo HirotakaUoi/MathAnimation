@@ -17,13 +17,13 @@ python3 -m http.server 8100
 - `index.html`
   - まとめページ
   - 分野別タブ構成
-  - `線形代数` タブには、行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・回転/拡大縮小/平行移動・同次座標系とグラフィックス・固有値と固有ベクトル・行列の対角化を掲載
+  - `線形代数` タブには、行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・回転/拡大縮小/平行移動・同次座標系とグラフィックス・固有値と固有ベクトル・行列の対角化・2次曲線の標準形と直交変換を掲載
   - `離散数学` タブは現在プレースホルダー
   - ページ下部右端に、追加ページへ移動する文字なしの小さな点リンクあり
 - `future_index.html`
   - 追加ページ用の別トップページ
   - 今後の追加ページやデバッグ中ページの置き場
-  - 離散数学の基礎知識ページ、外積、クオータニオン、2次曲線などを掲載
+  - 離散数学の基礎知識ページ、外積、クオータニオンなどを掲載
   - ページ下部右端に、メインページへ戻る文字なしの小さな点リンクあり
 - `matrix_operation.html`
   - 行列の加算・減算・乗算・除算
@@ -138,7 +138,7 @@ python3 -m http.server 8100
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
 - 今後の追加ページや調整中ページは `future_index.html` 側に置く運用
-- `future_index.html` には、離散数学の基礎知識・外積・クオータニオン・2次曲線などの追加ページを掲載
+- `future_index.html` には、離散数学の基礎知識・外積・クオータニオンなどの追加ページを掲載
 - `index.html` と `future_index.html` はページ下部右端の文字なし点リンクで相互移動できる
 
 ## 最近の重要な実装内容
@@ -273,10 +273,9 @@ python3 -m http.server 8100
 - `future_index.html` は追加ページやデバッグ中ページ用
 - `index.html` からは `future_index.html` へ直接リンクしない
 - `future_index.html` 配下のページの `一覧へ` は基本的に `future_index.html` へ戻す
-- ただし `eigen.html` と `diagonalization.html` は本番側へ移したため、`一覧へ` は `index.html` に戻す
-- `future_index.html` には `2次曲線の標準形と直交変換` のカードを追加済み
+- ただし `eigen.html` と `diagonalization.html` と `conic_orthogonal_transform.html` は本番側へ移したため、`一覧へ` は `index.html` に戻す
 - `future_index.html` には `主な線形写像` のカードを追加済み
-- `固有値と固有ベクトル` と `行列の対角化` は `future_index.html` から外し、`index.html` 側へ移動
+- `固有値と固有ベクトル` と `行列の対角化` と `2次曲線の標準形と直交変換` は `future_index.html` から外し、`index.html` 側へ移動
 - `線形独立と線形従属` と `基底ベクトルと標準基底ベクトル` は `future_index.html` から外し、`index.html` 側へ移動
 - デバッグ表示の状況
   - `determinant.html` はデバッグ表示を解除済み

@@ -51,6 +51,7 @@ http://localhost:8100/future_index.html
 - `homogeneous_coordinates.html` - 同次座標系とグラフィックス
 - `eigen.html` - 固有値と固有ベクトル
 - `diagonalization.html` - 行列の対角化
+- `conic_orthogonal_transform.html` - 2次曲線の標準形と直交変換
 
 ### 追加ページ
 
@@ -63,7 +64,6 @@ http://localhost:8100/future_index.html
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
-- `conic_orthogonal_transform.html` - 2次曲線の標準形と直交変換
 
 各ページを直接開くこともできます。例として、行列演算アニメーターを直接開く場合は次です。
 
