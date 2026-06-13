@@ -144,6 +144,11 @@ select {
   gap: 18px;
 }
 
+.discrete-animation-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+  justify-content: start;
+}
+
 .animation-card {
   display: grid;
   gap: 10px;
@@ -567,6 +572,10 @@ body[data-topic="eigen"] #sizePill {
   gap: 8px;
 }
 
+.control-group[hidden] {
+  display: none;
+}
+
 .control-group > label {
   color: var(--muted);
   font-size: 1rem;
@@ -720,6 +729,7 @@ input[type="text"] {
 }
 
 button {
+  min-width: 72px;
   min-height: 48px;
   border: 0;
   border-radius: 6px;
@@ -727,6 +737,7 @@ button {
   cursor: pointer;
   font-weight: 800;
   font-size: 1.05rem;
+  white-space: nowrap;
 }
 
 .primary {
@@ -910,6 +921,20 @@ select:focus-visible {
   justify-content: start;
 }
 
+.discrete-power-controls {
+  grid-template-columns: minmax(220px, 300px) minmax(110px, 150px) minmax(260px, auto);
+  justify-content: start;
+}
+
+.discrete-binomial-controls {
+  grid-template-columns: minmax(180px, 260px) minmax(90px, 120px) repeat(3, minmax(72px, 96px)) minmax(236px, auto);
+  justify-content: start;
+}
+
+.discrete-binomial-controls .button-row {
+  flex-wrap: nowrap;
+}
+
 .discrete-set-controls {
   grid-template-columns: minmax(170px, 220px) repeat(3, minmax(120px, 1fr)) minmax(260px, auto);
 }
@@ -1023,6 +1048,11 @@ select:focus-visible {
   fill: var(--ink);
   font-size: 22px;
   font-weight: 900;
+}
+
+.venn-wrap .venn-set-label {
+  fill: var(--blue);
+  font-style: italic;
 }
 
 .venn-wrap .member-on {
@@ -1162,6 +1192,139 @@ select:focus-visible {
   background: rgba(15, 118, 110, 0.1);
   color: var(--teal);
   font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.coefficient-row,
+.term-list,
+.multinomial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.coefficient-row {
+  margin-bottom: 16px;
+}
+
+.coefficient-row span,
+.term-list span,
+.multinomial-grid span {
+  display: grid;
+  min-height: 70px;
+  place-items: center;
+  padding: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.coefficient-row span.is-active,
+.term-list span.is-active,
+.multinomial-grid span.is-active {
+  border-color: rgba(194, 65, 12, 0.52);
+  background: rgba(194, 65, 12, 0.1);
+  color: var(--red);
+}
+
+.pascal-triangle {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.pascal-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.pascal-row span {
+  display: grid;
+  width: 52px;
+  min-height: 44px;
+  place-items: center;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.pascal-row.is-active-row span {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: rgba(15, 118, 110, 0.07);
+}
+
+.pascal-row span.is-edge {
+  color: var(--teal);
+}
+
+.pascal-row span.is-active {
+  border-color: rgba(15, 118, 110, 0.45);
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+  transform: translateY(-2px);
+}
+
+.coefficient-caption {
+  margin: 14px 0 12px;
+  padding: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-weight: 900;
+  text-align: center;
+}
+
+.multinomial-grid span {
+  gap: 4px;
+}
+
+.multinomial-grid strong {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.multinomial-grid .math-text {
+  font-style: normal;
+}
+
+.multinomial-progress {
+  display: grid;
+  gap: 14px;
+}
+
+.radical-power-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.radical-power-grid span {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  align-content: center;
+  padding: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+  text-align: center;
+}
+
+.radical-power-grid strong {
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .matrix-panel {
@@ -2781,9 +2944,19 @@ body:not([data-topic]) .solution-note-line {
   .vector-stage,
   .angle-stage,
   .eigen-summary-grid,
+  .discrete-board,
   .topic-stage,
   .topic-stage-4 {
     grid-template-columns: 1fr;
+  }
+
+  .discrete-visual-panel,
+  .discrete-side-panel {
+    min-width: 0;
+  }
+
+  .discrete-visual-stage {
+    min-height: 360px;
   }
 
   .vector-diagram {

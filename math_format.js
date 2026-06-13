@@ -13,8 +13,10 @@
     "#standardSummary",
     "#rotationSummary",
     "#inverseSummary",
+    "#visualSubtitle",
     ".history-item span",
     ".history-item strong",
+    ".history-list li",
     ".status-strip span",
     ".topic-inline-copy",
     ".animation-card span",
@@ -23,6 +25,11 @@
     ".math-matrix-label",
     ".equation-line",
     ".topic-summary-box",
+    ".count-result",
+    ".coefficient-caption",
+    ".choice-grid span",
+    ".term-list span",
+    ".radical-power-grid span",
     ".formula",
   ].join(", ");
 
@@ -46,7 +53,8 @@
     html = html.replace(/sqrt\(([^()]+)\)/g, "√($1)");
     html = html.replace(/\[([A-Za-z0-9λθφψχuvwxyzaei,\s+-]+)\](<sup>T<\/sup>)?/g, (_, body, transpose = "") => `(${normalizeVectorTuple(body)})${transpose}`);
     html = html.replace(/(\|[A-Za-zα-ωΑ-Ωλθ]+\|)\^(-?\d+|T)/g, "$1<sup>$2</sup>");
-    html = html.replace(/([A-Za-zα-ωΑ-Ωλθφψχ0-9)\]])\^(-?\d+|T)/g, "$1<sup>$2</sup>");
+    html = html.replace(/([A-Za-zα-ωΑ-Ωλθφψχ0-9)\]])\^(-?\d+|[A-Za-zα-ωΑ-Ωλθφψχ]+|T)/g, "$1<sup>$2</sup>");
+    html = html.replace(/\b(\d+)([CP])(\d+)\b/g, "<sub>$1</sub>$2<sub>$3</sub>");
     html = html.replace(/\b([A-Za-zα-ωΑ-Ωλθ])(\d+)\b/g, "$1<sub>$2</sub>");
     html = html.replace(/R\^-1/g, "R<sup>-1</sup>");
     html = html.replace(/q\^-1/g, "q<sup>-1</sup>");

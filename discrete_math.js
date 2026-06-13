@@ -5,6 +5,12 @@ const elements = {
   setAInput: document.querySelector("#setAInput"),
   setBInput: document.querySelector("#setBInput"),
   setCInput: document.querySelector("#setCInput"),
+  binomialAInput: document.querySelector("#binomialAInput"),
+  binomialBInput: document.querySelector("#binomialBInput"),
+  binomialCInput: document.querySelector("#binomialCInput"),
+  binomialAGroup: document.querySelector("#binomialAGroup"),
+  binomialBGroup: document.querySelector("#binomialBGroup"),
+  binomialCGroup: document.querySelector("#binomialCGroup"),
   stepBack: document.querySelector("#stepBack"),
   playPause: document.querySelector("#playPause"),
   stepForward: document.querySelector("#stepForward"),
@@ -77,6 +83,24 @@ const TOPICS = {
     formula: "順列 nPr = n!/(n-r)!、組合せ nCr = n!/(r!(n-r)!)。",
     examples: ["積の法則", "順列 6P2", "組合せ 6C2", "二項定理"],
     input: "",
+  },
+  "binomial-coefficients": {
+    chapter: "基礎知識",
+    title: "二項係数",
+    subtitle: "n乗を入力し、パスカルの三角形を順に構成する",
+    formulaTitle: "二項係数",
+    formula: "nCr = n!/(r!(n-r)!)。n個からr個を選ぶ組合せの数で、(a+b)^n の a^(n-r)b^r の係数にもなる。",
+    examples: ["パスカルの三角形", "(a+b√c)^n"],
+    input: "5",
+  },
+  "multinomial-theorem": {
+    chapter: "基礎知識",
+    title: "多項定理",
+    subtitle: "k+l+m=n の組を生成し、多項係数を順に計算する",
+    formulaTitle: "多項定理",
+    formula: "(x1+x2+...+xm)^n = Σ n!/(k1!k2!...km!) x1^k1 x2^k2 ... xm^km。ただし k1+...+km=n。",
+    examples: ["(x+y+z)^n"],
+    input: "4",
   },
   logic: {
     chapter: "5章",
@@ -175,6 +199,8 @@ function getFrames() {
   if (topic === "functions") return framesForFunctions(example);
   if (topic === "relations-functions") return framesForRelationsFunctions(example);
   if (topic === "counting") return framesForCounting(example);
+  if (topic === "binomial-coefficients") return framesForBinomialCoefficients(example);
+  if (topic === "multinomial-theorem") return framesForMultinomialTheorem(example);
   if (topic === "logic") return framesForLogic(example);
   if (topic === "circuits") return framesForCircuits(example);
   if (topic === "automata") return framesForAutomata(example, elements.inputValue.value);
@@ -187,6 +213,7 @@ function getFrames() {
 function render() {
   const topic = TOPICS[state.topic];
   if (state.topic === "sets") readSetInputs();
+  updateBinomialRadicalControls();
   const frames = getFrames();
   state.step = Math.max(0, Math.min(state.step, frames.length - 1));
   const frame = frames[state.step];
@@ -207,8 +234,16 @@ function renderTopicOptions() {
   elements.exampleSelect.value = String(state.example);
   if (elements.inputValue) {
     elements.inputValue.value = topic.input;
-    elements.inputValue.disabled = !["automata", "nfa", "grammar", "pda", "turing"].includes(state.topic);
+    elements.inputValue.disabled = !["automata", "nfa", "grammar", "pda", "turing", "binomial-coefficients", "multinomial-theorem"].includes(state.topic);
   }
+  updateBinomialRadicalControls();
+}
+
+function updateBinomialRadicalControls() {
+  const show = state.topic === "binomial-coefficients" && TOPICS[state.topic].examples[state.example] === "(a+b√c)^n";
+  [elements.binomialAGroup, elements.binomialBGroup, elements.binomialCGroup].filter(Boolean).forEach((group) => {
+    group.hidden = !show;
+  });
 }
 
 function parseSetInput(source) {
@@ -249,12 +284,12 @@ function vennSvg(active, label, members) {
   const elementPositions = computeVennElementPositions();
   return `
     <div class="venn-wrap">
-      <svg viewBox="0 0 520 330" role="img" aria-label="${escapeHtml(label)}">
-        <rect x="24" y="24" width="472" height="270" rx="10" class="venn-universe ${isActive("U") ? "is-active" : ""}" />
+      <svg viewBox="0 0 520 360" role="img" aria-label="${escapeHtml(label)}">
+        <rect x="24" y="24" width="472" height="318" rx="10" class="venn-universe ${isActive("U") ? "is-active" : ""}" />
         <circle cx="220" cy="150" r="82" class="venn-region region-a ${isActive("A") ? "is-active" : ""}" />
         <circle cx="300" cy="150" r="82" class="venn-region region-b ${isActive("B") ? "is-active" : ""}" />
         <circle cx="260" cy="210" r="82" class="venn-region region-c ${isActive("C") ? "is-active" : ""}" />
-        <text x="150" y="82">A</text><text x="360" y="82">B</text><text x="260" y="286">C</text><text x="40" y="52">U</text>
+        <text x="150" y="82" class="venn-set-label">A</text><text x="360" y="82" class="venn-set-label">B</text><text x="260" y="316" class="venn-set-label">C</text><text x="40" y="52" class="venn-set-label">U</text>
         ${elementPositions.map(({ value, x, y, fontSize }) => `<text x="${x}" y="${y}" style="font-size:${fontSize}px" class="venn-member ${members.includes(value) ? "member-on" : ""}">${value}</text>`).join("")}
       </svg>
       <div class="topic-summary-box">${label} = { ${chips || " "} }</div>
@@ -437,6 +472,260 @@ function countFormulaFrames(label, intro, pieces, answer) {
     { note: "積の法則で段階ごとに掛ける", html: `<div class="choice-grid">${pieces.map((p) => `<span>${p}</span>`).join("")}</div>` },
     { note: `答えは ${answer}`, html: `<div class="count-result">${label} = ${answer}</div>` },
   ];
+}
+
+function combination(n, r) {
+  if (r < 0 || r > n) return 0;
+  return factorial(n) / (factorial(r) * factorial(n - r));
+}
+
+function binomialRow(n, activeIndex = -1) {
+  const cells = Array.from({ length: n + 1 }, (_, r) => {
+    const active = r === activeIndex ? " is-active" : "";
+    return `<span class="${active}">${combination(n, r)}</span>`;
+  }).join("");
+  return `<div class="coefficient-row">${cells}</div>`;
+}
+
+function pascalTriangle(rows, activeRow = -1) {
+  const html = Array.from({ length: rows + 1 }, (_, n) => {
+    const cells = Array.from({ length: n + 1 }, (_, r) => `<span>${combination(n, r)}</span>`).join("");
+    return `<div class="pascal-row ${n === activeRow ? "is-active" : ""}">${cells}</div>`;
+  }).join("");
+  return `<div class="pascal-triangle">${html}</div>`;
+}
+
+function termList(terms, activeIndex = -1) {
+  return `<div class="term-list">${terms.map((term, index) => `<span class="${index === activeIndex ? "is-active" : ""}">${term}</span>`).join("")}</div>`;
+}
+
+function readPowerInput(defaultValue, maxValue = 8) {
+  if (!elements.inputValue) return defaultValue;
+  const raw = Number(elements.inputValue.value);
+  const valid = Number.isInteger(raw) && raw >= 0 && raw <= maxValue;
+  elements.inputValue.classList.toggle("invalid", !valid);
+  setMessage(valid ? "" : `n は 0 から ${maxValue} までの整数で入力してください。`);
+  return valid ? raw : defaultValue;
+}
+
+function readIntegerInput(input, label, defaultValue, { min = -20, max = 20 } = {}) {
+  if (!input) return defaultValue;
+  const raw = Number(input.value);
+  const valid = Number.isInteger(raw) && raw >= min && raw <= max;
+  input.classList.toggle("invalid", !valid);
+  if (!valid) setMessage(`${label} は ${min} から ${max} までの整数で入力してください。`);
+  return valid ? raw : defaultValue;
+}
+
+function readBinomialRadicalInputs() {
+  const a = readIntegerInput(elements.binomialAInput, "a", 1);
+  const b = readIntegerInput(elements.binomialBInput, "b", 1);
+  const c = readIntegerInput(elements.binomialCInput, "c", 2, { min: 0, max: 50 });
+  return { a, b, c };
+}
+
+function binomialTerms(n) {
+  return Array.from({ length: n + 1 }, (_, r) => {
+    const coefficient = combination(n, r);
+    const aPower = n - r;
+    const bPower = r;
+    const factors = [
+      aPower === 0 ? "" : aPower === 1 ? "a" : `a^${aPower}`,
+      bPower === 0 ? "" : bPower === 1 ? "b" : `b^${bPower}`,
+    ].filter(Boolean).join("");
+    return `${coefficient === 1 && factors ? "" : coefficient}${factors || "1"}`;
+  });
+}
+
+function radicalTermContribution(n, r, a, b, c) {
+  if (c === 0 && r > 0) return { integer: 0, radical: 0 };
+  const coefficient = combination(n, r) * (a ** (n - r)) * (b ** r);
+  if (r % 2 === 0) {
+    return { integer: coefficient * (c ** (r / 2)), radical: 0 };
+  }
+  return { integer: 0, radical: coefficient * (c ** ((r - 1) / 2)) };
+}
+
+function formatSignedTerm(value, unit = "") {
+  if (value === 0) return "";
+  const sign = value > 0 ? "+" : "-";
+  const abs = Math.abs(value);
+  return `${sign} ${abs}${unit}`;
+}
+
+function formatRadicalResult(integerPart, radicalPart, c) {
+  if (radicalPart === 0) return String(integerPart);
+  if (integerPart === 0) {
+    const sign = radicalPart < 0 ? "-" : "";
+    return `${sign}${Math.abs(radicalPart)}√${c}`;
+  }
+  return `${integerPart} ${formatSignedTerm(radicalPart, `√${c}`)}`;
+}
+
+function formatRadicalBase(a, b, c) {
+  if (b === 0) return String(a);
+  const radical = `${Math.abs(b)}√${c}`;
+  if (a === 0) return b < 0 ? `-${radical}` : radical;
+  return `${a} ${b > 0 ? "+" : "-"} ${radical}`;
+}
+
+function pascalTriangleBuild(rows, activeRow = -1, activeCol = -1) {
+  const html = Array.from({ length: rows + 1 }, (_, n) => {
+    const cells = Array.from({ length: n + 1 }, (_, r) => {
+      const active = n === activeRow && r === activeCol ? " is-active" : "";
+      const edge = r === 0 || r === n ? " is-edge" : "";
+      return `<span class="${active}${edge}">${combination(n, r)}</span>`;
+    }).join("");
+    return `<div class="pascal-row ${n === activeRow ? "is-active-row" : ""}">${cells}</div>`;
+  }).join("");
+  return `<div class="pascal-triangle">${html}</div>`;
+}
+
+function framesForBinomialCoefficients() {
+  const n = readPowerInput(5);
+  const example = TOPICS[state.topic].examples[state.example];
+  if (example === "(a+b√c)^n") return framesForBinomialRadicalPower(n);
+  const frames = [
+    {
+      note: "0段目を置く",
+      html: pascalTriangleBuild(0, 0, 0),
+      formula: "(a+b)^0 = 1",
+    },
+  ];
+  for (let row = 1; row <= n; row += 1) {
+    frames.push({
+      note: `${row}段目の左端に 1 を置く`,
+      html: pascalTriangleBuild(row, row, 0),
+      formula: `${row}C0 = 1`,
+    });
+    for (let col = 1; col < row; col += 1) {
+      const left = combination(row - 1, col - 1);
+      const right = combination(row - 1, col);
+      frames.push({
+        note: `${row}段目 ${col}番目は上の2つを足す`,
+        html: pascalTriangleBuild(row, row, col),
+        formula: `${row}C${col} = ${row - 1}C${col - 1} + ${row - 1}C${col} = ${left} + ${right} = ${left + right}`,
+      });
+    }
+    if (row > 0) {
+      frames.push({
+        note: `${row}段目の右端に 1 を置く`,
+        html: pascalTriangleBuild(row, row, row),
+        formula: `${row}C${row} = 1`,
+      });
+    }
+  }
+  frames.push({
+    note: `${n}段目を (a+b)^${n} の係数として読む`,
+    html: `${pascalTriangleBuild(n, n)}<div class="coefficient-caption">係数: ${Array.from({ length: n + 1 }, (_, r) => combination(n, r)).join(", ")}</div>${termList(binomialTerms(n))}`,
+    formula: `(a+b)^${n} = ${binomialTerms(n).join(" + ")}`,
+  });
+  return frames;
+}
+
+function framesForBinomialRadicalPower(n) {
+  const { a, b, c } = readBinomialRadicalInputs();
+  const base = formatRadicalBase(a, b, c);
+  const terms = Array.from({ length: n + 1 }, (_, r) => radicalTermContribution(n, r, a, b, c));
+  const frames = [
+    {
+      note: `${n}段目のパスカル係数を使う`,
+      html: `${pascalTriangleBuild(n, n)}<div class="coefficient-caption">係数: ${Array.from({ length: n + 1 }, (_, r) => combination(n, r)).join(", ")}</div>`,
+      formula: `(${base})^${n} = Σ ${n}Cr ${a}^(n-r) (${b}√${c})^r`,
+    },
+  ];
+  let integerPart = 0;
+  let radicalPart = 0;
+  terms.forEach((term, r) => {
+    integerPart += term.integer;
+    radicalPart += term.radical;
+    const coefficient = combination(n, r);
+    const source = `${coefficient} × ${a}^${n - r} × ${b}^${r} × (√${c})^${r}`;
+    const reduced = term.radical ? `${term.radical}√${c}` : String(term.integer);
+    frames.push({
+      note: `r=${r} の項を計算して加える`,
+      html: `
+        ${pascalTriangleBuild(n, n, r)}
+        <div class="radical-power-grid">
+          <span><strong>項</strong>${source}</span>
+          <span><strong>整理</strong>${reduced}</span>
+          <span><strong>途中結果</strong>${formatRadicalResult(integerPart, radicalPart, c)}</span>
+        </div>
+      `,
+      formula: `r=${r}: ${source} = ${reduced}`,
+    });
+  });
+  frames.push({
+    note: "整数部分と √c の係数をまとめる",
+    html: `
+      ${pascalTriangleBuild(n, n)}
+      <div class="count-result">${formatRadicalResult(integerPart, radicalPart, c)}</div>
+    `,
+    formula: `(${base})^${n} = ${formatRadicalResult(integerPart, radicalPart, c)}`,
+  });
+  return frames;
+}
+
+function multinomialCoefficient(parts) {
+  const total = parts.reduce((sum, value) => sum + value, 0);
+  return factorial(total) / parts.reduce((product, value) => product * factorial(value), 1);
+}
+
+function compositions(total, count) {
+  if (count === 1) return [[total]];
+  return Array.from({ length: total + 1 }, (_, index) => total - index)
+    .flatMap((value) => compositions(total - value, count - 1).map((rest) => [value, ...rest]));
+}
+
+function multinomialTerm(parts, variables = ["x", "y", "z"]) {
+  const coefficient = multinomialCoefficient(parts);
+  const factors = parts.map((power, index) => {
+    if (power === 0) return "";
+    return power === 1 ? variables[index] : `${variables[index]}^${power}`;
+  }).filter(Boolean).join("");
+  return `${coefficient === 1 ? "" : coefficient}${factors || "1"}`;
+}
+
+function multinomialGrid(partsList, activeIndex = -1) {
+  return `<div class="multinomial-grid">${partsList.map((parts, index) => `<span class="${index === activeIndex ? "is-active" : ""}"><strong>(${parts.join(",")})</strong><em class="math-text">${multinomialTerm(parts)}</em></span>`).join("")}</div>`;
+}
+
+function multinomialProgress(partsList, activeIndex = -1) {
+  const generated = partsList.slice(0, activeIndex + 1);
+  const remaining = Math.max(0, partsList.length - generated.length);
+  return `
+    <div class="multinomial-progress">
+      <div class="topic-summary-box">生成済み ${generated.length} / ${partsList.length} 組${remaining ? `、残り ${remaining} 組` : ""}</div>
+      ${multinomialGrid(generated, activeIndex)}
+    </div>
+  `;
+}
+
+function framesForMultinomialTheorem() {
+  const n = readPowerInput(4);
+  const partsList = compositions(n, 3);
+  const frames = [
+    {
+      note: `k+l+m=${n} となる指数の組を準備する`,
+      html: `<div class="count-result">k + l + m = ${n}</div>`,
+      formula: `(x+y+z)^${n} の各項は x^k y^l z^m`,
+    },
+  ];
+  partsList.forEach((parts, index) => {
+    const [k, l, m] = parts;
+    const coefficient = multinomialCoefficient(parts);
+    frames.push({
+      note: `(${k},${l},${m}) を生成して係数を計算する`,
+      html: multinomialProgress(partsList, index),
+      formula: `係数 = ${n}!/(${k}!${l}!${m}!) = ${coefficient}、項 = ${multinomialTerm(parts)}`,
+    });
+  });
+  frames.push({
+    note: "生成した項をすべて足して展開式にする",
+    html: termList(partsList.map((parts) => multinomialTerm(parts))),
+    formula: `(x+y+z)^${n} = ${partsList.map((parts) => multinomialTerm(parts)).join(" + ")}`,
+  });
+  return frames;
 }
 
 function framesForLogic(example) {
@@ -622,7 +911,7 @@ if (elements.inputValue) {
   });
 }
 
-[elements.setAInput, elements.setBInput, elements.setCInput].filter(Boolean).forEach((input) => {
+[elements.setAInput, elements.setBInput, elements.setCInput, elements.binomialAInput, elements.binomialBInput, elements.binomialCInput].filter(Boolean).forEach((input) => {
   input.addEventListener("input", () => {
     stopTimer();
     state.step = 0;

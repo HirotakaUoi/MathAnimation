@@ -1,6 +1,6 @@
 # Math Animation Lab
 
-数学の計算過程や概念をブラウザでアニメーション表示する小さなローカルアプリです。現在は線形代数を中心に、離散数学の基礎知識ページを追加ページとして作成中です。
+数学の計算過程や概念をブラウザでアニメーション表示する小さなローカルアプリです。現在は線形代数を中心に、離散数学の基礎知識ページも追加中です。
 
 ## 使い方
 
@@ -32,7 +32,7 @@ http://localhost:8100/future_index.html
 
 `index.html` は公開扱いのページ一覧です。分野別タブで `線形代数` と `離散数学` を切り替えます。
 
-現在、`離散数学` タブはプレースホルダーです。調整中の離散数学ページは `future_index.html` に置いています。メインページ下部右端には、追加ページへ移動する文字なしの小さな点リンクがあります。
+現在、`離散数学` タブには公開扱いの離散数学ページを掲載しています。調整中の離散数学ページは `future_index.html` に置いています。メインページ下部右端には、追加ページへ移動する文字なしの小さな点リンクがあります。
 
 線形代数タブには次のページがあります。
 
@@ -53,15 +53,20 @@ http://localhost:8100/future_index.html
 - `diagonalization.html` - 行列の対角化
 - `conic_orthogonal_transform.html` - 2次曲線の標準形と直交変換
 
+離散数学タブには次のページがあります。
+
+- `discrete_sets.html` - 集合とベン図
+
 ### 追加ページ
 
 `future_index.html` はデバッグ中・調整中の追加ページ一覧です。ページ下部右端には、メインページへ戻る文字なしの小さな点リンクがあります。
 
 現在の主な追加ページは次です。
 
-- `discrete_sets.html` - 集合とベン図
 - `discrete_relations_functions.html` - 関係と関数
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
+- `discrete_binomial_coefficients.html` - 二項係数（n乗入力、パスカルの三角形、a+b√c の累乗）
+- `discrete_multinomial_theorem.html` - 多項定理（n乗入力と多項係数）
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 
@@ -177,6 +182,18 @@ http://localhost:8100/discrete_relations_functions.html
 
 ```text
 http://localhost:8100/discrete_permutations_combinations.html
+```
+
+二項係数をアニメーションするページは次です。
+
+```text
+http://localhost:8100/discrete_binomial_coefficients.html
+```
+
+多項定理をアニメーションするページは次です。
+
+```text
+http://localhost:8100/discrete_multinomial_theorem.html
 ```
 
 現在 `デバッグ中` のページや、今後の追加ページは `future_index.html` 側にまとめています。公開扱いにしたページは `index.html` 側へ移しています。

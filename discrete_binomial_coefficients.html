@@ -3,31 +3,47 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>順列と組み合わせ</title>
+    <title>二項係数</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body data-topic="discrete-math" data-discrete-topic="counting">
+  <body data-topic="discrete-math" data-discrete-topic="binomial-coefficients">
     <main class="app-shell">
-      <section class="workspace discrete-workspace" aria-label="順列と組み合わせアニメーション">
+      <section class="workspace discrete-workspace" aria-label="二項係数アニメーション">
         <header class="topbar">
           <div>
             <p class="eyebrow">Discrete Math</p>
             <div class="title-row">
-              <h1>順列と組み合わせ</h1>
+              <h1>二項係数</h1>
             </div>
           </div>
           <div class="status-strip" aria-live="polite">
             <a class="home-link" href="./index.html">一覧へ</a>
             <span id="chapterStatus">基礎知識</span>
-            <span id="topicStatus">順列と組み合わせ</span>
+            <span id="topicStatus">二項係数</span>
           </div>
         </header>
 
-        <section class="control-band discrete-controls discrete-controls-compact" aria-label="設定">
+        <section class="control-band discrete-controls discrete-binomial-controls" aria-label="設定">
           <div class="control-group">
             <label for="exampleSelect">例</label>
             <select id="exampleSelect"></select>
+          </div>
+          <div class="control-group">
+            <label for="inputValue">n乗</label>
+            <input id="inputValue" class="cell-input" type="number" min="0" max="8" step="1" inputmode="numeric" value="5" />
+          </div>
+          <div id="binomialAGroup" class="control-group">
+            <label for="binomialAInput">a</label>
+            <input id="binomialAInput" class="cell-input" type="number" step="1" inputmode="numeric" value="1" />
+          </div>
+          <div id="binomialBGroup" class="control-group">
+            <label for="binomialBInput">b</label>
+            <input id="binomialBInput" class="cell-input" type="number" step="1" inputmode="numeric" value="1" />
+          </div>
+          <div id="binomialCGroup" class="control-group">
+            <label for="binomialCInput">c</label>
+            <input id="binomialCInput" class="cell-input" type="number" min="0" step="1" inputmode="numeric" value="2" />
           </div>
           <div class="control-group">
             <label>操作</label>
@@ -45,8 +61,8 @@
           <article class="discrete-visual-panel">
             <header class="discrete-panel-header">
               <div>
-                <h2 id="visualTitle">順列と組み合わせ</h2>
-                <span id="visualSubtitle">積の法則・順列・組み合わせ・二項係数</span>
+                <h2 id="visualTitle">二項係数</h2>
+                <span id="visualSubtitle">n乗を入力し、パスカルの三角形を順に構成する</span>
               </div>
               <output id="stepBadge">Step 1 / 1</output>
             </header>
@@ -65,7 +81,7 @@
       </section>
     </main>
 
-    <script src="./discrete_math.js?v=20260523i"></script>
+    <script src="./discrete_math.js?v=20260613c"></script>
     <script src="./math_format.js?v=20260613a"></script>
   </body>
 </html>
