@@ -54,7 +54,7 @@ const TOPICS = {
     subtitle: "順序対の集合を矢印と0-1行列で見る",
     formulaTitle: "関係R",
     formula: "R ⊆ A×B。a∈A と b∈B の間に関係があるとき (a,b)∈R と書く。",
-    examples: ["約数関係", "3で割った余りが等しい", "差が2以下"],
+    examples: ["約数関係: aはbを割り切る", "3で割った余りが等しい", "差が2以下"],
     input: "",
   },
   functions: {
@@ -63,7 +63,7 @@ const TOPICS = {
     subtitle: "各入力から出る矢印の本数で関数かどうかを判定する",
     formulaTitle: "関数f",
     formula: "Aの各要素に対して、Bの要素がちょうど1つ対応するとき f:A→B は関数。",
-    examples: ["関数", "関数でない", "単射", "全射"],
+    examples: ["関数", "関数でない", "単射", "全射", "全単射"],
     input: "",
   },
   "relations-functions": {
@@ -72,7 +72,22 @@ const TOPICS = {
     subtitle: "順序対・関係行列・写像の条件",
     formulaTitle: "関係と関数",
     formula: "関係は A×B の部分集合。関数は A の各要素から B の要素へちょうど1本の矢印を持つ関係。",
-    examples: ["関係: 約数関係", "関係: 3で割った余りが等しい", "関係: 差が2以下", "関数: 関数", "関数: 関数でない", "関数: 単射", "関数: 全射"],
+    examples: [
+      "関係: 約数関係: aはbを割り切る",
+      "関係: 3で割った余りが等しい",
+      "関係: 差が2以下",
+      "関係: 逆関係",
+      "関係: 合成関係",
+      "関係: 合成関係の逆関係",
+      "関数: 関数",
+      "関数: 関数でない",
+      "関数: 単射",
+      "関数: 全射",
+      "関数: 全単射",
+      "関数: 逆関数",
+      "関数: 合成関数",
+      "関数: 合成関数の逆関数",
+    ],
     input: "",
   },
   counting: {
@@ -383,19 +398,41 @@ function pointMatchesMembership(x, y, membership, minMargin) {
   });
 }
 
-function arrowDiagram(left, right, pairs, activeIndex = -1) {
-  const leftNodes = left.map((value, index) => `<div class="map-node" style="--row:${index + 1}">${value}</div>`).join("");
-  const rightNodes = right.map((value, index) => `<div class="map-node" style="--row:${index + 1}">${value}</div>`).join("");
+function arrowDiagram(left, right, pairs, activeIndex = -1, caption = "", labels = ["A", "B"]) {
+  const rowCount = Math.max(left.length, right.length);
+  const nodeRadius = 24;
+  const top = 84;
+  const rowGap = 52;
+  const height = top + (rowCount - 1) * rowGap + 52;
+  const leftX = 92;
+  const rightX = 388;
+  const nodeY = (index) => top + index * rowGap;
   const lines = pairs.map(([a, b], index) => {
-    const y1 = 50 + left.indexOf(a) * 62;
-    const y2 = 50 + right.indexOf(b) * 62;
-    return `<line x1="115" y1="${y1}" x2="365" y2="${y2}" class="${index === activeIndex ? "is-active" : ""}" />`;
+    const y1 = nodeY(left.indexOf(a));
+    const y2 = nodeY(right.indexOf(b));
+    return `<line x1="${leftX + nodeRadius}" y1="${y1}" x2="${rightX - nodeRadius}" y2="${y2}" class="${index === activeIndex ? "is-active" : ""}" />`;
   }).join("");
+  const nodes = (values, x) => values.map((value, index) => `
+    <g class="map-node" transform="translate(${x} ${nodeY(index)})">
+      <circle r="${nodeRadius}" />
+      <text>${escapeHtml(value)}</text>
+    </g>
+  `).join("");
+  const activePair = pairs[activeIndex];
+  const activeNote = activePair ? `赤線: いま見ている対応 (${activePair[0]}, ${activePair[1]})` : "";
   return `
     <div class="mapping-grid">
-      <div class="map-set"><strong>A</strong>${leftNodes}</div>
-      <svg class="map-arrows" viewBox="0 0 480 260">${lines}</svg>
-      <div class="map-set"><strong>B</strong>${rightNodes}</div>
+      ${caption ? `<div class="mapping-caption">${escapeHtml(caption)}</div>` : ""}
+      ${activeNote ? `<div class="mapping-active-note">${escapeHtml(activeNote)}</div>` : ""}
+      <svg class="mapping-svg" viewBox="0 0 480 ${height}" role="img" aria-label="集合Aから集合Bへの対応">
+        <rect class="map-set-box" x="28" y="20" width="128" height="${height - 40}" rx="8" />
+        <rect class="map-set-box" x="324" y="20" width="128" height="${height - 40}" rx="8" />
+        <text class="map-set-label" x="${leftX}" y="43">${escapeHtml(labels[0])}</text>
+        <text class="map-set-label" x="${rightX}" y="43">${escapeHtml(labels[1])}</text>
+        <g class="map-arrows">${lines}</g>
+        ${nodes(left, leftX)}
+        ${nodes(right, rightX)}
+      </svg>
     </div>
   `;
 }
@@ -404,32 +441,135 @@ function relationMatrix(left, right, pairs) {
   return `<div class="logic-table-wrap"><table class="logic-table"><thead><tr><th>R</th>${right.map((b) => `<th>${b}</th>`).join("")}</tr></thead><tbody>${left.map((a) => `<tr><th>${a}</th>${right.map((b) => `<td class="${pairs.some(([x, y]) => x === a && y === b) ? "truth-true" : ""}">${pairs.some(([x, y]) => x === a && y === b) ? "1" : "0"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 }
 
+function pairList(pairs) {
+  return pairs.map(([a, b]) => `(${a},${b})`).join(", ");
+}
+
+function inversePairs(pairs) {
+  return pairs.map(([a, b]) => [b, a]);
+}
+
+function composePairs(first, second) {
+  const composed = [];
+  first.forEach(([a, b]) => {
+    second.filter(([x]) => x === b).forEach(([, c]) => {
+      if (!composed.some(([left, right]) => left === a && right === c)) composed.push([a, c]);
+    });
+  });
+  return composed;
+}
+
+function chainDiagram(A, B, C, firstPairs, secondPairs, composedPairs = [], activeIndex = -1, caption = "", options = {}) {
+  const rowCount = Math.max(A.length, B.length, C.length);
+  const nodeRadius = 22;
+  const top = 82;
+  const rowGap = 52;
+  const height = top + (rowCount - 1) * rowGap + 56;
+  const xs = { A: 70, B: 240, C: 410 };
+  const nodeY = (values, value) => top + values.indexOf(value) * rowGap;
+  const nodes = (values, x, label, className = "") => `
+    <g class="${className}">
+    <rect class="map-set-box" x="${x - 48}" y="20" width="96" height="${height - 40}" rx="8" />
+    <text class="map-set-label" x="${x}" y="43">${label}</text>
+    ${values.map((value, index) => `
+      <g class="map-node" transform="translate(${x} ${top + index * rowGap})">
+        <circle r="${nodeRadius}" />
+        <text>${escapeHtml(value)}</text>
+      </g>
+    `).join("")}
+    </g>
+  `;
+  const firstLines = firstPairs.map(([a, b]) => `<line x1="${xs.A + nodeRadius}" y1="${nodeY(A, a)}" x2="${xs.B - nodeRadius}" y2="${nodeY(B, b)}" />`).join("");
+  const secondLines = secondPairs.map(([b, c]) => `<line x1="${xs.B + nodeRadius}" y1="${nodeY(B, b)}" x2="${xs.C - nodeRadius}" y2="${nodeY(C, c)}" />`).join("");
+  const composedLines = composedPairs.map(([a, c], index) => {
+    const className = index === activeIndex ? "is-active is-composed" : "is-composed";
+    return `<path d="M ${xs.A + nodeRadius} ${nodeY(A, a)} C 170 ${nodeY(A, a) - 42}, 310 ${nodeY(C, c) - 42}, ${xs.C - nodeRadius} ${nodeY(C, c)}" class="${className}" />`;
+  }).join("");
+  const activePair = composedPairs[activeIndex];
+  const activeNote = activePair
+    ? `${options.resultOverlay ? "点線" : "赤線"}: 合成で得た対応 (${activePair[0]}, ${activePair[1]})`
+    : "";
+  return `
+    <div class="mapping-grid">
+      ${caption ? `<div class="mapping-caption">${escapeHtml(caption)}</div>` : ""}
+      ${activeNote ? `<div class="mapping-active-note">${escapeHtml(activeNote)}</div>` : ""}
+      <svg class="mapping-svg mapping-svg-wide" viewBox="0 0 480 ${height}" role="img" aria-label="3つの集合の合成">
+        <g class="map-arrows">${firstLines}</g>
+        <g class="map-arrows map-arrows-secondary">${secondLines}</g>
+        ${options.resultOverlay ? "" : `<g class="map-arrows">${composedLines}</g>`}
+        ${nodes(A, xs.A, "A")}
+        ${nodes(B, xs.B, "B", options.fadeMiddle ? "map-set-faded" : "")}
+        ${nodes(C, xs.C, "C")}
+        ${options.resultOverlay ? `<g class="map-arrows map-arrows-overlay">${composedLines}</g>` : ""}
+      </svg>
+    </div>
+  `;
+}
+
 function framesForRelations(example) {
   const A = [2, 3, 5, 6];
   const B = [1, 3, 4, 6, 8];
-  const pairs = example === "約数関係"
+  const isDivisorRelation = example.startsWith("約数関係");
+  const condition = isDivisorRelation
+    ? "条件: Aの要素aがBの要素bを割り切る（例: 2→4, 2→6, 3→3）"
+    : example === "3で割った余りが等しい"
+      ? "条件: a∈A, b∈B, aとbを3で割った余りが等しい"
+      : "条件: a∈A, b∈B, |a-b|≦2";
+  const pairs = isDivisorRelation
     ? A.flatMap((a) => B.filter((b) => b % a === 0).map((b) => [a, b]))
     : example === "3で割った余りが等しい"
       ? A.flatMap((a) => B.filter((b) => a % 3 === b % 3).map((b) => [a, b]))
       : A.flatMap((a) => B.filter((b) => Math.abs(a - b) <= 2).map((b) => [a, b]));
+  const pairFrames = pairs.map((pair, index) => ({
+    note: isDivisorRelation
+      ? `Aの${pair[0]}はBの${pair[1]}を割り切るので (${pair[0]},${pair[1]}) を追加`
+      : `条件を満たす (${pair[0]},${pair[1]}) を追加`,
+    html: arrowDiagram(A, B, pairs.slice(0, index + 1), index, condition),
+  }));
   return [
-    { note: "A×Bの中から条件を満たす順序対を選ぶ", html: arrowDiagram(A, B, pairs.slice(0, 1), 0) },
-    { note: "関係Rを矢印の集合として表示する", html: arrowDiagram(A, B, pairs, pairs.length - 1) },
-    { note: "同じ関係を0-1行列で表す", html: relationMatrix(A, B, pairs), formula: `R = { ${pairs.map(([a, b]) => `(${a},${b})`).join(", ")} }` },
+    ...pairFrames,
+    { note: "同じ関係を0-1行列で表す", html: relationMatrix(A, B, pairs), formula: `${condition}\nR = { ${pairs.map(([a, b]) => `(${a},${b})`).join(", ")} }` },
   ];
 }
 
 function framesForFunctions(example) {
-  const A = ["p", "q", "r"];
-  const B = [2, 4, 6];
-  const pairsByExample = {
-    "関数": [["p", 2], ["q", 4], ["r", 4]],
-    "関数でない": [["p", 2], ["p", 4], ["q", 4], ["r", 6]],
-    "単射": [["p", 2], ["q", 4], ["r", 6]],
-    "全射": [["p", 2], ["q", 4], ["r", 6]],
+  const examples = {
+    "関数": {
+      A: ["p", "q", "r"],
+      B: [2, 4, 6],
+      pairs: [["p", 2], ["q", 4], ["r", 4]],
+    },
+    "関数でない": {
+      A: ["p", "q", "r"],
+      B: [2, 4, 6],
+      pairs: [["p", 2], ["p", 4], ["q", 4], ["r", 6]],
+    },
+    "単射": {
+      A: ["p", "q", "r"],
+      B: [2, 4, 6, 8],
+      pairs: [["p", 2], ["q", 4], ["r", 6]],
+    },
+    "全射": {
+      A: ["p", "q", "r", "s"],
+      B: [2, 4, 6],
+      pairs: [["p", 2], ["q", 4], ["r", 6], ["s", 6]],
+    },
+    "全単射": {
+      A: ["p", "q", "r"],
+      B: [2, 4, 6],
+      pairs: [["p", 2], ["q", 4], ["r", 6]],
+    },
   };
-  const pairs = pairsByExample[example];
-  const verdict = example === "関数でない" ? "pから矢印が2本出るので関数ではない" : `${example}の条件を満たす`;
+  const { A, B, pairs } = examples[example];
+  const verdict = example === "関数でない"
+    ? "pから矢印が2本出るので関数ではない"
+    : example === "単射"
+      ? "異なる入力が同じ出力に届かないので単射。ただし8には届かないので全射ではない"
+    : example === "全射"
+      ? "Bのすべての要素に少なくとも1本の矢印が届くので全射"
+      : example === "全単射"
+        ? "一対一で、Bのすべての要素に届くので全単射"
+      : `${example}の条件を満たす`;
   return [
     { note: "入力集合Aの各要素を見る", html: arrowDiagram(A, B, pairs.slice(0, 1), 0) },
     { note: "すべての対応を矢印で表示する", html: arrowDiagram(A, B, pairs, pairs.length - 1) },
@@ -437,7 +577,97 @@ function framesForFunctions(example) {
   ];
 }
 
+function framesForInverseRelation() {
+  const A = ["a", "b", "c"];
+  const B = [1, 2, 3];
+  const R = [["a", 1], ["a", 2], ["b", 2], ["c", 3]];
+  const inverse = inversePairs(R);
+  return [
+    { note: "元の関係 R を A から B への矢印で見る", html: arrowDiagram(A, B, R, -1, `R = { ${pairList(R)} }`, ["A", "B"]) },
+    { note: "順序対の左右を入れ替える", html: arrowDiagram(B, A, inverse.slice(0, 1), 0, "逆関係 R^-1 は (a,b) を (b,a) に入れ替えた関係", ["B", "A"]), formula: `R^-1 = { ${pairList(inverse)} }` },
+    { note: "すべての矢印を逆向きにしたものが逆関係", html: arrowDiagram(B, A, inverse, inverse.length - 1, `R^-1 = { ${pairList(inverse)} }`, ["B", "A"]), formula: `R = { ${pairList(R)} }\nR^-1 = { ${pairList(inverse)} }` },
+  ];
+}
+
+function framesForInverseFunction() {
+  const A = ["p", "q", "r"];
+  const B = [2, 4, 6];
+  const f = [["p", 2], ["q", 4], ["r", 6]];
+  const inverse = inversePairs(f);
+  return [
+    { note: "f は全単射なので逆関数を持つ", html: arrowDiagram(A, B, f, -1, "f:A→B は一対一で、Bの全要素に届く", ["A", "B"]) },
+    { note: "矢印を逆にしても各入力から1本だけ出る", html: arrowDiagram(B, A, inverse, inverse.length - 1, "f^-1:B→A は f の対応を逆向きにした関数", ["B", "A"]), formula: `f = { ${pairList(f)} }\nf^-1 = { ${pairList(inverse)} }` },
+    { note: "f^-1 は B の各要素を元の A の要素へ戻す", html: `<div class="verdict is-true">逆関数 f^-1 が定義できる</div>${arrowDiagram(B, A, inverse, -1, "", ["B", "A"])}` },
+  ];
+}
+
+function framesForCompositeRelation(inverse = false) {
+  const A = [1, 2, 3];
+  const B = ["x", "y"];
+  const C = ["u", "v", "w"];
+  const R = [[1, "x"], [1, "y"], [2, "y"], [3, "x"]];
+  const S = [["x", "u"], ["x", "v"], ["y", "v"], ["y", "w"]];
+  const composed = composePairs(R, S);
+  const inverseComposed = inversePairs(composed);
+  if (inverse) {
+    return [
+      { note: "まず A→B→C の合成関係 S∘R を作る", html: chainDiagram(A, B, C, R, S, composed, composed.length - 1, "S∘R: aRb かつ bSc となる b があるとき a(S∘R)c", { fadeMiddle: true, resultOverlay: true }), formula: `S∘R = { ${pairList(composed)} }` },
+      { note: "合成関係の順序対を左右入れ替える", html: arrowDiagram(C, A, inverseComposed.slice(0, 1), 0, "(S∘R)^-1 は C から A への逆関係", ["C", "A"]) },
+      { note: "合成関係の逆関係を表示する", html: arrowDiagram(C, A, inverseComposed, inverseComposed.length - 1, `(S∘R)^-1 = { ${pairList(inverseComposed)} }`, ["C", "A"]), formula: `(S∘R)^-1 = { ${pairList(inverseComposed)} }` },
+    ];
+  }
+  return [
+    { note: "R は A から B への関係", html: chainDiagram(A, B, C, R, [], [], -1, `R = { ${pairList(R)} }`) },
+    { note: "S は B から C への関係", html: chainDiagram(A, B, C, R, S, [], -1, `S = { ${pairList(S)} }`) },
+    ...composed.map((pair, index) => ({
+      note: `Aの${pair[0]}からCの${pair[1]}へ到達できるので (${pair[0]},${pair[1]}) を追加`,
+      html: chainDiagram(A, B, C, R, S, composed.slice(0, index + 1), index, "青: R、緑: S、赤: 合成関係 S∘R"),
+    })),
+    {
+      note: "集合Bを経由点として薄くし、合成関係 S∘R をAからCへの点線で表す",
+      html: `${chainDiagram(A, B, C, R, S, composed, composed.length - 1, "点線: 合成関係 S∘R の結果", { fadeMiddle: true, resultOverlay: true })}${relationMatrix(A, C, composed)}`,
+      formula: `S∘R = { ${pairList(composed)} }`,
+    },
+  ];
+}
+
+function framesForCompositeFunction(inverse = false) {
+  const A = ["p", "q", "r"];
+  const B = [2, 4, 6];
+  const C = ["U", "V", "W"];
+  const f = [["p", 2], ["q", 4], ["r", 6]];
+  const g = [[2, "U"], [4, "V"], [6, "W"]];
+  const composed = composePairs(f, g);
+  const inverseComposed = inversePairs(composed);
+  if (inverse) {
+    return [
+      { note: "合成関数 g∘f を作る", html: chainDiagram(A, B, C, f, g, composed, composed.length - 1, "g∘f:A→C", { fadeMiddle: true, resultOverlay: true }) },
+      { note: "全単射の合成なので逆関数を持つ", html: arrowDiagram(C, A, inverseComposed, inverseComposed.length - 1, "(g∘f)^-1:C→A", ["C", "A"]), formula: `(g∘f)^-1 = { ${pairList(inverseComposed)} }` },
+      { note: "逆関数は C の各要素を元の A の要素へ戻す", html: `<div class="verdict is-true">合成関数の逆関数が定義できる</div>${arrowDiagram(C, A, inverseComposed, -1, "", ["C", "A"])}` },
+    ];
+  }
+  return [
+    { note: "f は A から B への関数", html: chainDiagram(A, B, C, f, [], [], -1, `f = { ${pairList(f)} }`) },
+    { note: "g は B から C への関数", html: chainDiagram(A, B, C, f, g, [], -1, `g = { ${pairList(g)} }`) },
+    ...composed.map((pair, index) => ({
+      note: `g(f(${pair[0]})) = ${pair[1]} なので (${pair[0]},${pair[1]}) を追加`,
+      html: chainDiagram(A, B, C, f, g, composed.slice(0, index + 1), index, "青: f、緑: g、赤: 合成関数 g∘f"),
+    })),
+    {
+      note: "集合Bを経由点として薄くし、合成関数 g∘f をAからCへの点線で表す",
+      html: `<div class="verdict is-true">g∘f は関数</div>${chainDiagram(A, B, C, f, g, composed, composed.length - 1, "点線: 合成関数 g∘f の結果", { fadeMiddle: true, resultOverlay: true })}`,
+      formula: `g∘f = { ${pairList(composed)} }`,
+    },
+  ];
+}
+
 function framesForRelationsFunctions(example) {
+  if (example === "関係: 逆関係") return framesForInverseRelation();
+  if (example === "関係: 合成関係") return framesForCompositeRelation(false);
+  if (example === "関係: 合成関係の逆関係") return framesForCompositeRelation(true);
+  if (example === "関数: 逆関数") return framesForInverseFunction();
+  if (example === "関数: 合成関数") return framesForCompositeFunction(false);
+  if (example === "関数: 合成関数の逆関数") return framesForCompositeFunction(true);
   if (example.startsWith("関係: ")) {
     return framesForRelations(example.replace("関係: ", ""));
   }
@@ -929,11 +1159,11 @@ elements.playPause.addEventListener("click", () => {
   elements.playPause.textContent = "停止";
   state.timerId = window.setInterval(() => {
     const frames = getFrames();
-    state.step = state.step + 1;
-    if (state.step >= frames.length) {
-      state.step = frames.length - 1;
+    if (state.step >= frames.length - 1) {
       stopTimer();
+      return;
     }
+    state.step += 1;
     render();
   }, 950);
 });

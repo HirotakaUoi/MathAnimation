@@ -1066,42 +1066,73 @@ select:focus-visible {
 }
 
 .mapping-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: 140px minmax(260px, 1fr) 140px;
-  gap: 14px;
-  align-items: center;
-  min-height: 300px;
+  width: 100%;
+  overflow: auto;
 }
 
-.map-set {
-  display: grid;
-  gap: 10px;
-  align-content: center;
-  min-height: 260px;
-  padding: 14px;
-  border: 1px solid var(--line);
+.mapping-caption {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(15, 118, 110, 0.26);
   border-radius: 8px;
-  background: var(--paper);
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 850;
 }
 
-.map-set strong {
-  color: var(--teal);
-}
-
-.map-node {
-  display: grid;
-  place-items: center;
-  min-height: 46px;
-  border: 1px solid rgba(37, 99, 235, 0.26);
+.mapping-active-note {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto 8px;
+  padding: 5px 10px;
   border-radius: 999px;
-  background: #fff;
+  background: rgba(194, 65, 12, 0.1);
+  color: var(--red);
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.mapping-svg {
+  display: block;
+  width: 100%;
+  min-width: 460px;
+  max-height: 360px;
+}
+
+.map-set-box {
+  fill: var(--paper);
+  border: 1px solid var(--line);
+  stroke: var(--line);
+}
+
+.map-set-label {
+  text-anchor: middle;
+  dominant-baseline: central;
+  color: var(--teal);
+  fill: var(--teal);
+  font-size: 18px;
   font-weight: 900;
 }
 
-.map-arrows {
-  width: 100%;
-  min-height: 260px;
+.map-node circle {
+  fill: #fff;
+  stroke: rgba(37, 99, 235, 0.36);
+  stroke-width: 1.5;
+}
+
+.map-node text {
+  text-anchor: middle;
+  dominant-baseline: central;
+  fill: var(--ink);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.map-set-faded {
+  opacity: 0.28;
 }
 
 .map-arrows line {
@@ -1111,10 +1142,31 @@ select:focus-visible {
   opacity: 0.68;
 }
 
-.map-arrows line.is-active {
+.map-arrows path {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 3;
+  opacity: 0.42;
+}
+
+.map-arrows-secondary line {
+  stroke: var(--teal);
+}
+
+.map-arrows line.is-active,
+.map-arrows path.is-active {
   stroke: var(--red);
   stroke-width: 5;
   opacity: 1;
+}
+
+.map-arrows path.is-composed {
+  stroke-dasharray: 8 6;
+}
+
+.map-arrows-overlay path.is-composed {
+  opacity: 0.95;
+  stroke-dasharray: 5 7;
 }
 
 .logic-table-wrap {
