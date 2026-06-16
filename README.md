@@ -56,6 +56,9 @@ http://localhost:8100/future_index.html
 離散数学タブには次のページがあります。
 
 - `discrete_sets.html` - 集合とベン図
+- `discrete_relations_functions.html` - 関係と関数
+- `discrete_binomial_coefficients.html` - 二項係数（n乗入力、パスカルの三角形、a+b√c の累乗）
+- `discrete_multinomial_theorem.html` - 多項定理（n乗入力と多項係数）
 
 ### 追加ページ
 
@@ -63,10 +66,7 @@ http://localhost:8100/future_index.html
 
 現在の主な追加ページは次です。
 
-- `discrete_relations_functions.html` - 関係と関数
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
-- `discrete_binomial_coefficients.html` - 二項係数（n乗入力、パスカルの三角形、a+b√c の累乗）
-- `discrete_multinomial_theorem.html` - 多項定理（n乗入力と多項係数）
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 
