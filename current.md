@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-06-01
+最終更新: 2026-06-19
 
 ## プロジェクト概要
 
@@ -18,7 +18,7 @@ python3 -m http.server 8100
   - まとめページ
   - 分野別タブ構成
   - `線形代数` タブには、行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・回転/拡大縮小/平行移動・同次座標系とグラフィックス・固有値と固有ベクトル・行列の対角化・2次曲線の標準形と直交変換を掲載
-  - `離散数学` タブには集合とベン図を掲載
+  - `離散数学` タブには集合とベン図、関係と関数、二項係数、多項定理を掲載
   - ページ下部右端に、追加ページへ移動する文字なしの小さな点リンクあり
 - `future_index.html`
   - 追加ページ用の別トップページ
@@ -95,7 +95,8 @@ python3 -m http.server 8100
   - n乗を入力し、パスカルの三角形をセルごとに構成して二項展開の係数を表示
 - `discrete_multinomial_theorem.html`
   - 多項定理
-  - n乗を入力し、k+l+m=n の組を生成しながら多項係数を計算
+  - 例で `(x+y+z)^n` と `(x+y+z+w)^n` を切り替え
+  - 3変数では k+l+m=n、4変数では k+l+m+p=n の組を生成しながら多項係数を計算
 - `quaternion_vector.html`
   - クオータニオンとベクトル
 - `conic_orthogonal_transform.html`
@@ -141,6 +142,8 @@ python3 -m http.server 8100
 - 主要な追加ページ群は commit / push 済み
 - `current.md` はチャット引き継ぎ用として運用中
 - `CNAME` があるため GitHub Pages 公開も想定されている
+- GitHub Pages への反映は `main` を GitHub へ push した後に行われる。GitHub のメール非公開保護で `uoi@osakac.ac.jp` の author email は push 拒否されるため、公開用コミットは `HirotakaUoi@users.noreply.github.com` を author/committer email に使う
+- 2026-06-19 時点で、離散数学タブ復元・二項/多項の項表示修正・多項定理 4 変数対応は `main` へ push 済み。Pages 反映は push 後しばらく待つ必要あり
 - フォルダ内に特殊名ディレクトリ `”` が残っている
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
