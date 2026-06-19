@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ブール代数 4桁の対応表</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260619b" />
+  </head>
+  <body data-topic="discrete-math" data-table-page="boolean-algebra">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-table-workspace" aria-label="ブール代数4桁の対応表">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>ブール代数 4桁の対応表</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span>5章</span>
+            <span>ブール代数</span>
+          </div>
+        </header>
+
+        <section class="control-band boolean-table-controls" aria-label="設定">
+          <div class="control-group">
+            <label for="variableCount">変数</label>
+            <select id="variableCount">
+              <option value="2">2変数</option>
+              <option value="3">3変数</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="formulaSelect">例</label>
+            <select id="formulaSelect"></select>
+          </div>
+          <div class="control-group">
+            <div class="inline-label-row">
+              <label for="customBooleanFormulaInput">自由入力</label>
+              <div class="symbol-button-row" aria-label="記号入力">
+                <button type="button" data-insert-boolean-symbol="+">+</button>
+                <button type="button" data-insert-boolean-symbol="'">'</button>
+                <button type="button" data-insert-boolean-symbol="(">(</button>
+                <button type="button" data-insert-boolean-symbol=")">)</button>
+              </div>
+            </div>
+            <input id="customBooleanFormulaInput" type="text" placeholder="例: xy+x'z" autocomplete="off" />
+          </div>
+          <div class="control-group">
+            <label for="xInput">x</label>
+            <input id="xInput" type="text" value="1100" inputmode="numeric" maxlength="4" autocomplete="off" />
+          </div>
+          <div class="control-group">
+            <label for="yInput">y</label>
+            <input id="yInput" type="text" value="1010" inputmode="numeric" maxlength="4" autocomplete="off" />
+          </div>
+          <div id="zInputGroup" class="control-group">
+            <label for="zInput">z</label>
+            <input id="zInput" type="text" value="0110" inputmode="numeric" maxlength="4" autocomplete="off" />
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="table-page-grid" aria-label="入力と計算結果の対応表">
+          <article class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2 id="tableTitle">対応表</h2>
+                <span id="tableSubtitle">4桁の対応表と、各入力値に対する出力値表を表示します。</span>
+              </div>
+              <output id="rowCountBadge">4 桁</output>
+            </header>
+            <div id="tableStage" class="table-page-stage"></div>
+          </article>
+
+          <aside class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>記号</h2>
+                <span>このページで使う表記</span>
+              </div>
+            </header>
+            <div class="table-page-notes">
+              <dl>
+                <div><dt>xy</dt><dd>x と y の積、各桁の AND</dd></div>
+                <div><dt>x+y</dt><dd>x と y の和、各桁の OR</dd></div>
+                <div><dt>x'</dt><dd>x の各桁を反転</dd></div>
+              </dl>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./logic_tables.js?v=20260619b"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>

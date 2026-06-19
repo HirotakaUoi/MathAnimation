@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>論理回路の基礎</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260619c" />
+  </head>
+  <body data-topic="discrete-math" data-circuit-page="logic-circuit">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-circuit-workspace" aria-label="論理回路の基礎">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>論理回路の基礎</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span>5章</span>
+            <span>論理回路</span>
+          </div>
+        </header>
+
+        <section class="control-band logic-circuit-controls" aria-label="設定">
+          <div class="control-group">
+            <label for="inputCount">入力</label>
+            <select id="inputCount">
+              <option value="2">2入力</option>
+              <option value="3">3入力</option>
+              <option value="4">4入力</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="presetSelect">例</label>
+            <select id="presetSelect"></select>
+          </div>
+          <div class="control-group">
+            <label>生成</label>
+            <button id="randomCircuit" class="secondary" type="button">ランダム</button>
+          </div>
+          <div class="control-group">
+            <label for="layer2Count">第2層</label>
+            <select id="layer2Count">
+              <option value="0">0個</option>
+              <option value="1">1個</option>
+              <option value="2">2個</option>
+              <option value="3" selected>3個</option>
+              <option value="4">4個</option>
+            </select>
+          </div>
+          <div class="control-group logic-input-toggles">
+            <label>入力値</label>
+            <div id="inputToggleRow" class="button-row"></div>
+          </div>
+        </section>
+
+        <section class="logic-formula-band" aria-label="論理式から生成">
+          <div class="control-group">
+            <div class="inline-label-row">
+              <label for="formulaInput">論理式</label>
+              <div class="symbol-button-row" aria-label="記号入力">
+                <button type="button" data-insert-circuit-symbol="+">+</button>
+                <button type="button" data-insert-circuit-symbol="'">'</button>
+                <button type="button" data-insert-circuit-symbol="(">(</button>
+                <button type="button" data-insert-circuit-symbol=")">)</button>
+              </div>
+            </div>
+            <input id="formulaInput" type="text" placeholder="例: A'B + AC または (A+B)(C'+D)" autocomplete="off" />
+          </div>
+          <button id="generateFromFormula" class="primary" type="button">回路生成</button>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="logic-circuit-grid" aria-label="論理回路">
+          <article class="table-page-panel logic-circuit-panel">
+            <header class="table-page-header">
+              <div>
+                <h2 id="circuitTitle">3層論理回路</h2>
+                <span id="circuitSubtitle">第1層: そのまま/NOT、第2層: 最大4ゲート、第3層: まとめの出力</span>
+              </div>
+              <output id="outputBadge">Y=0</output>
+            </header>
+            <div id="circuitStage" class="logic-circuit-stage"></div>
+          </article>
+
+          <aside class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>ゲート設定</h2>
+                <span>第2層と第3層を変更</span>
+              </div>
+            </header>
+            <div class="logic-circuit-config">
+              <div id="layer2ConfigList" class="layer2-config-list"></div>
+              <div class="final-gate-config">
+                <label for="finalGateType">第3層</label>
+                <select id="finalGateType">
+                  <option value="AND">AND</option>
+                  <option value="OR" selected>OR</option>
+                  <option value="NAND">NAND</option>
+                  <option value="NOR">NOR</option>
+                </select>
+              </div>
+              <div id="calculationSummary" class="calculation-summary"></div>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./logic_circuit_visualizer.js?v=20260619c"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>

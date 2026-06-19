@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>命題論理の真理値表</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260619b" />
+  </head>
+  <body data-topic="discrete-math" data-table-page="propositional">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-table-workspace" aria-label="命題論理の真理値表">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>命題論理の真理値表</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span>5章</span>
+            <span>命題論理</span>
+          </div>
+        </header>
+
+        <section class="control-band logic-table-controls" aria-label="設定">
+          <div class="control-group">
+            <label for="variableCount">変数</label>
+            <select id="variableCount">
+              <option value="2">2変数</option>
+              <option value="3">3変数</option>
+              <option value="4">4変数</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="formulaSelect">例</label>
+            <select id="formulaSelect"></select>
+          </div>
+          <div class="control-group">
+            <div class="inline-label-row">
+              <label for="customFormulaInput">自由入力</label>
+              <div class="symbol-button-row" aria-label="記号入力">
+                <button type="button" data-insert-symbol="~">~</button>
+                <button type="button" data-insert-symbol="⋀">⋀</button>
+                <button type="button" data-insert-symbol="⋁">⋁</button>
+                <button type="button" data-insert-symbol="(">(</button>
+                <button type="button" data-insert-symbol=")">)</button>
+              </div>
+            </div>
+            <input id="customFormulaInput" type="text" placeholder="例: (p ⋀ q) ⋁ ~r" autocomplete="off" />
+          </div>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="table-page-grid" aria-label="真理値表">
+          <article class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2 id="tableTitle">真理値表</h2>
+                <span id="tableSubtitle">AND は ⋀、OR は ⋁、NOT は ~ で表します。</span>
+              </div>
+              <output id="rowCountBadge">4 行</output>
+            </header>
+            <div id="tableStage" class="table-page-stage"></div>
+          </article>
+
+          <aside class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>記号</h2>
+                <span>このページで使う表記</span>
+              </div>
+            </header>
+            <div class="table-page-notes">
+              <dl>
+                <div><dt>p ⋀ q</dt><dd>p と q がどちらも真のとき真</dd></div>
+                <div><dt>p ⋁ q</dt><dd>p と q の少なくとも一方が真のとき真</dd></div>
+                <div><dt>~p</dt><dd>p の真偽を反転</dd></div>
+                <div><dt>( )</dt><dd>括弧で計算順序を指定</dd></div>
+              </dl>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./logic_tables.js?v=20260619b"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>
