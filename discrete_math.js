@@ -111,10 +111,10 @@ const TOPICS = {
   "multinomial-theorem": {
     chapter: "基礎知識",
     title: "多項定理",
-    subtitle: "k+l+m=n の組を生成し、多項係数を順に計算する",
+    subtitle: "指数の組を生成し、多項係数を順に計算する",
     formulaTitle: "多項定理",
     formula: "(x1+x2+...+xm)^n = Σ n!/(k1!k2!...km!) x1^k1 x2^k2 ... xm^km。ただし k1+...+km=n。",
-    examples: ["(x+y+z)^n"],
+    examples: ["(x+y+z)^n", "(x+y+z+w)^n"],
     input: "4",
   },
   logic: {
@@ -916,44 +916,54 @@ function multinomialTerm(parts, variables = ["x", "y", "z"]) {
   return `${coefficient === 1 ? "" : coefficient}${factors || "1"}`;
 }
 
-function multinomialGrid(partsList, activeIndex = -1) {
-  return `<div class="multinomial-grid">${partsList.map((parts, index) => `<span class="${index === activeIndex ? "is-active" : ""}"><strong>(${parts.join(",")})</strong><em class="math-text">${multinomialTerm(parts)}</em></span>`).join("")}</div>`;
+function multinomialGrid(partsList, activeIndex = -1, variables = ["x", "y", "z"]) {
+  return `<div class="multinomial-grid">${partsList.map((parts, index) => `<span class="${index === activeIndex ? "is-active" : ""}"><strong>(${parts.join(",")})</strong><em class="math-text">${multinomialTerm(parts, variables)}</em></span>`).join("")}</div>`;
 }
 
-function multinomialProgress(partsList, activeIndex = -1) {
+function multinomialProgress(partsList, activeIndex = -1, variables = ["x", "y", "z"]) {
   const generated = partsList.slice(0, activeIndex + 1);
   const remaining = Math.max(0, partsList.length - generated.length);
   return `
     <div class="multinomial-progress">
       <div class="topic-summary-box">生成済み ${generated.length} / ${partsList.length} 組${remaining ? `、残り ${remaining} 組` : ""}</div>
-      ${multinomialGrid(generated, activeIndex)}
+      ${multinomialGrid(generated, activeIndex, variables)}
     </div>
   `;
 }
 
+function readMultinomialVariableCount() {
+  const example = TOPICS[state.topic].examples[state.example];
+  return example === "(x+y+z+w)^n" ? 4 : 3;
+}
+
 function framesForMultinomialTheorem() {
   const n = readPowerInput(4);
-  const partsList = compositions(n, 3);
+  const variableCount = readMultinomialVariableCount();
+  const variables = ["x", "y", "z", "w"].slice(0, variableCount);
+  const exponentLabels = ["k", "l", "m", "p"].slice(0, variableCount);
+  const baseExpression = `(${variables.join("+")})^${n}`;
+  const exponentCondition = `${exponentLabels.join("+")}=${n}`;
+  const partsList = compositions(n, variableCount);
   const frames = [
     {
-      note: `k+l+m=${n} となる指数の組を準備する`,
-      html: `<div class="count-result">k + l + m = ${n}</div>`,
-      formula: `(x+y+z)^${n} の各項は x^k y^l z^m`,
+      note: `${exponentCondition} となる指数の組を準備する`,
+      html: `<div class="count-result">${exponentLabels.join(" + ")} = ${n}</div>`,
+      formula: `${baseExpression} の各項は ${variables.map((variable, index) => `${variable}^${exponentLabels[index]}`).join(" ")}`,
     },
   ];
   partsList.forEach((parts, index) => {
-    const [k, l, m] = parts;
     const coefficient = multinomialCoefficient(parts);
+    const factorialDenominator = parts.map((part) => `${part}!`).join("");
     frames.push({
-      note: `(${k},${l},${m}) を生成して係数を計算する`,
-      html: multinomialProgress(partsList, index),
-      formula: `係数 = ${n}!/(${k}!${l}!${m}!) = ${coefficient}、項 = ${multinomialTerm(parts)}`,
+      note: `(${parts.join(",")}) を生成して係数を計算する`,
+      html: multinomialProgress(partsList, index, variables),
+      formula: `係数 = ${n}!/(${factorialDenominator}) = ${coefficient}、項 = ${multinomialTerm(parts, variables)}`,
     });
   });
   frames.push({
     note: "生成した項をすべて足して展開式にする",
-    html: termList(partsList.map((parts) => multinomialTerm(parts))),
-    formula: `(x+y+z)^${n} = ${partsList.map((parts) => multinomialTerm(parts)).join(" + ")}`,
+    html: termList(partsList.map((parts) => multinomialTerm(parts, variables))),
+    formula: `${baseExpression} = ${partsList.map((parts) => multinomialTerm(parts, variables)).join(" + ")}`,
   });
   return frames;
 }

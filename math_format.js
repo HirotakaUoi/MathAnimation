@@ -79,6 +79,7 @@
     });
     document.querySelectorAll(INLINE_TARGET_SELECTORS).forEach((element) => {
       if (element.closest("[data-math-skip='true']")) return;
+      if (element.childElementCount > 0) return;
       formatElement(element);
     });
   }
