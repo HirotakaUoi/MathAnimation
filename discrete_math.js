@@ -726,7 +726,7 @@ function pascalTriangle(rows, activeRow = -1) {
 }
 
 function termList(terms, activeIndex = -1) {
-  return `<div class="term-list">${terms.map((term, index) => `<span class="${index === activeIndex ? "is-active" : ""}">${term}</span>`).join("")}</div>`;
+  return `<div class="term-list">${terms.map((term, index) => `<span class="${index === activeIndex ? "is-active" : ""}"><em class="math-text">${term}</em></span>`).join("")}</div>`;
 }
 
 function readPowerInput(defaultValue, maxValue = 8) {

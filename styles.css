@@ -1275,6 +1275,18 @@ select:focus-visible {
   text-align: center;
 }
 
+.term-list span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+.term-list .math-text {
+  display: inline;
+  font-style: normal;
+}
+
 .coefficient-row span.is-active,
 .term-list span.is-active,
 .multinomial-grid span.is-active {
