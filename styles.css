@@ -1577,6 +1577,26 @@ select:focus-visible {
   font-size: 11px;
 }
 
+.draggable-circuit-node {
+  cursor: ns-resize;
+  outline: none;
+  touch-action: none;
+}
+
+.draggable-circuit-node:hover .gate-shape,
+.draggable-circuit-node:hover .not-gate-triangle,
+.draggable-circuit-node:focus-visible .gate-shape,
+.draggable-circuit-node:focus-visible .not-gate-triangle,
+.draggable-circuit-node.is-dragging .gate-shape,
+.draggable-circuit-node.is-dragging .not-gate-triangle {
+  stroke-width: 3;
+}
+
+.draggable-circuit-node:focus-visible .gate-shape,
+.draggable-circuit-node:focus-visible .not-gate-triangle {
+  filter: drop-shadow(0 0 3px rgba(15, 118, 110, 0.45));
+}
+
 .not-bubble {
   fill: #fff;
   stroke: var(--line);
@@ -1609,6 +1629,207 @@ select:focus-visible {
   padding: 18px;
   max-height: calc(100dvh - 260px);
   overflow: auto;
+}
+
+.logic-simplification-workspace {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.logic-simplification-controls {
+  grid-template-columns: minmax(110px, 150px) minmax(250px, 360px) minmax(320px, 1fr) auto;
+  justify-content: start;
+}
+
+.logic-simplification-formula-band {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.logic-simplification-grid {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) minmax(300px, 0.28fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.logic-simplification-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.logic-simplification-stage {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  overflow: auto;
+}
+
+.simplification-result-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.simplification-result-strip div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.simplification-result-strip span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.simplification-result-strip strong {
+  color: var(--teal);
+  font-size: 1.15rem;
+  font-weight: 950;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.simplification-board {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(300px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.simplification-board h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.simplification-circuit-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.simplification-circuit-stack > div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.simplification-circuit-stack h3 {
+  margin: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.karnaugh-stage {
+  overflow: auto;
+}
+
+.karnaugh-map {
+  width: 100%;
+  min-width: 300px;
+  border-collapse: collapse;
+  background: #fff;
+  font-weight: 900;
+}
+
+.karnaugh-map th,
+.karnaugh-map td {
+  min-width: 66px;
+  height: 62px;
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.karnaugh-map th {
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.karnaugh-map td {
+  position: relative;
+  color: var(--ink);
+}
+
+.karnaugh-map td span {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.karnaugh-map td small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.karnaugh-map td.is-covered {
+  outline: 3px solid rgba(15, 118, 110, 0.38);
+  outline-offset: -6px;
+}
+
+.karnaugh-map td.cover-1 {
+  outline-color: rgba(37, 99, 235, 0.36);
+}
+
+.karnaugh-map td.cover-2 {
+  outline-color: rgba(194, 65, 12, 0.34);
+}
+
+.karnaugh-map td.cover-3 {
+  outline-color: rgba(124, 58, 237, 0.32);
+}
+
+.logic-simplified-circuit-stage {
+  padding: 18px;
+  overflow: auto;
+  background: #fff;
+}
+
+.logic-simplified-circuit-svg {
+  display: block;
+  width: 100%;
+  min-width: 880px;
+}
+
+.logic-simplified-circuit-svg .circuit-wire {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gate-pin {
+  fill: var(--teal);
+  stroke: var(--teal);
+}
+
+.logic-circuit-empty {
+  padding: 18px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-weight: 900;
+  line-height: 1.55;
+}
+
+.simplification-notes {
+  border-top: 1px solid var(--line);
 }
 
 .layer2-config-list {
@@ -3488,6 +3709,7 @@ body:not([data-topic]) .solution-note-line {
 
   .hub-hero,
   .control-band,
+  .logic-simplification-formula-band,
   .equation-display-band,
   .equation-compare,
   .inverse-display-band,
@@ -3507,6 +3729,8 @@ body:not([data-topic]) .solution-note-line {
   .discrete-board,
   .table-page-grid,
   .logic-circuit-grid,
+  .logic-simplification-grid,
+  .simplification-board,
   .topic-stage,
   .topic-stage-4 {
     grid-template-columns: 1fr;

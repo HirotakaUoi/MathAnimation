@@ -67,6 +67,10 @@ http://localhost:8100/future_index.html
 現在の主な追加ページは次です。
 
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
+- `discrete_propositional_truth_tables.html` - 命題論理の真理値表
+- `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
+- `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
+- `discrete_logic_simplification.html` - 論理回路の簡略化
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>論理回路の簡略化</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260620g" />
+  </head>
+  <body data-topic="discrete-math" data-simplification-page="logic-simplification">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-simplification-workspace" aria-label="論理回路の簡略化">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>論理回路の簡略化</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./future_index.html">一覧へ</a>
+            <span>5章</span>
+            <span>論理回路</span>
+          </div>
+        </header>
+
+        <section class="control-band logic-simplification-controls" aria-label="設定">
+          <div class="control-group">
+            <label for="inputCount">入力</label>
+            <select id="inputCount">
+              <option value="2">2入力</option>
+              <option value="3" selected>3入力</option>
+              <option value="4">4入力</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="presetSelect">元の回路</label>
+            <select id="presetSelect"></select>
+          </div>
+          <div class="control-group">
+            <label>生成</label>
+            <button id="randomCircuit" class="secondary" type="button">ランダム</button>
+          </div>
+          <div class="control-group">
+            <label for="termCount">複雑さ</label>
+            <select id="termCount">
+              <option value="2">低</option>
+              <option value="3" selected>中</option>
+              <option value="4">高</option>
+              <option value="5">最大</option>
+            </select>
+          </div>
+          <button id="simplifyButton" class="primary" type="button">簡略化</button>
+        </section>
+
+        <section class="logic-simplification-formula-band" aria-label="論理式から元回路を生成">
+          <div class="control-group">
+            <div class="inline-label-row">
+              <label for="sourceFormulaInput">論理式</label>
+              <div class="symbol-button-row" aria-label="記号入力">
+                <button type="button" data-insert-source-symbol="+">+</button>
+                <button type="button" data-insert-source-symbol="'">'</button>
+                <button type="button" data-insert-source-symbol="(">(</button>
+                <button type="button" data-insert-source-symbol=")">)</button>
+              </div>
+            </div>
+            <input id="sourceFormulaInput" type="text" value="(A+B')C" placeholder="例: (A+B')C, (A+B)(A'+C)" autocomplete="off" />
+          </div>
+          <button id="generateFromSourceFormula" class="primary" type="button">元回路生成</button>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="logic-simplification-grid" aria-label="簡略化の結果">
+          <article class="table-page-panel logic-simplification-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>簡略化の流れ</h2>
+                <span id="summaryText">元の回路からカルノー図を作り、don't care を使ってより短い回路にします。</span>
+              </div>
+              <output id="termCountBadge">0項</output>
+            </header>
+            <div class="logic-simplification-stage">
+              <section class="simplification-result-strip" aria-label="論理式">
+                <div>
+                  <span>元の論理回路</span>
+                  <strong id="originalExpression"></strong>
+                </div>
+                <div>
+                  <span>簡略化後の論理回路</span>
+                  <strong id="simplifiedExpression"></strong>
+                </div>
+              </section>
+
+              <section class="simplification-circuit-stack" aria-label="回路図の比較">
+                <div>
+                  <h3>元の回路図</h3>
+                  <div id="originalCircuitStage" class="logic-simplified-circuit-stage"></div>
+                </div>
+              </section>
+
+              <section class="simplification-board simplification-board-single">
+                <div>
+                  <h3>カルノー図</h3>
+                  <div id="karnaughStage" class="karnaugh-stage"></div>
+                </div>
+              </section>
+
+              <section class="simplification-circuit-stack" aria-label="簡略化後の回路図">
+                <div>
+                  <h3>簡略化後の回路図</h3>
+                  <div id="simplifiedCircuitStage" class="logic-simplified-circuit-stage"></div>
+                </div>
+              </section>
+            </div>
+          </article>
+
+          <aside class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>カルノー図操作</h2>
+                <span>don't care を指定して簡略化を比較</span>
+              </div>
+            </header>
+            <div class="table-page-notes simplification-notes">
+              <dl>
+                <div><dt>d</dt><dd>0 または 1 のセルをクリックすると don't care に切り替わります。</dd></div>
+                <div><dt>簡略化</dt><dd>d は 1 として使っても、使わなくてもよいセルです。</dd></div>
+                <div><dt>回路図</dt><dd>積項を AND、最後の和を OR として表示します。</dd></div>
+              </dl>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./logic_simplification.js?v=20260620h"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>

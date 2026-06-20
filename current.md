@@ -97,6 +97,10 @@ python3 -m http.server 8100
   - 多項定理
   - 例で `(x+y+z)^n` と `(x+y+z+w)^n` を切り替え
   - 3変数では k+l+m=n、4変数では k+l+m+p=n の組を生成しながら多項係数を計算
+- `discrete_logic_simplification.html`
+  - 論理回路の簡略化
+  - 論理式からカルノー図、簡略化後の論理式、簡略化後の回路を表示
+  - 2, 3, 4入力に対応
 - `quaternion_vector.html`
   - クオータニオンとベクトル
 - `conic_orthogonal_transform.html`
@@ -124,6 +128,9 @@ python3 -m http.server 8100
   - `diagonalization.html` 用
 - `discrete_math.js`
   - `discrete_sets.html`, `discrete_relations_functions.html`, `discrete_permutations_combinations.html` 用
+- `logic_simplification.js`
+  - `discrete_logic_simplification.html` 用
+  - 2〜4入力の論理式評価、minterm 生成、簡略化、カルノー図・簡略化回路の描画
 - `future_topics.js`
   - future 側ページの共通ロジック
 - `math_format.js`
