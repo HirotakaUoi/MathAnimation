@@ -13,6 +13,7 @@ const elements = {
   binomialCGroup: document.querySelector("#binomialCGroup"),
   stepBack: document.querySelector("#stepBack"),
   playPause: document.querySelector("#playPause"),
+  randomExample: document.querySelector("#randomExample"),
   stepForward: document.querySelector("#stepForward"),
   chapterStatus: document.querySelector("#chapterStatus"),
   topicStatus: document.querySelector("#topicStatus"),
@@ -31,12 +32,27 @@ const state = {
   example: 0,
   step: 0,
   timerId: null,
+  countingSample: null,
+  countingRandomConfig: null,
   sets: {
     A: [1, 3, 5, 7],
     B: [2, 3, 6, 7],
     C: [4, 5, 6, 7, 9],
   },
 };
+
+const COUNTING_EXAMPLES = [
+  ...[true, false].flatMap((distinguishNumbers) => [false, true].flatMap((allowRepetition) => [true, false].flatMap((ordered) => [2, 3].map((r) => ({
+    label: `${distinguishNumbers ? "番号あり" : "色だけ"}・${allowRepetition ? "重複を許す" : "重複を許さない"}・${ordered ? "順列" : "組み合わせ"}：${r}個${ordered ? "を順に取り出す" : "を選ぶ"}`,
+    distinguishNumbers,
+    allowRepetition,
+    ordered,
+    r,
+  }))))),
+];
+
+const COUNTING_BALL_COUNTS = { red: 3, white: 3, blue: 2 };
+const COUNTING_TOTAL_BALLS = Object.values(COUNTING_BALL_COUNTS).reduce((total, count) => total + count, 0);
 
 const TOPICS = {
   sets: {
@@ -93,10 +109,10 @@ const TOPICS = {
   counting: {
     chapter: "基礎知識",
     title: "順列と組み合わせ",
-    subtitle: "積の法則・順列・組み合わせ・二項係数",
-    formulaTitle: "数え上げ",
-    formula: "順列 nPr = n!/(n-r)!、組合せ nCr = n!/(r!(n-r)!)。",
-    examples: ["積の法則", "順列 6P2", "組合せ 6C2", "二項定理"],
+    subtitle: "番号の区別と重複の可否を独立して比べる",
+    formulaTitle: "順列と組み合わせ",
+    formula: "順列 nPr = n!/(n-r)!\n組合せ nCr = n!/(r!(n-r)!)",
+    examples: COUNTING_EXAMPLES.map(({ label }) => label),
     input: "",
   },
   "binomial-coefficients": {
@@ -208,7 +224,9 @@ function stopTimer() {
 
 function getFrames() {
   const topic = state.topic;
-  const example = TOPICS[topic].examples[state.example];
+  const example = topic === "counting" && state.countingRandomConfig
+    ? state.countingRandomConfig.label
+    : TOPICS[topic].examples[state.example];
   if (topic === "sets") return framesForSets(example);
   if (topic === "relations") return framesForRelations(example);
   if (topic === "functions") return framesForFunctions(example);
@@ -675,33 +693,177 @@ function framesForRelationsFunctions(example) {
 }
 
 function framesForCounting(example) {
-  if (example === "積の法則") {
+  const config = state.countingRandomConfig?.label === example
+    ? state.countingRandomConfig
+    : COUNTING_EXAMPLES.find(({ label }) => label === example) || COUNTING_EXAMPLES[0];
+  const { distinguishNumbers, allowRepetition, ordered, r } = config;
+  const identity = distinguishNumbers ? "色と番号で8個すべてを区別する" : "番号を無視し、同じ色のボールは区別しない";
+  const replacement = allowRepetition ? "選ぶたび箱へ戻し、重複を許す" : "選んだボールは箱へ戻さず、重複を許さない";
+  const premise = `箱には番号付きの赤3個・白3個・青2個がある。${identity}。${replacement}`;
+  const generatedSample = state.countingSample?.example === example ? state.countingSample.keys : null;
+  const sampleKeys = generatedSample || ["red-1", "white-2", "blue-2"].slice(0, r);
+  const sampleLabels = countingBallLabels(sampleKeys, distinguishNumbers);
+  const box = (selected = [], slots = []) => countingBallBox({ distinguishNumbers, allowRepetition, selected, slots });
+
+  if (distinguishNumbers && ordered) {
+    const factors = Array.from({ length: r }, (_, index) => allowRepetition ? COUNTING_TOTAL_BALLS : COUNTING_TOTAL_BALLS - index);
+    const answer = factors.reduce((product, value) => product * value, 1);
+    const notation = allowRepetition ? countingPowerNotation(COUNTING_TOTAL_BALLS, r) : countingNotation(COUNTING_TOTAL_BALLS, "P", r);
     return [
-      { note: "主菜が2通りある", html: choiceGrid(["カレー", "パスタ"], []) },
-      { note: "飲み物が3通りあるので枝が分かれる", html: choiceGrid(["カレー", "パスタ"], ["水", "茶", "ジュース"]) },
-      { note: "合計は 2×3=6 通り", html: `<div class="count-result">2 × 3 = 6</div>${choiceGrid(["カレー", "パスタ"], ["水", "茶", "ジュース"])}` },
+      { note: premise, html: box(), formula: `${COUNTING_TOTAL_BALLS}個すべてを区別する。${replacement}` },
+      { note: `${r}個を取り出す順番まで区別する`, html: box(sampleKeys, sampleLabels), formula: factors.map((value, index) => `${index + 1}番目: ${value}通り`).join("\n") },
+      { note: `選択肢の数を順に掛けると${answer}通り`, html: `<div class="count-result" data-math-skip="true">${notation} = ${answer}</div>${box(sampleKeys, sampleLabels)}`, formula: `${notation} = ${factors.join(" × ")} = ${answer}` },
     ];
   }
-  if (example === "順列 6P2") {
-    return countFormulaFrames("6P2", "6個から順に2個選んで並べる", ["1番目: 6通り", "2番目: 5通り"], 6 * 5);
-  }
-  if (example === "組合せ 6C2") {
-    return countFormulaFrames("6C2", "並び順を区別しないので 2! で割る", ["まず 6P2 = 30", "同じ組を 2! = 2 回数えている", "30 / 2 = 15"], 15);
-  }
-  return countFormulaFrames("(a+b)^4", "係数は二項係数で並ぶ", ["1", "4", "6", "4", "1"], 16);
-}
 
-function choiceGrid(first, second) {
-  const rows = first.flatMap((a) => second.length ? second.map((b) => `${a}-${b}`) : [a]);
-  return `<div class="choice-grid">${rows.map((item) => `<span>${item}</span>`).join("")}</div>`;
-}
+  if (distinguishNumbers && !ordered) {
+    if (allowRepetition) {
+      const answer = combination(COUNTING_TOTAL_BALLS + r - 1, r);
+      const repeatedNotation = countingNotation(COUNTING_TOTAL_BALLS, "H", r);
+      const combinationNotation = countingNotation(COUNTING_TOTAL_BALLS + r - 1, "C", r);
+      return [
+        { note: premise, html: box(), formula: `${COUNTING_TOTAL_BALLS}個から重複を許して${r}個を選ぶ` },
+        { note: "同じボールを複数回選べるが、選ぶ順番は区別しない", html: box(sampleKeys), formula: `${COUNTING_TOTAL_BALLS}種類から重複を許す組み合わせ` },
+        { note: `重複組み合わせは${answer}通り`, html: `<div class="count-result" data-math-skip="true">${repeatedNotation} = ${combinationNotation} = ${answer}</div>${box(sampleKeys)}`, formula: `${repeatedNotation} = ${combinationNotation} = ${answer}` },
+      ];
+    }
+    const permutationAnswer = permutation(COUNTING_TOTAL_BALLS, r);
+    const answer = combination(COUNTING_TOTAL_BALLS, r);
+    const permutationNotation = countingNotation(COUNTING_TOTAL_BALLS, "P", r);
+    const combinationNotation = countingNotation(COUNTING_TOTAL_BALLS, "C", r);
+    return [
+      { note: premise, html: box(), formula: `${COUNTING_TOTAL_BALLS}個から${r}個を選ぶ` },
+      { note: "同じボールの組なら、取り出す順番が違っても同じ組とする", html: `${box(sampleKeys)}${countingOrderComparison(sampleLabels)}`, formula: `${permutationNotation}では同じ組を${r}!回ずつ数える` },
+      { note: `順列${permutationAnswer}通りを${r}!で割る`, html: `<div class="count-result" data-math-skip="true">${combinationNotation} = ${answer}</div>${box(sampleKeys)}`, formula: `${combinationNotation} = ${permutationAnswer}/${r}! = ${answer}` },
+    ];
+  }
 
-function countFormulaFrames(label, intro, pieces, answer) {
+  if (!distinguishNumbers && ordered) {
+    const answer = countColorSequences(r, allowRepetition);
+    const fullCount = 3 ** r;
+    const calculation = allowRepetition || answer === fullCount ? countingPowerNotation(3, r) : `${countingPowerNotation(3, r)} − ${fullCount - answer}`;
+    return [
+      { note: premise, html: box(), formula: `3色を区別する。${replacement}` },
+      { note: `色の順番を区別して${r}個取り出す`, html: box(sampleKeys, sampleLabels), formula: allowRepetition ? "各回とも3色から選べる" : "箱に残っている色から選ぶ" },
+      { note: `可能な色の並びは${answer}通り`, html: `<div class="count-result" data-math-skip="true">${calculation} = ${answer}</div>${box(sampleKeys, sampleLabels)}`, formula: allowRepetition ? `${calculation} = ${answer}` : `${calculation} = ${answer}（在庫数を超える色の並びを除く）` },
+    ];
+  }
+
+  const patterns = colorPatterns(r, allowRepetition);
+  const answer = patterns.length;
+  const repeatedNotation = countingNotation(3, "H", r);
+  const notation = countingNotation(r + 2, "C", r);
+  const resultNotation = allowRepetition ? `${repeatedNotation} = ${notation}` : "色の個数分布";
   return [
-    { note: intro, html: `<div class="count-result">${label}</div>` },
-    { note: "積の法則で段階ごとに掛ける", html: `<div class="choice-grid">${pieces.map((p) => `<span>${p}</span>`).join("")}</div>` },
-    { note: `答えは ${answer}`, html: `<div class="count-result">${label} = ${answer}</div>` },
+    { note: premise, html: box(), formula: `順番を区別せず、色ごとの個数だけを数える。${replacement}` },
+    { note: "赤・白・青を何個ずつ選ぶかを列挙する", html: `${box(sampleKeys)}${countingColorPatterns(patterns)}`, formula: `赤の個数 + 白の個数 + 青の個数 = ${r}` },
+    { note: `色ごとの個数分布は${answer}通り`, html: `<div class="count-result" data-math-skip="true">${resultNotation} = ${answer}</div>${countingColorPatterns(patterns)}`, formula: allowRepetition ? `${repeatedNotation} = ${notation} = ${answer}` : `在庫の範囲内の色の個数分布 = ${answer}` },
   ];
+}
+
+function permutation(n, r) {
+  return factorial(n) / factorial(n - r);
+}
+
+function countingNotation(n, symbol, r) {
+  const subscript = String(n).replace(/\d/g, (digit) => "₀₁₂₃₄₅₆₇₈₉"[Number(digit)]);
+  const right = String(r).replace(/\d/g, (digit) => "₀₁₂₃₄₅₆₇₈₉"[Number(digit)]);
+  return `${subscript}${symbol}${right}`;
+}
+
+function countingPowerNotation(base, exponent) {
+  const superscript = String(exponent).replace(/\d/g, (digit) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[Number(digit)]);
+  return `${base}${superscript}`;
+}
+
+function countingBallLabels(keys, distinguishNumbers) {
+  const colorLabels = { red: "赤", white: "白", blue: "青" };
+  return keys.map((key) => {
+    const [color, number] = key.split("-");
+    return `${colorLabels[color]}${distinguishNumbers ? number : ""}`;
+  });
+}
+
+function randomCountingSample(config) {
+  const keys = Object.entries(COUNTING_BALL_COUNTS).flatMap(([color, count]) => Array.from({ length: count }, (_, index) => `${color}-${index + 1}`));
+  if (!config.allowRepetition) {
+    for (let index = keys.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [keys[index], keys[swapIndex]] = [keys[swapIndex], keys[index]];
+    }
+    return keys.slice(0, config.r);
+  }
+  if (config.distinguishNumbers) {
+    return Array.from({ length: config.r }, () => keys[Math.floor(Math.random() * keys.length)]);
+  }
+  const used = { red: 0, white: 0, blue: 0 };
+  const colors = Object.keys(used);
+  return Array.from({ length: config.r }, () => {
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    used[color] += 1;
+    const physicalNumber = ((used[color] - 1) % COUNTING_BALL_COUNTS[color]) + 1;
+    return `${color}-${physicalNumber}`;
+  });
+}
+
+function countingBallBox({ distinguishNumbers, allowRepetition, selected = [], slots = [] }) {
+  const colors = [
+    { key: "red", label: "赤" },
+    { key: "white", label: "白" },
+    { key: "blue", label: "青" },
+  ];
+  const balls = colors.flatMap(({ key, label }) => Array.from({ length: COUNTING_BALL_COUNTS[key] }, (_, index) => index + 1).map((number) => {
+    const id = `${key}-${number}`;
+    return `<span class="count-ball count-ball-${key}${selected.includes(id) ? " is-selected" : ""}" data-math-skip="true">${label}${distinguishNumbers ? number : ""}</span>`;
+  })).join("");
+  const slotHtml = slots.length
+    ? `<div class="count-pick-row">${slots.map((item, index) => `<span><small>${index + 1}番目</small><strong>${item}</strong></span>`).join("")}</div>`
+    : "";
+  const mode = `${distinguishNumbers ? "番号まで区別" : "番号を無視（色だけ）"}・${allowRepetition ? "重複を許す" : "重複を許さない"}`;
+  return `<div class="count-ball-example"><div class="count-ball-box"><strong>箱の中｜${mode}</strong><div class="count-ball-grid">${balls}</div></div>${slotHtml}</div>`;
+}
+
+function countingOrderComparison(labels) {
+  const forward = labels.join(" → ");
+  const reverse = [...labels].reverse().join(" → ");
+  return `<div class="count-order-comparison" data-math-skip="true"><span>${forward}</span><strong>= 同じ組</strong><span>${reverse}</span></div>`;
+}
+
+function colorPatterns(r, allowRepetition) {
+  const patterns = [];
+  for (let red = 0; red <= r; red += 1) {
+    for (let white = 0; white <= r - red; white += 1) {
+      const blue = r - red - white;
+      if (allowRepetition || (red <= COUNTING_BALL_COUNTS.red && white <= COUNTING_BALL_COUNTS.white && blue <= COUNTING_BALL_COUNTS.blue)) {
+        patterns.push([red, white, blue]);
+      }
+    }
+  }
+  return patterns;
+}
+
+function countingColorPatterns(patterns) {
+  const items = patterns.map(([red, white, blue]) => `<span>赤 ${red}・白 ${white}・青 ${blue}</span>`).join("");
+  return `<div class="choice-grid count-color-patterns" data-math-skip="true">${items}</div>`;
+}
+
+function countColorSequences(r, allowRepetition) {
+  let count = 0;
+  const visit = (depth, used) => {
+    if (depth === r) {
+      count += 1;
+      return;
+    }
+    Object.keys(COUNTING_BALL_COUNTS).forEach((color) => {
+      if (allowRepetition || used[color] < COUNTING_BALL_COUNTS[color]) {
+        used[color] += 1;
+        visit(depth + 1, used);
+        used[color] -= 1;
+      }
+    });
+  };
+  visit(0, { red: 0, white: 0, blue: 0 });
+  return count;
 }
 
 function combination(n, r) {
@@ -1138,10 +1300,45 @@ if (elements.topicSelect) {
 
 elements.exampleSelect.addEventListener("change", () => {
   stopTimer();
-  state.example = Number(elements.exampleSelect.value);
+  const selected = Number(elements.exampleSelect.value);
+  if (selected !== -1) {
+    state.countingRandomConfig = null;
+    elements.exampleSelect.querySelector("[data-random-example]")?.remove();
+  }
+  state.example = selected;
   state.step = 0;
+  if (selected !== -1) state.countingSample = null;
+  setMessage("");
   render();
 });
+
+if (elements.randomExample) {
+  elements.randomExample.addEventListener("click", () => {
+    stopTimer();
+    const distinguishNumbers = Math.random() < 0.5;
+    const allowRepetition = Math.random() < 0.5;
+    const ordered = Math.random() < 0.5;
+    const r = 2 + Math.floor(Math.random() * 4);
+    const example = `${distinguishNumbers ? "番号あり" : "色だけ"}・${allowRepetition ? "重複を許す" : "重複を許さない"}・${ordered ? "順列" : "組み合わせ"}：${r}個${ordered ? "を順に取り出す" : "を選ぶ"}`;
+    const config = { label: example, distinguishNumbers, allowRepetition, ordered, r };
+    state.countingRandomConfig = config;
+    state.example = -1;
+    state.step = 0;
+    state.countingSample = { example, keys: randomCountingSample(config) };
+    let randomOption = elements.exampleSelect.querySelector("[data-random-example]");
+    if (!randomOption) {
+      randomOption = document.createElement("option");
+      randomOption.value = "-1";
+      randomOption.dataset.randomExample = "true";
+      elements.exampleSelect.append(randomOption);
+    }
+    randomOption.textContent = `ランダム：${example}`;
+    elements.exampleSelect.value = "-1";
+    const sample = countingBallLabels(state.countingSample.keys, config.distinguishNumbers).join("・");
+    setMessage(`ランダム生成: ${example}${sample ? `（例: ${sample}）` : ""}`);
+    render();
+  });
+}
 
 if (elements.inputValue) {
   elements.inputValue.addEventListener("input", () => {

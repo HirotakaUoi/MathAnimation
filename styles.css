@@ -921,6 +921,24 @@ select:focus-visible {
   justify-content: start;
 }
 
+.counting-controls {
+  grid-template-columns: minmax(420px, 1fr) minmax(390px, auto);
+  justify-content: stretch;
+}
+
+.counting-controls .control-group {
+  min-width: 0;
+}
+
+.counting-controls select {
+  width: 100%;
+  max-width: 100%;
+}
+
+.counting-controls .button-row {
+  flex-wrap: nowrap;
+}
+
 .discrete-power-controls {
   grid-template-columns: minmax(220px, 300px) minmax(110px, 150px) minmax(260px, auto);
   justify-content: start;
@@ -1961,6 +1979,99 @@ select:focus-visible {
   background: rgba(15, 118, 110, 0.1);
   color: var(--teal);
   font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.count-ball-example {
+  display: grid;
+  gap: 18px;
+}
+
+.count-ball-box {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 3px solid #9a6a3a;
+  border-top-width: 8px;
+  border-radius: 6px 6px 16px 16px;
+  background: rgba(183, 121, 31, 0.08);
+}
+
+.count-ball-box > strong {
+  color: #79502d;
+  text-align: center;
+}
+
+.count-ball-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 14px;
+  justify-items: center;
+}
+
+.count-ball {
+  display: grid;
+  width: clamp(58px, 12vw, 72px);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.35), 0 5px 12px rgba(20, 30, 45, 0.14);
+}
+
+.count-ball-red {
+  background: #ef4444;
+  color: #fff;
+}
+
+.count-ball-white {
+  background: #fff;
+  color: #475467;
+}
+
+.count-ball-blue {
+  background: #2563eb;
+  color: #fff;
+}
+
+.count-ball.is-selected {
+  outline: 5px solid rgba(15, 118, 110, 0.34);
+  transform: translateY(-5px);
+}
+
+.count-pick-row,
+.count-order-comparison {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.count-pick-row > span,
+.count-order-comparison > span {
+  display: grid;
+  min-width: 128px;
+  min-height: 74px;
+  place-items: center;
+  padding: 10px 16px;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.count-pick-row small {
+  color: var(--muted);
+}
+
+.count-pick-row strong {
+  font-size: 1.25rem;
+}
+
+.count-order-comparison > strong {
+  color: var(--teal);
 }
 
 .coefficient-row,
@@ -3739,6 +3850,10 @@ body:not([data-topic]) .solution-note-line {
   .discrete-visual-panel,
   .discrete-side-panel {
     min-width: 0;
+  }
+
+  .counting-controls .button-row {
+    flex-wrap: wrap;
   }
 
   .discrete-visual-stage {

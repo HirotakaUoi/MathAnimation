@@ -57,6 +57,7 @@ http://localhost:8100/future_index.html
 
 - `discrete_sets.html` - 集合とベン図
 - `discrete_relations_functions.html` - 関係と関数
+- `discrete_permutations_combinations.html` - 順列と組み合わせ
 - `discrete_binomial_coefficients.html` - 二項係数（n乗入力、パスカルの三角形、a+b√c の累乗）
 - `discrete_multinomial_theorem.html` - 多項定理（n乗入力と多項係数）
 
@@ -66,7 +67,6 @@ http://localhost:8100/future_index.html
 
 現在の主な追加ページは次です。
 
-- `discrete_permutations_combinations.html` - 順列と組み合わせ
 - `discrete_propositional_truth_tables.html` - 命題論理の真理値表
 - `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
 - `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
@@ -277,9 +277,10 @@ PWA 用のファイル群 (`manifest.webmanifest`, `service-worker.js`, `pwa.js`
     - 関係行列
     - 関数・関数でない例、単射、全射
   - 順列と組み合わせ
-    - 積の法則
-    - 順列 6P2
-    - 組合せ 6C2
+    - 赤3個・白3個・青2個に番号を付けた、合計8個のボールを使用
+    - 番号の区別あり・なしと、重複を許す・許さないを独立に設定
+    - 2個・3個の順列と組合せ、計16パターンを選択可能
+    - `ランダム生成` では番号・重複・順序の条件と、2〜5個の取り出し個数、ボール例を生成
     - 二項係数
 - 公式のある計算ページでは、初期表示の数式欄にも公式を表示
 

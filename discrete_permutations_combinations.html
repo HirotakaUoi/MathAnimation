@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>順列と組み合わせ</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260618a" />
+    <link rel="stylesheet" href="./styles.css?v=20260621b" />
   </head>
   <body data-topic="discrete-math" data-discrete-topic="counting">
     <main class="app-shell">
@@ -24,7 +24,7 @@
           </div>
         </header>
 
-        <section class="control-band discrete-controls discrete-controls-compact" aria-label="設定">
+        <section class="control-band discrete-controls discrete-controls-compact counting-controls" aria-label="設定">
           <div class="control-group">
             <label for="exampleSelect">例</label>
             <select id="exampleSelect"></select>
@@ -32,6 +32,7 @@
           <div class="control-group">
             <label>操作</label>
             <div class="button-row">
+              <button id="randomExample" class="secondary" type="button">ランダム生成</button>
               <button id="stepBack" class="secondary" type="button">戻る</button>
               <button id="playPause" class="primary" type="button">再生</button>
               <button id="stepForward" class="secondary" type="button">進む</button>
@@ -46,7 +47,7 @@
             <header class="discrete-panel-header">
               <div>
                 <h2 id="visualTitle">順列と組み合わせ</h2>
-                <span id="visualSubtitle">積の法則・順列・組み合わせ・二項係数</span>
+                <span id="visualSubtitle">番号の区別と重複の可否を独立して比べる</span>
               </div>
               <output id="stepBadge">Step 1 / 1</output>
             </header>
@@ -65,7 +66,7 @@
       </section>
     </main>
 
-    <script src="./discrete_math.js?v=20260618a"></script>
+    <script src="./discrete_math.js?v=20260621h"></script>
     <script src="./math_format.js?v=20260619a"></script>
   </body>
 </html>
