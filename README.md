@@ -71,6 +71,7 @@ http://localhost:8100/future_index.html
 - `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
 - `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
 - `discrete_logic_simplification.html` - 論理回路の簡略化
+- `discrete_logic_circuit_samples.html` - 論理回路のサンプル（フリップフロップ、半加算器・全加算器、レジスタ、4ビット連続加算器）
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 

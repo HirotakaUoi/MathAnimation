@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>論理回路のサンプル</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260621p" />
+  </head>
+  <body data-topic="discrete-math" data-circuit-page="logic-samples">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-samples-workspace" aria-label="論理回路のサンプル">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row"><h1>論理回路のサンプル</h1><span class="debug-badge">デバッグ中</span></div>
+          </div>
+          <div class="status-strip">
+            <a class="home-link" href="./future_index.html">一覧へ</a><span>AND・OR・NOT・XOR・NOR</span><span>同期回路</span>
+          </div>
+        </header>
+
+        <nav class="logic-sample-menu" aria-label="回路を選択" role="tablist">
+          <button class="logic-sample-menu-button is-active" type="button" role="tab" aria-selected="true" aria-controls="flipflopPanel" data-sample-target="flipflop">
+            <small>01</small><strong>SRフリップフロップ</strong><span>NOR 2個で1ビットを記憶</span>
+          </button>
+          <button class="logic-sample-menu-button" type="button" role="tab" aria-selected="false" aria-controls="halfAdderPanel" data-sample-target="half-adder">
+            <small>02</small><strong>1ビット半加算器</strong><span>XORとAND</span>
+          </button>
+          <button class="logic-sample-menu-button" type="button" role="tab" aria-selected="false" aria-controls="adderPanel" data-sample-target="adder">
+            <small>03</small><strong>1ビット全加算器</strong><span>和と桁上がり</span>
+          </button>
+          <button class="logic-sample-menu-button" type="button" role="tab" aria-selected="false" aria-controls="registerPanel" data-sample-target="register">
+            <small>04</small><strong>4ビットレジスタ</strong><span>4ビットを一括保存</span>
+          </button>
+          <button class="logic-sample-menu-button" type="button" role="tab" aria-selected="false" aria-controls="sequentialPanel" data-sample-target="sequential">
+            <small>05</small><strong>4ビット連続加算器</strong><span>加算してレジスタ保存</span>
+          </button>
+        </nav>
+
+        <section class="logic-sample-panels">
+          <article id="flipflopPanel" class="table-page-panel logic-sample-panel" role="tabpanel" data-sample-panel="flipflop">
+            <header class="table-page-header">
+              <div><p class="component-number">01 / MEMORY</p><h2>SRフリップフロップ</h2><span>2個のNORゲートを交差帰還し、入力が0に戻っても1ビットを保持</span></div>
+              <output id="ffOutput">Q=0</output>
+            </header>
+            <div class="sample-control-band">
+              <button id="ffSet" class="bit-toggle" type="button" aria-pressed="false">S = 0</button>
+              <button id="ffReset" class="bit-toggle" type="button" aria-pressed="false">R = 0</button>
+              <p class="gate-equation">Q=¬(R∨Q̅)　/　Q̅=¬(S∨Q)　/　S=R=0 のとき前の値を保持</p>
+            </div>
+            <div id="ffCircuitStage" class="logic-sample-circuit-stage"></div>
+          </article>
+
+          <article id="halfAdderPanel" class="table-page-panel logic-sample-panel" role="tabpanel" data-sample-panel="half-adder" hidden>
+            <header class="table-page-header">
+              <div><p class="component-number">02 / COMBINATIONAL</p><h2>1ビット半加算器</h2><span>2つの入力を加算し、XORで和、ANDで桁上がりを出力</span></div>
+              <output id="halfAdderOutput">S=0 / C=0</output>
+            </header>
+            <div class="sample-control-band">
+              <button class="bit-toggle half-adder-bit" data-half-adder-bit="a" type="button" aria-pressed="false">A = 0</button>
+              <button class="bit-toggle half-adder-bit" data-half-adder-bit="b" type="button" aria-pressed="false">B = 0</button>
+              <p class="gate-equation">S=A⊕B　/　C=A∧B</p>
+            </div>
+            <div id="halfAdderCircuitStage" class="logic-sample-circuit-stage"></div>
+          </article>
+
+          <article id="adderPanel" class="table-page-panel logic-sample-panel" role="tabpanel" data-sample-panel="adder" hidden>
+            <header class="table-page-header">
+              <div><p class="component-number">03 / COMBINATIONAL</p><h2>1ビット全加算器</h2><span>2個の半加算器を回路素子として接続し、ORで桁上がりを統合</span></div>
+              <output id="adderOutput">S=0 / Cout=0</output>
+            </header>
+            <div class="sample-control-band">
+              <button class="bit-toggle adder-bit" data-adder-bit="a" type="button" aria-pressed="false">A = 0</button>
+              <button class="bit-toggle adder-bit" data-adder-bit="b" type="button" aria-pressed="false">B = 0</button>
+              <button class="bit-toggle adder-bit" data-adder-bit="cin" type="button" aria-pressed="false">Cin = 0</button>
+              <p class="gate-equation">HA1(A,B)→(P,C1)　/　HA2(P,Cin)→(S,C2)　/　Cout=C1∨C2</p>
+            </div>
+            <div id="adderCircuitStage" class="logic-sample-circuit-stage"></div>
+          </article>
+
+          <article id="registerPanel" class="table-page-panel logic-sample-panel" role="tabpanel" data-sample-panel="register" hidden>
+            <header class="table-page-header">
+              <div><p class="component-number">04 / MEMORY ARRAY</p><h2>4ビットレジスタ</h2><span>入力制御付きDフリップフロップを4個並列にし、共通CLKで同時保存</span></div>
+              <output id="registerOutput">Q=0000</output>
+            </header>
+            <div class="sample-control-band">
+              <label class="binary-field">入力 D[3:0]<input id="registerInput" value="1010" inputmode="numeric" maxlength="4" aria-label="レジスタ入力4ビット" /></label>
+              <button id="registerClock" class="primary" type="button">CLK 保存 ↑</button>
+              <p class="gate-equation">Q[3:0]⁺ = D[3:0]（4個すべてが同じ CLK ↑ を受ける）</p>
+            </div>
+            <div id="registerCircuitStage" class="logic-sample-circuit-stage"></div>
+          </article>
+
+          <article id="sequentialPanel" class="table-page-panel logic-sample-panel" role="tabpanel" data-sample-panel="sequential" hidden>
+            <header class="table-page-header">
+              <div><p class="component-number">05 / SEQUENTIAL ADDER</p><h2>4ビット連続加算器</h2><span>4個の全加算器をキャリー接続し、結果とCoutを5ビットレジスタへ保存</span></div>
+              <output id="cycleBadge">cycle 0</output>
+            </header>
+            <div class="sequential-controls">
+              <label class="binary-field">入力 A<input id="inputA" value="0011" inputmode="numeric" maxlength="4" aria-label="入力A 4ビット" /></label><span class="decimal-value" id="decimalA">3</span>
+              <label class="binary-field">入力 B<input id="inputB" value="0101" inputmode="numeric" maxlength="4" aria-label="入力B 4ビット" /></label><span class="decimal-value" id="decimalB">5</span>
+              <label class="sequence-option"><input id="sequenceMode" type="checkbox" checked /> 例を順送り</label>
+              <button id="clockButton" class="primary clock-button" type="button">CLK 立ち上がり ↑</button>
+              <button id="resetSequential" class="secondary" type="button">リセット</button>
+            </div>
+            <p id="sequentialMessage" class="message is-success" role="status">加算結果は常に変化し、CLK ↑ の瞬間だけ出力レジスタへ保存されます。</p>
+            <div id="sequentialCircuitStage" class="logic-sample-circuit-stage sequential-circuit-stage"></div>
+            <div class="sequential-bottom-grid">
+              <section class="adder-breakdown"><h3>桁ごとの計算</h3><div id="bitAdderRows" class="bit-adder-rows"></div></section>
+              <section class="clock-history-panel"><h3>クロック履歴</h3><ol id="clockHistory" class="clock-history"><li class="empty-history">まだ保存されていません。</li></ol></section>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+    <script src="./logic_circuit_samples.js?v=20260621r"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>
