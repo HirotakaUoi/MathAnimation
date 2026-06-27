@@ -60,14 +60,9 @@ http://localhost:8100/future_index.html
 - `discrete_permutations_combinations.html` - 順列と組み合わせ
 - `discrete_binomial_coefficients.html` - 二項係数（n乗入力、パスカルの三角形、a+b√c の累乗）
 - `discrete_multinomial_theorem.html` - 多項定理（n乗入力と多項係数）
-
-論理回路タブには次のページがあります。
-
 - `discrete_propositional_truth_tables.html` - 命題論理の真理値表
 - `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
 - `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
-- `discrete_logic_simplification.html` - 論理回路の簡略化
-- `discrete_logic_circuit_samples.html` - 論理回路のサンプル（フリップフロップ、半加算器・全加算器、レジスタ、4ビット連続加算器）
 
 ### 追加ページ
 
@@ -75,6 +70,8 @@ http://localhost:8100/future_index.html
 
 現在の主な追加ページは次です。
 
+- `discrete_logic_simplification.html` - 論理回路の簡略化
+- `discrete_logic_circuit_samples.html` - 論理回路のサンプル（フリップフロップ、半加算器・全加算器、レジスタ、4ビット連続加算器）
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 
