@@ -316,6 +316,13 @@ python3 -m http.server 8100
   - 上下の出力分岐から中央方向へ短い縦線を1本ずつ追加
   - 入力側の折れ点にも中央から外側へ向かう短い縦線を1本ずつ追加
 - `index.html` からは `future_index.html` へ直接リンクしない
+- `index.html` に `論理回路` タブを追加
+  - `命題論理の真理値表`
+  - `ブール代数 4桁の対応表`
+  - `論理回路の基礎`
+  - `論理回路の簡略化`
+  - `論理回路のサンプル`
+  - 上記5ページは `future_index.html` から外し、論理回路タブへ移動
 - `future_index.html` 配下のページの `一覧へ` は基本的に `future_index.html` へ戻す
 - ただし `eigen.html` と `diagonalization.html` と `conic_orthogonal_transform.html` は本番側へ移したため、`一覧へ` は `index.html` に戻す
 - `future_index.html` には `主な線形写像` のカードを追加済み
