@@ -1653,6 +1653,78 @@ select:focus-visible {
   grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
+/* Logic puzzles */
+.logic-puzzle-workspace {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.logic-puzzle-controls {
+  grid-template-columns: minmax(260px, 420px) minmax(160px, 220px) minmax(120px, auto);
+  justify-content: start;
+}
+
+.logic-puzzle-grid {
+  display: grid;
+  grid-template-columns: minmax(560px, 1fr) minmax(300px, 0.32fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.logic-puzzle-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.logic-puzzle-section {
+  display: grid;
+  gap: 10px;
+}
+
+.logic-puzzle-section h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.logic-puzzle-text ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1.6;
+}
+
+.logic-puzzle-table-wrap {
+  overflow-x: auto;
+}
+
+.logic-puzzle-table tr.is-valid td {
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.logic-puzzle-table tr.is-invalid td {
+  color: rgba(71, 85, 105, 0.68);
+}
+
+.logic-puzzle-table tr.is-invalid td:last-child {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.logic-puzzle-answer {
+  padding: 14px 16px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.07);
+  color: var(--ink);
+  font-weight: 800;
+  line-height: 1.65;
+}
+
 /* Logic circuit samples */
 .logic-samples-workspace {
   gap: 16px;
@@ -5005,6 +5077,7 @@ body:not([data-topic]) .solution-note-line {
   .eigen-summary-grid,
   .discrete-board,
   .table-page-grid,
+  .logic-puzzle-grid,
   .logic-circuit-grid,
   .logic-simplification-grid,
   .simplification-board,

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>論理パズルを命題論理で解く</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+  </head>
+  <body data-topic="discrete-math" data-logic-puzzle-page="logic-puzzles">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace logic-puzzle-workspace" aria-label="論理パズルを命題論理で解く">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Discrete Math</p>
+            <div class="title-row">
+              <h1>論理パズルを命題論理で解く</h1>
+            </div>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <a class="home-link" href="./index.html#discrete-math">一覧へ</a>
+            <span>5章</span>
+            <span>命題論理</span>
+          </div>
+        </header>
+
+        <section class="control-band logic-puzzle-controls" aria-label="問題選択">
+          <div class="control-group">
+            <label for="puzzleSelect">サンプル問題</label>
+            <select id="puzzleSelect"></select>
+          </div>
+          <div class="control-group">
+            <label for="stepSelect">表示</label>
+            <select id="stepSelect">
+              <option value="all">全体</option>
+              <option value="problem">問題</option>
+              <option value="logic">命題化</option>
+              <option value="table">候補表</option>
+              <option value="answer">結論</option>
+            </select>
+          </div>
+          <button id="nextStep" class="primary" type="button">次へ</button>
+        </section>
+
+        <section id="message" class="message" role="status"></section>
+
+        <section class="logic-puzzle-grid" aria-label="命題論理による解法">
+          <article class="table-page-panel logic-puzzle-main">
+            <header class="table-page-header">
+              <div>
+                <h2 id="puzzleTitle">論理パズル</h2>
+                <span id="puzzleSubtitle">条件を命題に置き換えて、残る候補を調べます。</span>
+              </div>
+              <output id="answerBadge">未選択</output>
+            </header>
+            <div class="table-page-stage logic-puzzle-stage">
+              <section class="logic-puzzle-section" data-section="problem">
+                <h3>問題</h3>
+                <div id="problemText" class="logic-puzzle-text"></div>
+              </section>
+
+              <section class="logic-puzzle-section" data-section="logic">
+                <h3>命題化</h3>
+                <div id="logicText" class="logic-puzzle-text"></div>
+              </section>
+
+              <section class="logic-puzzle-section" data-section="table">
+                <h3>候補を調べる</h3>
+                <div id="candidateTable" class="logic-puzzle-table-wrap"></div>
+              </section>
+
+              <section class="logic-puzzle-section" data-section="answer">
+                <h3>結論</h3>
+                <div id="answerText" class="logic-puzzle-answer"></div>
+              </section>
+            </div>
+          </article>
+
+          <aside class="table-page-panel">
+            <header class="table-page-header">
+              <div>
+                <h2>解き方</h2>
+                <span>真偽を列挙して、制約に合う行だけを残す</span>
+              </div>
+            </header>
+            <div class="table-page-notes logic-puzzle-notes">
+              <dl>
+                <div><dt>命題</dt><dd>「Aに宝石がある」「Cが空室である」のように、真か偽に決まる文を記号にします。</dd></div>
+                <div><dt>制約</dt><dd>注意書きの真偽や、宝石・虎・空室の個数を論理式として加えます。</dd></div>
+                <div><dt>候補表</dt><dd>各配置について命題の値を計算し、制約を満たす候補だけを残します。</dd></div>
+                <div><dt>Prolog</dt><dd>このページでは扱わず、命題論理の式と表だけで解きます。</dd></div>
+              </dl>
+            </div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./logic_puzzles.js?v=20260701a"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>
