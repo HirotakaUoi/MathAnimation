@@ -18,12 +18,12 @@ python3 -m http.server 8100
   - まとめページ
   - 分野別タブ構成
   - `線形代数` タブには、行列演算・逆行列・連立一次方程式・行列式・ベクトル加減算・ベクトル内積・ベクトルのなす角・線形独立と線形従属・基底ベクトルと標準基底ベクトル・線形写像と表現行列・主な線形写像・回転/拡大縮小/平行移動・同次座標系とグラフィックス・固有値と固有ベクトル・行列の対角化・2次曲線の標準形と直交変換を掲載
-  - `離散数学` タブには集合とベン図、関係と関数、順列と組み合わせ、二項係数、多項定理を掲載
+  - `離散数学` タブには集合とベン図、関係と関数、順列と組み合わせ、二項係数、多項定理、命題論理、ブール代数、論理回路系ページを掲載
   - ページ下部右端に、追加ページへ移動する文字なしの小さな点リンクあり
 - `future_index.html`
   - 追加ページ用の別トップページ
   - 今後の追加ページやデバッグ中ページの置き場
-  - 離散数学の基礎知識ページ、外積、クオータニオンなどを掲載
+  - オートマトン8ページ、外積、クオータニオンなどを掲載
   - ページ下部右端に、メインページへ戻る文字なしの小さな点リンクあり
 - `matrix_operation.html`
   - 行列の加算・減算・乗算・除算
@@ -107,6 +107,30 @@ python3 -m http.server 8100
 - `discrete_logic_circuit_samples.html`
   - 論理回路のサンプル
   - SR フリップフロップ、1ビット半加算器・全加算器、4ビットレジスタ、4ビット連続加算器を操作可能
+- `automata_formal_language.html`
+  - 形式言語
+  - アルファベット、語、空語、連接、閉包、言語を具体例で表示
+- `automata_dfa_language.html`
+  - (決定性)有限オートマトンとその受理言語
+  - DFAの遷移図、遷移表、入力語の実行トレースを表示
+- `automata_regular_expression.html`
+  - 正規表現とその生成言語
+  - 正規表現の代表例、生成される語、入力語の判定を表示
+- `automata_nfa_language.html`
+  - 非決定性有限オートマトンとその生成言語
+  - NFAの遷移図、分岐とε遷移、到達可能状態集合を表示
+- `automata_nfa_to_dfa.html`
+  - 決定性オートマトンと非決定性オートマトンの等価性と変換
+  - 元のNFAの遷移図、変換後DFAの遷移図、部分集合構成の変換表を表示
+- `automata_cfg_language.html`
+  - 文脈自由文法とその生成言語
+  - 生成規則と導出例を表示
+- `automata_pda_language.html`
+  - プッシュダウンオートマトンとその受理言語
+  - 入力語とスタック操作の実行トレースを表示
+- `automata_turing_machine.html`
+  - チューリング機械の例
+  - テープ、ヘッド、状態の変化を表示
 - `quaternion_vector.html`
   - クオータニオンとベクトル
 - `conic_orthogonal_transform.html`
@@ -137,6 +161,9 @@ python3 -m http.server 8100
 - `logic_simplification.js`
   - `discrete_logic_simplification.html` 用
   - 2〜4入力の論理式評価、minterm 生成、簡略化、カルノー図・簡略化回路の描画
+- `automata_topics.js`
+  - `automata_*.html` 用
+  - 形式言語、DFA、正規表現、NFA、NFAからDFAへの変換、CFG、PDA、チューリング機械の簡易シミュレーションをまとめて担当
 - `future_topics.js`
   - future 側ページの共通ロジック
 - `math_format.js`
@@ -161,7 +188,7 @@ python3 -m http.server 8100
 - `manifest.webmanifest`, `service-worker.js`, `pwa.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `offline.html` は残している
 - ただし現時点では各 HTML から PWA 導線を外しており、PWA としては無効化している
 - 今後の追加ページや調整中ページは `future_index.html` 側に置く運用
-- `future_index.html` には、離散数学の基礎知識・外積・クオータニオンなどの追加ページを掲載
+- `future_index.html` には、オートマトン8ページ・外積・クオータニオンなどの追加ページを掲載
 - `index.html` と `future_index.html` はページ下部右端の文字なし点リンクで相互移動できる
 
 ## 最近の重要な実装内容

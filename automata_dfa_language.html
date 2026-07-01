@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>(決定性)有限オートマトンとその受理言語</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+  </head>
+  <body data-topic="discrete-math" data-automata-page="dfa_language">
+    <main class="app-shell">
+      <section class="workspace discrete-workspace automata-workspace" aria-label="DFAと受理言語">
+        <header class="topbar">
+          <div><p class="eyebrow">Automata</p><div class="title-row"><h1 id="automataTitle"></h1></div></div>
+          <div class="status-strip" aria-live="polite"><a class="home-link" href="./future_index.html">一覧へ</a><span>6章</span><span id="automataBadge"></span></div>
+        </header>
+        <section class="control-band automata-controls" aria-label="設定">
+          <div class="control-group"><label for="automataExample">DFA</label><select id="automataExample"></select></div>
+          <div class="control-group"><label for="automataInput">入力語</label><input id="automataInput" type="text" autocomplete="off" /></div>
+          <button id="automataRun" class="primary" type="button">実行</button>
+        </section>
+        <section class="message" role="status"><span id="automataSubtitle"></span></section>
+        <section class="table-page-grid automata-grid" aria-label="DFA">
+          <article class="table-page-panel"><header class="table-page-header"><div><h2>遷移表</h2><span>状態と入力記号から次状態を決める</span></div></header><div id="automataPrimaryStage" class="table-page-stage automata-stage"></div></article>
+          <aside class="table-page-panel"><header class="table-page-header"><div><h2>要点</h2><span>受理言語 L(M)</span></div></header><div id="automataNotes" class="table-page-notes"></div></aside>
+        </section>
+        <section class="table-page-panel automata-trace-panel"><header class="table-page-header"><div><h2>実行トレース</h2><span>1文字ずつ読んだ状態変化</span></div></header><div id="automataTraceStage" class="table-page-stage automata-stage"></div></section>
+      </section>
+    </main>
+    <script src="./automata_topics.js?v=20260701a"></script>
+    <script src="./math_format.js?v=20260619a"></script>
+  </body>
+</html>

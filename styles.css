@@ -2746,6 +2746,240 @@ select:focus-visible {
   outline-color: rgba(124, 58, 237, 0.32);
 }
 
+.automata-workspace {
+  grid-template-rows: auto auto auto minmax(0, auto) auto;
+}
+
+.automata-controls {
+  grid-template-columns: minmax(220px, 340px) minmax(260px, 1fr) minmax(120px, auto);
+}
+
+.automata-grid {
+  align-items: start;
+}
+
+.automata-trace-panel {
+  min-width: 0;
+}
+
+.automata-stage {
+  display: grid;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.automata-definition-grid,
+.automata-word-list,
+.automata-rule-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.automata-pill {
+  display: inline-grid;
+  min-height: 34px;
+  margin: 2px;
+  padding: 6px 10px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--blue);
+  font-weight: 900;
+  place-items: center;
+  white-space: nowrap;
+}
+
+.automata-pill.start {
+  border-color: rgba(15, 118, 110, 0.26);
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--teal);
+}
+
+.automata-pill.accept {
+  border-color: rgba(15, 118, 110, 0.32);
+  background: rgba(15, 118, 110, 0.14);
+  color: var(--teal);
+}
+
+.automata-pill.reject {
+  border-color: rgba(194, 65, 12, 0.28);
+  background: rgba(194, 65, 12, 0.09);
+  color: var(--red);
+}
+
+.automata-expression {
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-size: 1.45rem;
+  font-weight: 950;
+  overflow-x: auto;
+}
+
+.automata-result {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 1.15rem;
+  font-weight: 950;
+}
+
+.automata-result.is-accepted {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: rgba(15, 118, 110, 0.09);
+  color: var(--teal);
+}
+
+.automata-result.is-rejected {
+  border-color: rgba(194, 65, 12, 0.28);
+  background: rgba(194, 65, 12, 0.08);
+  color: var(--red);
+}
+
+.automata-graph-card {
+  display: grid;
+  gap: 10px;
+  min-width: 560px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.automata-graph-card h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 950;
+}
+
+.automata-transition-graph {
+  display: block;
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+}
+
+.automata-edge,
+.automata-start-edge {
+  fill: none;
+  stroke: #526173;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.automata-transition-graph marker path {
+  fill: #526173;
+}
+
+.automata-edge-label,
+.automata-start-label {
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 6px;
+  stroke-linejoin: round;
+  fill: var(--ink);
+  font-size: 20px;
+  font-weight: 950;
+  text-anchor: middle;
+}
+
+.automata-start-label {
+  fill: var(--muted);
+  font-size: 17px;
+}
+
+.automata-node circle {
+  fill: #fff;
+  stroke: var(--blue);
+  stroke-width: 3;
+}
+
+.automata-node.is-accept circle {
+  stroke: var(--teal);
+}
+
+.automata-node .accept-ring {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 3;
+}
+
+.automata-node text {
+  fill: var(--ink);
+  font-size: 18px;
+  font-weight: 950;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.automata-table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.automata-table th,
+.automata-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  font-weight: 800;
+}
+
+.automata-table th {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--teal);
+  font-weight: 950;
+}
+
+.automata-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.automata-table th:last-child,
+.automata-table td:last-child {
+  border-right: 0;
+}
+
+.tape-row {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.tape-cell {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 950;
+  place-items: center;
+}
+
+.tape-cell.is-head {
+  border-color: rgba(194, 65, 12, 0.42);
+  background: rgba(194, 65, 12, 0.1);
+  color: var(--red);
+}
+
 .logic-simplified-circuit-stage {
   padding: 18px;
   overflow: auto;
