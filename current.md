@@ -1,6 +1,6 @@
 # Current Status
 
-最終更新: 2026-06-19
+最終更新: 2026-07-01
 
 ## プロジェクト概要
 
@@ -104,6 +104,9 @@ python3 -m http.server 8100
   - 論理回路の簡略化
   - 論理式からカルノー図、簡略化後の論理式、簡略化後の回路を表示
   - 2, 3, 4入力に対応
+- `discrete_logic_circuit_samples.html`
+  - 論理回路のサンプル
+  - SR フリップフロップ、1ビット半加算器・全加算器、4ビットレジスタ、4ビット連続加算器を操作可能
 - `quaternion_vector.html`
   - クオータニオンとベクトル
 - `conic_orthogonal_transform.html`
@@ -320,8 +323,9 @@ python3 -m http.server 8100
   - `命題論理の真理値表`
   - `ブール代数 4桁の対応表`
   - `論理回路の基礎`
-  - 上記3ページは `離散数学` タブへ移動し、カードの `デバッグ中` 表示を解除
-  - `論理回路の簡略化` と `論理回路のサンプル` は `future_index.html` へ戻す
+  - `論理回路の簡略化`
+  - `論理回路のサンプル`
+  - 上記5ページは `離散数学` タブへ移動し、カードの `デバッグ中` 表示を解除
 - `future_index.html` 配下のページの `一覧へ` は基本的に `future_index.html` へ戻す
 - ただし `eigen.html` と `diagonalization.html` と `conic_orthogonal_transform.html` は本番側へ移したため、`一覧へ` は `index.html` に戻す
 - `future_index.html` には `主な線形写像` のカードを追加済み
