@@ -202,6 +202,17 @@
           });
         }
 
+        function hasHubTab(target) {
+          return Array.from(document.querySelectorAll("[data-tab-target]")).some((button) => button.dataset.tabTarget === target);
+        }
+
+        function syncHubTabFromHash() {
+          const initialTab = location.hash.slice(1);
+          if (hasHubTab(initialTab)) {
+            activateHubTab(initialTab);
+          }
+        }
+
         document.querySelectorAll("[data-tab-target]").forEach((button) => {
           button.addEventListener("click", () => {
             const target = button.dataset.tabTarget;
@@ -214,10 +225,9 @@
           });
         });
 
-        const initialTab = location.hash.slice(1);
-        if (document.querySelector(`[data-tab-target="${initialTab}"]`)) {
-          activateHubTab(initialTab);
-        }
+        syncHubTabFromHash();
+        window.addEventListener("hashchange", syncHubTabFromHash);
+        window.addEventListener("pageshow", syncHubTabFromHash);
       </script>
   </body>
 </html>
