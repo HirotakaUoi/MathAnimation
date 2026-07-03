@@ -1,7 +1,6 @@
 const elements = {
   puzzleSelect: document.querySelector("#puzzleSelect"),
-  stepSelect: document.querySelector("#stepSelect"),
-  nextStep: document.querySelector("#nextStep"),
+  generatePuzzle: document.querySelector("#generatePuzzle"),
   message: document.querySelector("#message"),
   puzzleTitle: document.querySelector("#puzzleTitle"),
   puzzleSubtitle: document.querySelector("#puzzleSubtitle"),
@@ -14,8 +13,39 @@ const elements = {
 
 const state = {
   puzzleIndex: 0,
-  stepIndex: -1,
+  generatedPuzzle: null,
 };
+
+const GUARDS = ["A", "B", "C"];
+const TRIBES = ["honest", "liar", "normal"];
+const ROAD_SETS = [
+  ["left", "right"],
+  ["left", "center", "right"],
+];
+const GUARD_SCENARIOS = [
+  {
+    id: "with-normal",
+    guards: ["A", "B", "C"],
+    tribes: TRIBES,
+    subtitle: "正直族・うそつき族・普通人族から天国の道を判定する",
+    setup: "その前に、正直族・うそつき族・普通人族の3人の門番 A, B, C が1人ずつ立っている。",
+    rule: "正直族は必ず真実を答え、うそつき族は必ず反対を答え、普通人族は真偽に関係なく「はい」「いいえ」のどちらも答えうる。",
+    candidateCount: (roads) => 6 * roads.length,
+    candidateLogic: (roads) => `候補は、A, B, C に正直族・うそつき族・普通人族を1つずつ割り当て、天国の道を${roads.map(roadLabel).join("/")}で分けた${6 * roads.length}通り。`,
+    answerLogic: "正直族なら Q の真偽どおり、うそつき族なら Q と反対、普通人族なら「はい」「いいえ」のどちらも候補として残す。",
+  },
+  {
+    id: "without-normal",
+    guards: ["A", "B"],
+    tribes: ["honest", "liar"],
+    subtitle: "正直族とうそつき族だけから天国の道を判定する",
+    setup: "その前に、正直族とうそつき族の2人の門番 A, B が1人ずつ立っている。",
+    rule: "正直族は必ず真実を答え、うそつき族は必ず反対を答える。普通人族はいない。",
+    candidateCount: (roads) => 2 * roads.length,
+    candidateLogic: (roads) => `候補は、A, B に正直族とうそつき族を1人ずつ割り当て、天国の道を${roads.map(roadLabel).join("/")}で分けた${2 * roads.length}通り。`,
+    answerLogic: "正直族なら Q の真偽どおり、うそつき族なら Q と反対に答える。",
+  },
+];
 
 function noteTruth(value) {
   return value ? "真" : "偽";
@@ -113,6 +143,193 @@ function createIslandRows() {
       valid: canAsk,
     };
   });
+}
+
+function tribeLabel(value) {
+  if (value === "honest") return "正直族";
+  if (value === "liar") return "うそつき族";
+  if (value === "normal") return "普通人族";
+  return value;
+}
+
+function roadLabel(value) {
+  if (value === "left") return "左";
+  if (value === "center") return "中央";
+  return "右";
+}
+
+function answerLabel(value) {
+  if (value === true) return "はい";
+  if (value === false) return "いいえ";
+  return "どちらも";
+}
+
+function createGuardCandidates(scenario, roads) {
+  const candidates = [];
+  function assignTribes(index, tribes) {
+    if (index === scenario.guards.length) {
+      if (new Set(Object.values(tribes)).size !== scenario.guards.length) return;
+      roads.forEach((heavenRoad) => candidates.push({ tribes: { ...tribes }, heavenRoad }));
+      return;
+    }
+    const guard = scenario.guards[index];
+    scenario.tribes.forEach((tribe) => {
+      assignTribes(index + 1, { ...tribes, [guard]: tribe });
+    });
+  }
+  assignTribes(0, {});
+  return candidates;
+}
+
+function createQuestionChoicesForGuard(guard, scenario, roads) {
+  const others = scenario.guards.filter((item) => item !== guard);
+  const questions = roads.flatMap((road) => [
+    {
+      text: `${roadLabel(road)}の道は天国の道ですか。`,
+      logic: `Q(${guard})=${roadLabel(road)}が天国`,
+      evaluate: (candidate) => candidate.heavenRoad === road,
+    },
+    {
+      text: `あなたに『${roadLabel(road)}の道は天国の道ですか』と聞いたら、あなたは『はい』と答えますか。`,
+      logic: `Q(${guard})=「${roadLabel(road)}が天国か」と聞かれたら${guard}が「はい」と答える`,
+      forceTruthfulAnswer: true,
+      evaluate: (candidate) => candidate.heavenRoad === road,
+    },
+  ]);
+  questions.push(
+    {
+      text: "あなたは正直族ですか。",
+      logic: `Q(${guard})=${guard}が正直族`,
+      evaluate: (candidate) => candidate.tribes[guard] === "honest",
+    },
+  );
+  if (scenario.tribes.includes("normal")) {
+    questions.push({
+      text: "あなたは普通人族ですか。",
+      logic: `Q(${guard})=${guard}が普通人族`,
+      evaluate: (candidate) => candidate.tribes[guard] === "normal",
+    });
+  }
+  others.forEach((other) => {
+    questions.push({
+      text: `${other}は正直族ですか。`,
+      logic: `Q(${guard})=${other}が正直族`,
+      evaluate: (candidate) => candidate.tribes[other] === "honest",
+    });
+    questions.push({
+      text: `${other}はうそつき族ですか。`,
+      logic: `Q(${guard})=${other}がうそつき族`,
+      evaluate: (candidate) => candidate.tribes[other] === "liar",
+    });
+    if (scenario.tribes.includes("normal")) {
+      questions.push({
+        text: `${other}は普通人族ですか。`,
+        logic: `Q(${guard})=${other}が普通人族`,
+        evaluate: (candidate) => candidate.tribes[other] === "normal",
+      });
+    }
+  });
+  return questions;
+}
+
+function possibleAnswer(candidate, guard, question) {
+  const truth = question.evaluate(candidate);
+  if (question.forceTruthfulAnswer && candidate.tribes[guard] !== "normal") return [truth];
+  if (candidate.tribes[guard] === "honest") return [truth];
+  if (candidate.tribes[guard] === "liar") return [!truth];
+  return [true, false];
+}
+
+function generateObservedAnswers(hiddenCandidate, questions) {
+  return Object.fromEntries(Object.keys(questions).map((guard) => {
+    const possible = possibleAnswer(hiddenCandidate, guard, questions[guard]);
+    return [guard, possible[Math.floor(Math.random() * possible.length)]];
+  }));
+}
+
+function matchesObservedAnswers(candidate, questions, observedAnswers, guards) {
+  return guards.every((guard) => (
+    possibleAnswer(candidate, guard, questions[guard]).includes(observedAnswers[guard])
+  ));
+}
+
+function createGeneratedRows(questions, observedAnswers, scenario, roads) {
+  return () => createGuardCandidates(scenario, roads).map((candidate) => {
+    const answerDisplays = scenario.guards.map((guard) => {
+      const possible = possibleAnswer(candidate, guard, questions[guard]);
+      return possible.length === 2 ? "どちらも" : answerLabel(possible[0]);
+    });
+    const valid = matchesObservedAnswers(candidate, questions, observedAnswers, scenario.guards);
+    return {
+      values: [
+        `${roadLabel(candidate.heavenRoad)}の道`,
+        ...scenario.guards.map((guard) => tribeLabel(candidate.tribes[guard])),
+        ...answerDisplays,
+        valid ? "残す" : "除外",
+      ],
+      valid,
+    };
+  });
+}
+
+function sampleOne(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function buildGeneratedPuzzleCandidate(target) {
+  for (let attempt = 0; attempt < 900; attempt += 1) {
+    const scenario = sampleOne(GUARD_SCENARIOS);
+    const roads = sampleOne(ROAD_SETS);
+    const candidates = createGuardCandidates(scenario, roads);
+    const hiddenCandidate = sampleOne(candidates);
+    const questions = Object.fromEntries(scenario.guards.map((guard) => [
+      guard,
+      sampleOne(createQuestionChoicesForGuard(guard, scenario, roads)),
+    ]));
+    const observedAnswers = generateObservedAnswers(hiddenCandidate, questions);
+    const validRows = createGeneratedRows(questions, observedAnswers, scenario, roads)()
+      .filter((row) => row.valid);
+    const possibleRoads = new Set(validRows.map((row) => row.values[0]));
+    if (validRows.length === 0) continue;
+
+    const answerRoads = [...possibleRoads];
+    const isDecidable = answerRoads.length === 1;
+    if (target === "decidable" && !isDecidable) continue;
+    if (target === "ambiguous" && isDecidable) continue;
+    const answerText = isDecidable ? answerRoads[0] : "判定不能";
+    return {
+      title: "自動生成",
+      subtitle: `${scenario.guards.length}人の門番、${scenario.subtitle}`,
+      badge: isDecidable ? `答え: ${answerText}` : "判定不能",
+      headers: ["天国の道", ...scenario.guards, ...scenario.guards.map((guard) => `${guard}の返答`), "判定"],
+      rows: createGeneratedRows(questions, observedAnswers, scenario, roads),
+      problem: [
+        `目の前に${roads.length}つの分かれ道（${roads.map((road) => `${roadLabel(road)}の道`).join("・")}）があり、1つだけが天国の道である。`,
+        scenario.setup,
+        scenario.rule,
+        "あなたは門番それぞれに1回だけ、はい/いいえで答えられる質問をした。",
+        ...scenario.guards.map((guard) => `${guard}への質問: 「${questions[guard].text}」 ${guard}の返答: 「${answerLabel(observedAnswers[guard])}」。`),
+        `天国の道は${roads.map(roadLabel).join("・")}のどれか。`,
+      ],
+      logic: [
+        scenario.candidateLogic(roads),
+        ...scenario.guards.map((guard) => questions[guard].logic),
+        scenario.answerLogic,
+        `${scenario.guards.length}人の返答すべてと一致する候補だけを残し、残った候補の天国の道を比べる。`,
+      ],
+      answer: isDecidable
+        ? `候補表で残る行では、天国の道がすべて${answerText}になる。したがって、${answerText}を選ぶ。`
+        : `候補表で残る行の天国の道が ${answerRoads.join("、")} に分かれる。したがって、この質問と返答だけでは天国の道を判定できない。`,
+    };
+  }
+  return null;
+}
+
+function buildGeneratedPuzzle() {
+  const target = Math.random() < 0.15 ? "ambiguous" : "decidable";
+  return buildGeneratedPuzzleCandidate(target)
+    || buildGeneratedPuzzleCandidate("decidable")
+    || buildGeneratedPuzzleCandidate("any");
 }
 
 const PUZZLES = [
@@ -231,15 +448,8 @@ function renderTable(puzzle) {
   elements.candidateTable.innerHTML = `<table class="logic-table wide-logic-table logic-puzzle-table"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
 }
 
-function applyStepVisibility() {
-  const mode = elements.stepSelect.value;
-  document.querySelectorAll(".logic-puzzle-section").forEach((section) => {
-    section.hidden = mode !== "all" && section.dataset.section !== mode;
-  });
-}
-
 function renderPuzzle() {
-  const puzzle = PUZZLES[state.puzzleIndex];
+  const puzzle = state.generatedPuzzle || PUZZLES[state.puzzleIndex];
   elements.puzzleTitle.textContent = puzzle.title;
   elements.puzzleSubtitle.textContent = puzzle.subtitle;
   elements.answerBadge.textContent = puzzle.badge;
@@ -247,32 +457,39 @@ function renderPuzzle() {
   renderList(elements.logicText, puzzle.logic);
   renderTable(puzzle);
   elements.answerText.textContent = puzzle.answer;
-  applyStepVisibility();
   setMessage("問題を命題に置き換え、候補表で条件を満たす行だけを残します。");
 }
 
-function initialize() {
+function renderPuzzleOptions() {
   elements.puzzleSelect.innerHTML = PUZZLES.map((puzzle, index) => (
     `<option value="${index}">${escapeHtml(puzzle.title)}</option>`
   )).join("");
+  elements.puzzleSelect.value = String(state.puzzleIndex);
+}
+
+function addGeneratedPuzzle() {
+  const generatedPuzzle = buildGeneratedPuzzle();
+  if (!generatedPuzzle) {
+    elements.puzzleSelect.value = String(state.puzzleIndex);
+    setMessage("一意に解ける問題を生成できませんでした。もう一度試してください。");
+    return;
+  }
+  state.generatedPuzzle = generatedPuzzle;
+  renderPuzzle();
+  setMessage("一意に解けるサンプル問題を自動生成しました。");
+}
+
+function initialize() {
+  renderPuzzleOptions();
 
   elements.puzzleSelect.addEventListener("change", () => {
     state.puzzleIndex = Number(elements.puzzleSelect.value);
-    state.stepIndex = -1;
-    elements.stepSelect.value = "all";
+    state.generatedPuzzle = null;
     renderPuzzle();
   });
 
-  elements.stepSelect.addEventListener("change", () => {
-    state.stepIndex = ["all", "problem", "logic", "table", "answer"].indexOf(elements.stepSelect.value);
-    applyStepVisibility();
-  });
-
-  elements.nextStep.addEventListener("click", () => {
-    const steps = ["problem", "logic", "table", "answer", "all"];
-    state.stepIndex = (state.stepIndex + 1) % steps.length;
-    elements.stepSelect.value = steps[state.stepIndex];
-    applyStepVisibility();
+  elements.generatePuzzle.addEventListener("click", () => {
+    addGeneratedPuzzle();
   });
 
   renderPuzzle();

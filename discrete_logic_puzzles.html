@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>論理パズルを命題論理で解く</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+    <link rel="stylesheet" href="./styles.css?v=20260702a" />
   </head>
   <body data-topic="discrete-math" data-logic-puzzle-page="logic-puzzles">
     <main class="app-shell">
@@ -29,17 +29,7 @@
             <label for="puzzleSelect">サンプル問題</label>
             <select id="puzzleSelect"></select>
           </div>
-          <div class="control-group">
-            <label for="stepSelect">表示</label>
-            <select id="stepSelect">
-              <option value="all">全体</option>
-              <option value="problem">問題</option>
-              <option value="logic">命題化</option>
-              <option value="table">候補表</option>
-              <option value="answer">結論</option>
-            </select>
-          </div>
-          <button id="nextStep" class="primary" type="button">次へ</button>
+          <button id="generatePuzzle" class="primary" type="button">自動生成</button>
         </section>
 
         <section id="message" class="message" role="status"></section>
@@ -86,9 +76,8 @@
             <div class="table-page-notes logic-puzzle-notes">
               <dl>
                 <div><dt>命題</dt><dd>「Aに宝石がある」「Cが空室である」のように、真か偽に決まる文を記号にします。</dd></div>
-                <div><dt>制約</dt><dd>注意書きの真偽や、宝石・虎・空室の個数を論理式として加えます。</dd></div>
+                <div><dt>制約</dt><dd>注意書き、返答、種族、配置などの条件を論理式として加えます。</dd></div>
                 <div><dt>候補表</dt><dd>各配置について命題の値を計算し、制約を満たす候補だけを残します。</dd></div>
-                <div><dt>Prolog</dt><dd>このページでは扱わず、命題論理の式と表だけで解きます。</dd></div>
               </dl>
             </div>
           </aside>
@@ -96,7 +85,7 @@
       </section>
     </main>
 
-    <script src="./logic_puzzles.js?v=20260701a"></script>
+    <script src="./logic_puzzles.js?v=20260702i"></script>
     <script src="./math_format.js?v=20260619a"></script>
   </body>
 </html>

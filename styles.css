@@ -100,6 +100,10 @@ select {
   margin-top: 22px;
 }
 
+.hub-hero + .animation-grid {
+  margin-top: 22px;
+}
+
 .hub-tab-list {
   display: flex;
   flex-wrap: wrap;
@@ -206,6 +210,7 @@ select {
   text-decoration: none;
 }
 
+/* The index switcher is intentionally only a subtle dot. */
 .hub-footer-link a span {
   width: 6px;
   height: 6px;
@@ -1659,7 +1664,8 @@ select:focus-visible {
 }
 
 .logic-puzzle-controls {
-  grid-template-columns: minmax(260px, 420px) minmax(160px, 220px) minmax(120px, auto);
+  grid-template-columns: minmax(260px, 340px) minmax(120px, auto);
+  gap: 10px;
   justify-content: start;
 }
 
@@ -5070,6 +5076,10 @@ body:not([data-topic]) .solution-note-line {
   .matrix-stage,
   .method-stage {
     grid-template-columns: 1fr;
+  }
+
+  .logic-puzzle-controls {
+    grid-template-columns: minmax(220px, 1fr) minmax(112px, auto);
   }
 
   .vector-stage,
