@@ -2958,11 +2958,21 @@ select:focus-visible {
   fill: #526173;
 }
 
+.automata-label-group {
+  pointer-events: none;
+}
+
+.automata-label-bg {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: rgba(203, 213, 225, 0.86);
+  stroke-width: 1;
+}
+
 .automata-edge-label,
 .automata-start-label {
   paint-order: stroke;
   stroke: #fff;
-  stroke-width: 6px;
+  stroke-width: 3px;
   stroke-linejoin: round;
   fill: var(--ink);
   font-size: 20px;
@@ -3032,6 +3042,19 @@ select:focus-visible {
 .automata-table th:last-child,
 .automata-table td:last-child {
   border-right: 0;
+}
+
+.automata-editable-table td {
+  vertical-align: middle;
+}
+
+.automata-transition-select {
+  width: 100%;
+  min-width: 88px;
+  padding: 8px 10px;
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.06);
+  font-weight: 900;
 }
 
 .tape-row {

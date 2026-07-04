@@ -2,11 +2,15 @@ const automataPages = {
   formal_language: {
     badge: "Σ, word, language",
     title: "形式言語",
-    subtitle: "アルファベット、語、空語、連接、閉包、言語を具体例で確認します。",
+    subtitle: "アルファベット、語、空語、連接、閉包、言語と集合演算を具体例で確認します。",
     examples: [
       { id: "binary", label: "Σ = {0, 1}", alphabet: ["0", "1"], word: "0101" },
       { id: "abc", label: "Σ = {a, b, c}", alphabet: ["a", "b", "c"], word: "abca" },
       { id: "acz", label: "Σ = {a, c, z}", alphabet: ["a", "c", "z"], word: "azca" },
+      { id: "union", label: "L1 ∪ L2", alphabet: ["0", "1"], word: "1010", operation: "union" },
+      { id: "intersection", label: "L1 ∩ L2", alphabet: ["0", "1"], word: "110", operation: "intersection" },
+      { id: "complement", label: "L1 の補集合", alphabet: ["0", "1"], word: "1011", operation: "complement" },
+      { id: "combo", label: "L1 ∩ 補(L2)", alphabet: ["0", "1"], word: "010", operation: "combo" },
     ],
   },
   dfa_language: {
@@ -114,6 +118,112 @@ function stateKey(state) {
   return formatStateLabel(state);
 }
 
+function svgLabelSize(label, className = "automata-edge-label") {
+  const charWidth = className === "automata-start-label" ? 9 : 11;
+  return {
+    width: Math.max(34, label.length * charWidth + 18),
+    height: 28,
+  };
+}
+
+function makeLabelRect(label, x, y, className = "automata-edge-label", padding = 8) {
+  const { width, height } = svgLabelSize(label, className);
+  return {
+    left: x - width / 2 - padding,
+    right: x + width / 2 + padding,
+    top: y - height / 2 - padding,
+    bottom: y + height / 2 + padding,
+  };
+}
+
+function rectsOverlap(a, b) {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+}
+
+function overlapArea(a, b) {
+  if (!rectsOverlap(a, b)) return 0;
+  return (Math.min(a.right, b.right) - Math.max(a.left, b.left)) * (Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+}
+
+function makeSvgLabel(label, x, y, className = "automata-edge-label") {
+  const { width, height } = svgLabelSize(label, className);
+  return `
+    <g class="automata-label-group" transform="translate(${x} ${y})">
+      <rect class="automata-label-bg" x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" rx="8"></rect>
+      <text class="${className}" y="7">${escapeHtml(label)}</text>
+    </g>
+  `;
+}
+
+function placeSvgLabel(label, candidates, occupiedRects, bounds, className = "automata-edge-label") {
+  const { width, height } = svgLabelSize(label, className);
+  const margin = 8;
+  const normalized = candidates.map((candidate) => ({
+    x: Math.min(Math.max(candidate.x, width / 2 + margin), bounds.width - width / 2 - margin),
+    y: Math.min(Math.max(candidate.y, height / 2 + margin), bounds.height - height / 2 - margin),
+    anchorX: candidate.anchorX ?? candidate.x,
+    anchorY: candidate.anchorY ?? candidate.y,
+    penalty: candidate.penalty ?? 0,
+  }));
+  let best = normalized[0];
+  let bestScore = Infinity;
+  for (const candidate of normalized) {
+    const rect = makeLabelRect(label, candidate.x, candidate.y, className);
+    const overlap = occupiedRects.reduce((sum, occupied) => sum + overlapArea(rect, occupied), 0);
+    const anchorDistance = Math.hypot(candidate.x - candidate.anchorX, candidate.y - candidate.anchorY);
+    const preferredDistance = Math.hypot(candidate.x - normalized[0].x, candidate.y - normalized[0].y);
+    const score = overlap * 100000 + anchorDistance * 8 + preferredDistance + candidate.penalty;
+    if (score < bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+    if (overlap === 0) break;
+  }
+  occupiedRects.push(makeLabelRect(label, best.x, best.y, className));
+  return makeSvgLabel(label, best.x, best.y, className);
+}
+
+function pointOnQuadratic(start, control, end, t) {
+  const mt = 1 - t;
+  return {
+    x: mt * mt * start.x + 2 * mt * t * control.x + t * t * end.x,
+    y: mt * mt * start.y + 2 * mt * t * control.y + t * t * end.y,
+  };
+}
+
+function tangentOnQuadratic(start, control, end, t) {
+  return {
+    x: 2 * (1 - t) * (control.x - start.x) + 2 * t * (end.x - control.x),
+    y: 2 * (1 - t) * (control.y - start.y) + 2 * t * (end.y - control.y),
+  };
+}
+
+function edgeLabelCandidates(start, control, end, preferredT = 0.5) {
+  const build = (t, penalty = 0) => {
+    const anchor = pointOnQuadratic(start, control, end, t);
+    return {
+      x: anchor.x,
+      y: anchor.y,
+      anchorX: anchor.x,
+      anchorY: anchor.y,
+      penalty,
+    };
+  };
+  return [
+    build(preferredT, 0),
+    build(preferredT - 0.1, 14),
+    build(preferredT + 0.1, 14),
+    build(preferredT - 0.18, 34),
+    build(preferredT + 0.18, 34),
+    build(preferredT - 0.26, 62),
+    build(preferredT + 0.26, 62),
+    build(preferredT - 0.34, 96),
+    build(preferredT + 0.34, 96),
+    build(preferredT - 0.4, 140),
+    build(preferredT + 0.4, 140),
+  ];
+}
+
 function renderTransitionGraph({ states, start, accept, edges, title }) {
   const width = 860;
   const height = 430;
@@ -123,35 +233,65 @@ function renderTransitionGraph({ states, start, accept, edges, title }) {
   const radiusY = states.length <= 3 ? 115 : 145;
   const nodeRadius = 42;
   const positioned = new Map();
+  const stateOrder = new Map();
   states.forEach((state, index) => {
+    stateOrder.set(stateKey(state), index);
+    const fixedThree = [
+      { x: centerX, y: 112 },
+      { x: centerX + 250, y: 310 },
+      { x: centerX - 250, y: 310 },
+    ];
     const angle = -Math.PI / 2 + (2 * Math.PI * index) / Math.max(states.length, 1);
-    positioned.set(stateKey(state), {
+    const fallback = {
       x: centerX + Math.cos(angle) * radiusX,
       y: centerY + Math.sin(angle) * radiusY,
+    };
+    const pos = states.length === 3 ? fixedThree[index] : fallback;
+    positioned.set(stateKey(state), {
+      x: pos.x,
+      y: pos.y,
       label: formatStateLabel(state),
     });
   });
+  const occupiedRects = [...positioned.values()].map((pos) => ({
+    left: pos.x - nodeRadius - 14,
+    right: pos.x + nodeRadius + 14,
+    top: pos.y - nodeRadius - 14,
+    bottom: pos.y + nodeRadius + 14,
+  }));
+  const graphBounds = { width, height };
 
   const grouped = new Map();
+  const pairCounts = new Map();
   for (const edge of edges) {
     const key = `${stateKey(edge.from)}->${stateKey(edge.to)}`;
     const existing = grouped.get(key) || { from: stateKey(edge.from), to: stateKey(edge.to), labels: [] };
     existing.labels.push(edge.label);
     grouped.set(key, existing);
+    const unordered = [stateKey(edge.from), stateKey(edge.to)].sort().join("<->");
+    pairCounts.set(unordered, (pairCounts.get(unordered) || 0) + 1);
   }
 
-  const edgeMarkup = [...grouped.values()].map((edge, index) => {
+  const edgePaths = [];
+  const edgeLabels = [];
+  [...grouped.values()].forEach((edge) => {
     const from = positioned.get(edge.from);
     const to = positioned.get(edge.to);
     const label = edge.labels.join(", ");
-    if (!from || !to) return "";
+    if (!from || !to) return;
     if (edge.from === edge.to) {
       const loopX = from.x;
       const loopY = from.y - nodeRadius - 8;
-      return `
-        <path class="automata-edge" d="M ${from.x - 18} ${from.y - nodeRadius + 4} C ${loopX - 74} ${loopY - 70}, ${loopX + 74} ${loopY - 70}, ${from.x + 18} ${from.y - nodeRadius + 4}" marker-end="url(#automata-arrow)" />
-        <text class="automata-edge-label" x="${loopX}" y="${loopY - 56}">${escapeHtml(label)}</text>
-      `;
+      const loopLabelCandidates = [
+        { x: loopX, y: loopY - 56 },
+        { x: loopX - 28, y: loopY - 60, penalty: 14 },
+        { x: loopX + 28, y: loopY - 60, penalty: 14 },
+        { x: loopX - 48, y: loopY - 52, penalty: 34 },
+        { x: loopX + 48, y: loopY - 52, penalty: 34 },
+      ];
+      edgePaths.push(`<path class="automata-edge" d="M ${from.x - 18} ${from.y - nodeRadius + 4} C ${loopX - 74} ${loopY - 70}, ${loopX + 74} ${loopY - 70}, ${from.x + 18} ${from.y - nodeRadius + 4}" marker-end="url(#automata-arrow)" />`);
+      edgeLabels.push(placeSvgLabel(label, loopLabelCandidates, occupiedRects, graphBounds));
+      return;
     }
 
     const dx = to.x - from.x;
@@ -163,20 +303,28 @@ function renderTransitionGraph({ states, start, accept, edges, title }) {
     const startY = from.y + uy * nodeRadius;
     const endX = to.x - ux * (nodeRadius + 4);
     const endY = to.y - uy * (nodeRadius + 4);
-    const curve = ((index % 2 === 0 ? 1 : -1) * Math.min(58, distance * 0.18));
+    const pairDensity = pairCounts.get([edge.from, edge.to].sort().join("<->")) || 1;
+    const curveMagnitude = Math.min(130, distance * (pairDensity > 1 ? 0.38 : 0.26));
+    const curve = curveMagnitude;
     const controlX = (startX + endX) / 2 - uy * curve;
     const controlY = (startY + endY) / 2 + ux * curve;
-    return `
-      <path class="automata-edge" d="M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}" marker-end="url(#automata-arrow)" />
-      <text class="automata-edge-label" x="${controlX}" y="${controlY - 8}">${escapeHtml(label)}</text>
-    `;
-  }).join("");
+    const labelCandidates = edgeLabelCandidates(
+      { x: startX, y: startY },
+      { x: controlX, y: controlY },
+      { x: endX, y: endY },
+      0.5
+    );
+    edgePaths.push(`<path class="automata-edge" d="M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}" marker-end="url(#automata-arrow)" />`);
+    edgeLabels.push(placeSvgLabel(label, labelCandidates, occupiedRects, graphBounds));
+  });
 
   const startNode = positioned.get(stateKey(start));
-  const startMarkup = startNode ? `
-    <path class="automata-start-edge" d="M ${startNode.x - 96} ${startNode.y} L ${startNode.x - nodeRadius - 8} ${startNode.y}" marker-end="url(#automata-arrow)" />
-    <text class="automata-start-label" x="${startNode.x - 104}" y="${startNode.y - 10}">start</text>
-  ` : "";
+  const startPathMarkup = startNode ? `<path class="automata-start-edge" d="M ${startNode.x - 96} ${startNode.y} L ${startNode.x - nodeRadius - 8} ${startNode.y}" marker-end="url(#automata-arrow)" />` : "";
+  const startLabelMarkup = startNode ? placeSvgLabel("start", [
+      { x: startNode.x - 104, y: startNode.y - 10 },
+      { x: startNode.x - 118, y: startNode.y - 34 },
+      { x: startNode.x - 118, y: startNode.y + 28 },
+    ], occupiedRects, graphBounds, "automata-start-label") : "";
 
   const nodeMarkup = states.map((state) => {
     const key = stateKey(state);
@@ -202,9 +350,11 @@ function renderTransitionGraph({ states, start, accept, edges, title }) {
             <path d="M 0 0 L 10 5 L 0 10 z"></path>
           </marker>
         </defs>
-        ${edgeMarkup}
-        ${startMarkup}
+        ${edgePaths.join("")}
+        ${startPathMarkup}
         ${nodeMarkup}
+        ${edgeLabels.join("")}
+        ${startLabelMarkup}
       </svg>
     </div>
   `;
@@ -243,6 +393,92 @@ function wordPower(alphabet, length) {
     words = words.flatMap((word) => alphabet.map((symbol) => word + symbol));
   }
   return words;
+}
+
+function languageOperationDefinition(operation) {
+  const definitions = {
+    union: {
+      title: "和集合 L1 ∪ L2",
+      expression: "L1 ∪ L2",
+      operationText: "L1 または L2 の少なくとも一方に含まれる語",
+      tree: { type: "union", left: { type: "atom", id: "L1" }, right: { type: "atom", id: "L2" } },
+    },
+    intersection: {
+      title: "積集合 L1 ∩ L2",
+      expression: "L1 ∩ L2",
+      operationText: "L1 と L2 の両方に含まれる語",
+      tree: { type: "intersection", left: { type: "atom", id: "L1" }, right: { type: "atom", id: "L2" } },
+    },
+    complement: {
+      title: "補集合 補(L1)",
+      expression: "補(L1)",
+      operationText: "Σ* の語のうち、L1 に含まれない語",
+      tree: { type: "complement", child: { type: "atom", id: "L1" } },
+    },
+    combo: {
+      title: "組み合わせ L1 ∩ 補(L2)",
+      expression: "L1 ∩ 補(L2)",
+      operationText: "L1 に含まれ、かつ L2 には含まれない語",
+      tree: {
+        type: "intersection",
+        left: { type: "atom", id: "L1" },
+        right: { type: "complement", child: { type: "atom", id: "L2" } },
+      },
+    },
+  };
+  return definitions[operation] || definitions.union;
+}
+
+function formalLanguagePredicates(alphabet) {
+  return {
+    L1: {
+      label: "L1",
+      description: "0で終わる語",
+      accepts: (word) => alphabet.includes("0") && word.endsWith("0"),
+    },
+    L2: {
+      label: "L2",
+      description: "11を部分語として含む語",
+      accepts: (word) => alphabet.includes("1") && word.includes("11"),
+    },
+  };
+}
+
+function evaluateLanguageTree(tree, predicates, word) {
+  if (tree.type === "atom") return predicates[tree.id].accepts(word);
+  if (tree.type === "union") return evaluateLanguageTree(tree.left, predicates, word) || evaluateLanguageTree(tree.right, predicates, word);
+  if (tree.type === "intersection") return evaluateLanguageTree(tree.left, predicates, word) && evaluateLanguageTree(tree.right, predicates, word);
+  if (tree.type === "complement") return !evaluateLanguageTree(tree.child, predicates, word);
+  return false;
+}
+
+function displayWord(word) {
+  return word || "ε";
+}
+
+const dfaEditorState = {
+  exampleId: null,
+  def: null,
+};
+
+function cloneDfaDefinition(def) {
+  return {
+    states: [...def.states],
+    start: def.start,
+    accept: [...def.accept],
+    alphabet: [...def.alphabet],
+    transition: Object.fromEntries(
+      def.states.map((state) => [state, Object.fromEntries(def.alphabet.map((symbol) => [symbol, def.transition[state]?.[symbol] || def.states[0]]))])
+    ),
+  };
+}
+
+function getEditableDfaDefinition(example) {
+  if (dfaEditorState.exampleId !== example.id || !dfaEditorState.def) {
+    dfaEditorState.exampleId = example.id;
+    dfaEditorState.def = cloneDfaDefinition(dfaDefinitions(example.id));
+  }
+  return dfaEditorState.def;
 }
 
 function dfaDefinitions(id) {
@@ -294,6 +530,26 @@ function simulateDfa(def, input) {
     state = next;
   }
   return { state, accepted: def.accept.includes(state), rows };
+}
+
+function makeDfaTransitionEditor(def) {
+  const rows = def.states
+    .map((state) => {
+      const cells = def.alphabet
+        .map((symbol) => {
+          const current = def.transition[state]?.[symbol] || def.states[0];
+          const options = def.states
+            .map((target) => `<option value="${escapeHtml(target)}" ${target === current ? "selected" : ""}>${escapeHtml(target)}</option>`)
+            .join("");
+          return `<td><select class="automata-transition-select" data-dfa-state="${escapeHtml(state)}" data-dfa-symbol="${escapeHtml(symbol)}" aria-label="${escapeHtml(`${state} で ${symbol} を読んだ次状態`)}">${options}</select></td>`;
+        })
+        .join("");
+      return `<tr><td>${makePill(state, def.accept.includes(state) ? "accept" : state === def.start ? "start" : "")}</td>${cells}</tr>`;
+    })
+    .join("");
+  return `<table class="automata-table automata-editable-table"><thead><tr>${["状態", ...def.alphabet]
+    .map((header) => `<th>${escapeHtml(header)}</th>`)
+    .join("")}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function regexSamples(id) {
@@ -610,7 +866,50 @@ function renderTape(tape, head) {
   return `<span class="tape-row">${cells.join("")}</span>`;
 }
 
+function renderFormalOperation(example, input) {
+  const alphabet = example.alphabet;
+  const predicates = formalLanguagePredicates(alphabet);
+  const operation = languageOperationDefinition(example.operation);
+  const valid = [...input].every((symbol) => alphabet.includes(symbol));
+  const accepted = valid && evaluateLanguageTree(operation.tree, predicates, input);
+  const sampleWords = [""]
+    .concat(wordPower(alphabet, 1), wordPower(alphabet, 2), wordPower(alphabet, 3))
+    .slice(0, 18);
+  const rows = sampleWords.map((word) => {
+    const inL1 = predicates.L1.accepts(word);
+    const inL2 = predicates.L2.accepts(word);
+    const inResult = evaluateLanguageTree(operation.tree, predicates, word);
+    return [
+      makePill(displayWord(word)),
+      makePill(inL1 ? "○" : "×", inL1 ? "accept" : "reject"),
+      makePill(inL2 ? "○" : "×", inL2 ? "accept" : "reject"),
+      makePill(inResult ? "○" : "×", inResult ? "accept" : "reject"),
+    ];
+  });
+
+  setHtml("automataPrimaryStage", `
+    <div class="automata-definition-grid">
+      ${makePill(`Σ = {${alphabet.join(", ")}}`, "start")}
+      ${makePill(`${predicates.L1.label}: ${predicates.L1.description}`)}
+      ${makePill(`${predicates.L2.label}: ${predicates.L2.description}`)}
+      ${makePill(operation.expression, "start")}
+    </div>
+    <div class="automata-expression">${escapeHtml(operation.title)}</div>
+    ${makeTable(["語", "L1", "L2", operation.expression], rows)}
+    <div class="automata-result ${accepted ? "is-accepted" : "is-rejected"}">
+      ${escapeHtml(displayWord(input))} は ${valid ? escapeHtml(operation.expression) : "Σ*"} に${accepted ? "含まれる" : "含まれない"}
+    </div>
+  `);
+  setHtml("automataTraceStage", `
+    <p>${escapeHtml(operation.operationText)}として判定します。補集合はこのページでは Σ* に対する補集合、つまり「同じアルファベットで作れる全ての語」から元の言語を除いた集合です。</p>
+  `);
+}
+
 function renderFormal(page, example, input) {
+  if (example.operation) {
+    renderFormalOperation(example, input);
+    return;
+  }
   const alphabet = example.alphabet;
   const words2 = wordPower(alphabet, 2);
   const words3 = wordPower(alphabet, 3);
@@ -633,15 +932,11 @@ function renderFormal(page, example, input) {
 }
 
 function renderDfa(page, example, input) {
-  const def = dfaDefinitions(example.id);
+  const def = getEditableDfaDefinition(example);
   const sim = simulateDfa(def, input);
-  const transitionRows = def.states.map((state) => [
-    makePill(state, def.accept.includes(state) ? "accept" : state === def.start ? "start" : ""),
-    ...def.alphabet.map((symbol) => makePill(def.transition[state]?.[symbol] || "-")),
-  ]);
   setHtml("automataPrimaryStage", `
     ${renderTransitionGraph({ states: def.states, start: def.start, accept: def.accept, edges: dfaEdges(def), title: "状態遷移図" })}
-    ${makeTable(["状態", ...def.alphabet], transitionRows)}
+    ${makeDfaTransitionEditor(def)}
     <div class="automata-result ${sim.accepted ? "is-accepted" : "is-rejected"}">${sim.accepted ? "受理" : "不受理"}: 最終状態 ${escapeHtml(sim.state)}</div>
   `);
   setHtml("automataTraceStage", makeTable(["現在状態", "入力", "次の状態"], sim.rows));
@@ -782,6 +1077,18 @@ function renderAutomataPage() {
   });
   input.addEventListener("input", update);
   byId("automataRun")?.addEventListener("click", update);
+  byId("automataPrimaryStage")?.addEventListener("change", (event) => {
+    const control = event.target;
+    if (pageId !== "dfa_language" || !control.matches?.("[data-dfa-state][data-dfa-symbol]")) return;
+    const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
+    const def = getEditableDfaDefinition(example);
+    const state = control.dataset.dfaState;
+    const symbol = control.dataset.dfaSymbol;
+    if (def.transition[state] && def.alphabet.includes(symbol) && def.states.includes(control.value)) {
+      def.transition[state][symbol] = control.value;
+      update();
+    }
+  });
   input.value = page.examples[0].input || page.examples[0].word || "";
   update();
 }
@@ -792,6 +1099,9 @@ function renderNotes(pageId) {
       ["アルファベット Σ", "使える記号の有限集合です。"],
       ["語 w", "Σ の記号を有限個並べたものです。長さ0の語は ε です。"],
       ["言語 L", "Σ* の部分集合、つまり語の集合です。"],
+      ["和集合 L1 ∪ L2", "L1 または L2 のどちらかに含まれる語の集合です。"],
+      ["積集合 L1 ∩ L2", "L1 と L2 の両方に含まれる語の集合です。"],
+      ["補集合 補(L)", "同じアルファベットで作れる全ての語から L を除いた集合です。"],
     ],
     dfa_language: [
       ["DFA", "状態、入力アルファベット、受理状態、初期状態、遷移関数の五つ組です。"],
