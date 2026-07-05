@@ -59,7 +59,10 @@ const automataPages = {
     examples: [
       { id: "anbn", label: "S -> aSb | ε", input: "aaabbb" },
       { id: "ancbn", label: "S -> aSb | c", input: "aacbb" },
-      { id: "expr", label: "E -> (E+E) | a | b", input: "((a+b)+a)" },
+      { id: "blocks", label: "S -> AB, A -> aA | ε, B -> bB | ε", input: "aaabbb" },
+      { id: "anbn_cm", label: "S -> AC, A -> aAb | ε, C -> cC | ε", input: "aabbcc" },
+      { id: "palindrome", label: "S -> aSa | bSb | A, A -> c | ε", input: "abcba" },
+      { id: "expr", label: "E,T,F の算術式文法", input: "a+a*b" },
     ],
   },
   pda_language: {
@@ -774,9 +777,32 @@ function subsetDfaDefinition(def) {
 }
 
 function cfgDefinitions(id) {
+  const makeSteps = (start) => [{ before: "", rule: "開始", location: "-", after: start, focusStart: -1, focusLength: 0 }];
+  const pushStep = (steps, before, rule, location, after, focusStart = -1, focusLength = 0) => {
+    steps.push({ before, rule, location, after, focusStart, focusLength });
+  };
+  const replaceFocus = (source, target, replacement) => {
+    const focusStart = source.indexOf(target);
+    if (focusStart < 0) return null;
+    return {
+      after: `${source.slice(0, focusStart)}${replacement}${source.slice(focusStart + target.length)}`,
+      focusStart,
+      focusLength: target.length,
+    };
+  };
+  const pushReplacement = (steps, before, target, replacement, rule, location) => {
+    const result = replaceFocus(before, target, replacement);
+    if (!result) return before;
+    pushStep(steps, before, rule, location, result.after, result.focusStart, result.focusLength);
+    return result.after;
+  };
   if (id === "ancbn") {
     return {
+      nonterminals: ["S"],
+      terminals: ["a", "b", "c"],
+      start: "S",
       rules: ["S -> aSb", "S -> c"],
+      sample: "aacbb",
       test: (w) => {
         const m = w.match(/^(a*)c(b*)$/);
         return Boolean(m && m[1].length === m[2].length);
@@ -785,25 +811,140 @@ function cfgDefinitions(id) {
         const m = w.match(/^(a*)c(b*)$/);
         if (!m || m[1].length !== m[2].length) return null;
         let sentential = "S";
-        const steps = [sentential];
+        const steps = makeSteps(sentential);
         for (let i = 0; i < m[1].length; i += 1) {
-          sentential = sentential.replace("S", "aSb");
-          steps.push(sentential);
+          sentential = pushReplacement(steps, sentential, "S", "aSb", "S -> aSb", `${i + 1}回目に残っている S`);
         }
-        steps.push(sentential.replace("S", "c"));
+        sentential = pushReplacement(steps, sentential, "S", "c", "S -> c", "中央の S");
+        return steps;
+      },
+    };
+  }
+  if (id === "blocks") {
+    return {
+      nonterminals: ["S", "A", "B"],
+      terminals: ["a", "b"],
+      start: "S",
+      rules: ["S -> AB", "A -> aA", "A -> ε", "B -> bB", "B -> ε"],
+      sample: "aaabbb",
+      test: (w) => /^a*b*$/.test(w),
+      derive: (w) => {
+        const m = w.match(/^(a*)(b*)$/);
+        if (!m) return null;
+        let sentential = "S";
+        const steps = makeSteps(sentential);
+        sentential = pushReplacement(steps, sentential, "S", "AB", "S -> AB", "開始記号 S");
+        for (let i = 0; i < m[1].length; i += 1) {
+          sentential = pushReplacement(steps, sentential, "A", "aA", "A -> aA", `左側の A (${i + 1}個目の a)`);
+        }
+        sentential = pushReplacement(steps, sentential, "A", "", "A -> ε", "左側の A");
+        for (let i = 0; i < m[2].length; i += 1) {
+          sentential = pushReplacement(steps, sentential, "B", "bB", "B -> bB", `右側の B (${i + 1}個目の b)`);
+        }
+        sentential = pushReplacement(steps, sentential, "B", "", "B -> ε", "右側の B");
+        return steps;
+      },
+    };
+  }
+  if (id === "anbn_cm") {
+    return {
+      nonterminals: ["S", "A", "C"],
+      terminals: ["a", "b", "c"],
+      start: "S",
+      rules: ["S -> AC", "A -> aAb", "A -> ε", "C -> cC", "C -> ε"],
+      sample: "aabbcc",
+      test: (w) => {
+        const m = w.match(/^(a*)(b*)(c*)$/);
+        return Boolean(m && m[1].length === m[2].length);
+      },
+      derive: (w) => {
+        const m = w.match(/^(a*)(b*)(c*)$/);
+        if (!m || m[1].length !== m[2].length) return null;
+        let sentential = "S";
+        const steps = makeSteps(sentential);
+        sentential = pushReplacement(steps, sentential, "S", "AC", "S -> AC", "開始記号 S");
+        for (let i = 0; i < m[1].length; i += 1) {
+          sentential = pushReplacement(steps, sentential, "A", "aAb", "A -> aAb", `A (${i + 1}組目の a,b)`);
+        }
+        sentential = pushReplacement(steps, sentential, "A", "", "A -> ε", "A");
+        for (let i = 0; i < m[3].length; i += 1) {
+          sentential = pushReplacement(steps, sentential, "C", "cC", "C -> cC", `C (${i + 1}個目の c)`);
+        }
+        sentential = pushReplacement(steps, sentential, "C", "", "C -> ε", "C");
+        return steps;
+      },
+    };
+  }
+  if (id === "palindrome") {
+    return {
+      nonterminals: ["S", "A"],
+      terminals: ["a", "b", "c"],
+      start: "S",
+      rules: ["S -> aSa", "S -> bSb", "S -> A", "A -> c", "A -> ε"],
+      sample: "abcba",
+      test: (w) => w === [...w].reverse().join("") && /^[abc]*$/.test(w) && (w.length % 2 === 0 || w.includes("c")),
+      derive: (w) => {
+        if (!w || w !== [...w].reverse().join("") || !/^[abc]*$/.test(w)) return null;
+        let left = 0;
+        let right = w.length - 1;
+        let sentential = "S";
+        const steps = makeSteps(sentential);
+        while (left < right) {
+          if (w[left] !== w[right]) return null;
+          const rule = w[left] === "a" ? "S -> aSa" : "S -> bSb";
+          sentential = pushReplacement(steps, sentential, "S", `${w[left]}S${w[right]}`, rule, `中央に残っている S (${left + 1}文字目と${right + 1}文字目を作る)`);
+          left += 1;
+          right -= 1;
+        }
+        if (left === right) {
+          if (w[left] !== "c") return null;
+          sentential = pushReplacement(steps, sentential, "S", "A", "S -> A", "中央の S");
+          sentential = pushReplacement(steps, sentential, "A", "c", "A -> c", "中央の A");
+          return steps;
+        }
+        sentential = pushReplacement(steps, sentential, "S", "A", "S -> A", "中央の S");
+        sentential = pushReplacement(steps, sentential, "A", "", "A -> ε", "中央の A");
         return steps;
       },
     };
   }
   if (id === "expr") {
     return {
-      rules: ["E -> (E+E)", "E -> a", "E -> b"],
-      test: (w) => parseExpr(w),
-      derive: () => ["E", "(E+E)", "((E+E)+E)", "((a+b)+a)"],
+      nonterminals: ["E", "T", "F"],
+      terminals: ["a", "b", "+", "*", "(", ")"],
+      start: "E",
+      rules: ["E -> E+T", "E -> T", "T -> T*F", "T -> F", "F -> a", "F -> b", "F -> (E)"],
+      sample: "a+a*b",
+      test: (w) => parseArithmeticExpr(w),
+      derive: (w) => {
+        if (!/^[ab](\*[ab])*(\+[ab](\*[ab])*)*$/.test(w)) return null;
+        const steps = makeSteps("E");
+        const terms = w.split("+");
+        let sentential = "E";
+        for (let i = 1; i < terms.length; i += 1) {
+          sentential = pushReplacement(steps, sentential, "E", "E+T", "E -> E+T", `左端の E (${i + 1}個目の項を追加)`);
+        }
+        sentential = pushReplacement(steps, sentential, "E", "T", "E -> T", "左端の E");
+        terms.forEach((term, termIndex) => {
+          const factors = term.split("*");
+          for (let i = 1; i < factors.length; i += 1) {
+            sentential = pushReplacement(steps, sentential, "T", "T*F", "T -> T*F", `${termIndex + 1}個目の項の T (${i + 1}個目の因子を追加)`);
+          }
+          sentential = pushReplacement(steps, sentential, "T", "F", "T -> F", `${termIndex + 1}個目の項の T`);
+          factors.forEach((factor, factorIndex) => {
+            sentential = pushReplacement(steps, sentential, "F", factor, `F -> ${factor}`, `${termIndex + 1}個目の項の${factorIndex + 1}個目の F`);
+          });
+        });
+        return steps;
+      },
     };
   }
   return {
+    nonterminals: ["S"],
+    terminals: ["a", "b"],
+    start: "S",
     rules: ["S -> aSb", "S -> ε"],
+    sample: "aaabbb",
     test: (w) => {
       const m = w.match(/^(a*)(b*)$/);
       return Boolean(m && m[1].length === m[2].length);
@@ -812,28 +953,24 @@ function cfgDefinitions(id) {
       const m = w.match(/^(a*)(b*)$/);
       if (!m || m[1].length !== m[2].length) return null;
       let sentential = "S";
-      const steps = [sentential];
+      const steps = makeSteps(sentential);
       for (let i = 0; i < m[1].length; i += 1) {
-        sentential = sentential.replace("S", "aSb");
-        steps.push(sentential);
+        sentential = pushReplacement(steps, sentential, "S", "aSb", "S -> aSb", `${i + 1}回目に残っている S`);
       }
-      steps.push(sentential.replace("S", "ε").replace("ε", ""));
+      sentential = pushReplacement(steps, sentential, "S", "", "S -> ε", "中央の S");
       return steps;
     },
   };
 }
 
-function parseExpr(input) {
+function parseArithmeticExpr(input) {
   let index = 0;
-  function parseE() {
+  function parseF() {
     if (input[index] === "a" || input[index] === "b") {
       index += 1;
       return true;
     }
     if (input[index] === "(") {
-      index += 1;
-      if (!parseE()) return false;
-      if (input[index] !== "+") return false;
       index += 1;
       if (!parseE()) return false;
       if (input[index] !== ")") return false;
@@ -842,7 +979,23 @@ function parseExpr(input) {
     }
     return false;
   }
-  return parseE() && index === input.length;
+  function parseT() {
+    if (!parseF()) return false;
+    while (input[index] === "*") {
+      index += 1;
+      if (!parseF()) return false;
+    }
+    return true;
+  }
+  function parseE() {
+    if (!parseT()) return false;
+    while (input[index] === "+") {
+      index += 1;
+      if (!parseT()) return false;
+    }
+    return true;
+  }
+  return input.length > 0 && parseE() && index === input.length;
 }
 
 function simulatePda(id, input) {
@@ -1063,12 +1216,62 @@ function renderNfaToDfa(page, example, input) {
 function renderCfg(page, example, input) {
   const def = cfgDefinitions(example.id);
   const accepted = def.test(input);
-  const steps = def.derive(input) || def.derive("") || [];
+  const inputSteps = def.derive(input);
+  const steps = inputSteps || def.derive(def.sample) || [];
+  const shownWord = inputSteps ? input : def.sample;
+  const rows = steps.map((step, index) => [
+    String(index),
+    renderCfgSentential(step),
+    escapeHtml(step.rule),
+    renderCfgLocation(step),
+  ]);
   setHtml("automataPrimaryStage", `
+    <div class="automata-definition-grid">
+      ${makePill(`V = {${def.nonterminals.join(", ")}}`, "start")}
+      ${makePill(`Σ = {${def.terminals.join(", ")}}`)}
+      ${makePill(`開始記号 ${def.start}`, "start")}
+      ${makePill(`入力 ${input || "ε"}`, accepted ? "accept" : "reject")}
+    </div>
     <div class="automata-rule-list">${def.rules.map((rule) => makePill(rule)).join("")}</div>
     <div class="automata-result ${accepted ? "is-accepted" : "is-rejected"}">${escapeHtml(input || "ε")} は ${accepted ? "生成できる" : "この例の文法では生成できない"}</div>
   `);
-  setHtml("automataTraceStage", makeTable(["段階", "句形式"], steps.map((step, index) => [String(index), makePill(step || "ε")])));
+  setHtml("automataTraceStage", `
+    ${renderCfgAnimation(steps, shownWord)}
+    ${makeTable(["段階", "句形式", "適用した生成規則", "適用個所"], rows)}
+  `);
+}
+
+function renderCfgSentential(step) {
+  const value = step.before || step.after || "";
+  if (!value) return makePill("ε");
+  if (step.focusStart < 0 || !step.focusLength) return makePill(value);
+  const before = value.slice(0, step.focusStart);
+  const focus = value.slice(step.focusStart, step.focusStart + step.focusLength);
+  const after = value.slice(step.focusStart + step.focusLength);
+  return `<span class="cfg-sentential"><span>${escapeHtml(before)}<mark class="cfg-focus-symbol">${escapeHtml(focus)}</mark>${escapeHtml(after)}</span><span class="cfg-derive-arrow">=&gt;</span><span>${escapeHtml(step.after || "ε")}</span></span>`;
+}
+
+function renderCfgLocation(step) {
+  if (step.focusStart < 0 || !step.focusLength) return escapeHtml(step.location);
+  return `<span class="cfg-location">${escapeHtml(step.location)}<span class="cfg-location-index">${step.focusStart + 1}文字目</span></span>`;
+}
+
+function renderCfgAnimation(steps, word) {
+  if (!steps.length) return `<p>この入力語に対する導出例はありません。</p>`;
+  const duration = Math.max(steps.length, 1) * 1.2;
+  return `
+    <div class="cfg-animation" aria-label="${escapeHtml(`${word || "ε"} の導出アニメーション`)}" style="--cfg-cycle: ${duration}s">
+      ${steps
+        .map((step, index) => `
+          <div class="cfg-animation-step" style="--cfg-step: ${index}; --cfg-count: ${steps.length}">
+            <span class="cfg-step-index">${index}</span>
+            <span class="cfg-step-form">${renderCfgSentential(step)}</span>
+            <span class="cfg-step-rule">${escapeHtml(step.rule)}</span>
+          </div>
+        `)
+        .join("")}
+    </div>
+  `;
 }
 
 function renderPda(page, example, input) {

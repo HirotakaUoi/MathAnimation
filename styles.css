@@ -2900,6 +2900,110 @@ select:focus-visible {
   overflow-x: auto;
 }
 
+.cfg-animation {
+  --cfg-cycle: 6s;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+  padding: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.05);
+}
+
+.cfg-animation-step {
+  display: grid;
+  min-width: 118px;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  animation: cfg-step-pulse var(--cfg-cycle) linear infinite;
+  animation-delay: calc(var(--cfg-step) * 1.2s);
+}
+
+.cfg-step-index {
+  width: fit-content;
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.cfg-step-form {
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.cfg-step-rule {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cfg-sentential {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.cfg-focus-symbol {
+  padding: 1px 5px;
+  border: 1px solid rgba(194, 65, 12, 0.32);
+  border-radius: 6px;
+  background: rgba(251, 146, 60, 0.22);
+  color: var(--red);
+  font-weight: 950;
+}
+
+.cfg-derive-arrow {
+  color: var(--teal);
+  font-weight: 950;
+}
+
+.cfg-location {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.cfg-location-index {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(194, 65, 12, 0.09);
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+@keyframes cfg-step-pulse {
+  0%,
+  14% {
+    border-color: rgba(15, 118, 110, 0.56);
+    background: rgba(15, 118, 110, 0.16);
+    transform: translateY(-2px);
+  }
+  22%,
+  100% {
+    border-color: rgba(37, 99, 235, 0.18);
+    background: rgba(255, 255, 255, 0.82);
+    transform: translateY(0);
+  }
+}
+
 .automata-result {
   padding: 14px 16px;
   border: 1px solid var(--line);
