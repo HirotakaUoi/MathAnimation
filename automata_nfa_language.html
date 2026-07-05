@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>非決定性有限オートマトンとその生成言語</title>
+    <title>非決定性有限オートマトンとその受理言語</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+    <link rel="stylesheet" href="./styles.css?v=20260704d" />
   </head>
   <body data-topic="discrete-math" data-automata-page="nfa_language">
     <main class="app-shell">
-      <section class="workspace discrete-workspace automata-workspace" aria-label="NFA">
+      <section class="workspace discrete-workspace automata-workspace" aria-label="NFAと受理言語">
         <header class="topbar">
           <div><p class="eyebrow">Automata</p><div class="title-row"><h1 id="automataTitle"></h1></div></div>
           <div class="status-strip" aria-live="polite"><a class="home-link" href="./future_index.html">一覧へ</a><span>6章</span><span id="automataBadge"></span></div>
@@ -21,13 +21,13 @@
         </section>
         <section class="message" role="status"><span id="automataSubtitle"></span></section>
         <section class="table-page-grid automata-grid" aria-label="NFA">
-          <article class="table-page-panel"><header class="table-page-header"><div><h2>遷移関係</h2><span>複数の次状態とε遷移を許す</span></div></header><div id="automataPrimaryStage" class="table-page-stage automata-stage"></div></article>
-          <aside class="table-page-panel"><header class="table-page-header"><div><h2>要点</h2><span>非決定性の読み方</span></div></header><div id="automataNotes" class="table-page-notes"></div></aside>
+          <article class="table-page-panel"><header class="table-page-header"><div><h2>遷移関係</h2><span>次状態集合を編集すると図と実行トレースも更新</span></div></header><div id="automataPrimaryStage" class="table-page-stage automata-stage"></div></article>
+          <aside class="table-page-panel"><header class="table-page-header"><div><h2>要点</h2><span>受理言語 L(M)</span></div></header><div id="automataNotes" class="table-page-notes"></div></aside>
         </section>
-        <section class="table-page-panel automata-trace-panel"><header class="table-page-header"><div><h2>到達可能状態</h2><span>分岐を集合として追跡</span></div></header><div id="automataTraceStage" class="table-page-stage automata-stage"></div></section>
+        <section class="table-page-panel automata-trace-panel"><header class="table-page-header"><div><h2>実行トレース</h2><span>分岐を到達可能状態の集合として追跡</span></div></header><div id="automataTraceStage" class="table-page-stage automata-stage"></div></section>
       </section>
     </main>
-    <script src="./automata_topics.js?v=20260701a"></script>
+    <script src="./automata_topics.js?v=20260704d"></script>
     <script src="./math_format.js?v=20260619a"></script>
   </body>
 </html>

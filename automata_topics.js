@@ -36,8 +36,8 @@ const automataPages = {
   },
   nfa_language: {
     badge: "NFA",
-    title: "非決定性有限オートマトンとその生成言語",
-    subtitle: "1つの入力で複数の遷移先を持てます。ε遷移も使えます。",
+    title: "非決定性有限オートマトンとその受理言語",
+    subtitle: "各状態と入力記号から、複数の次状態へ分岐できます。入力を読まないε遷移も使えます。",
     examples: [
       { id: "a_or_abstarc", label: "L = (a|ab*c)+", input: "abca" },
       { id: "contains_ab_or_ba", label: "部分語 ab または ba を含む", input: "caba" },
@@ -461,6 +461,11 @@ const dfaEditorState = {
   def: null,
 };
 
+const nfaEditorState = {
+  exampleId: null,
+  def: null,
+};
+
 function cloneDfaDefinition(def) {
   return {
     states: [...def.states],
@@ -479,6 +484,30 @@ function getEditableDfaDefinition(example) {
     dfaEditorState.def = cloneDfaDefinition(dfaDefinitions(example.id));
   }
   return dfaEditorState.def;
+}
+
+function cloneNfaDefinition(def) {
+  return {
+    states: [...def.states],
+    start: def.start,
+    accept: [...def.accept],
+    alphabet: [...def.alphabet],
+    epsilon: Object.fromEntries(def.states.map((state) => [state, [...(def.epsilon[state] || [])]])),
+    transition: Object.fromEntries(
+      def.states.map((state) => [
+        state,
+        Object.fromEntries(def.alphabet.map((symbol) => [symbol, [...(def.transition[state]?.[symbol] || [])]])),
+      ])
+    ),
+  };
+}
+
+function getEditableNfaDefinition(example) {
+  if (nfaEditorState.exampleId !== example.id || !nfaEditorState.def) {
+    nfaEditorState.exampleId = example.id;
+    nfaEditorState.def = cloneNfaDefinition(nfaDefinitions(example.id));
+  }
+  return nfaEditorState.def;
 }
 
 function dfaDefinitions(id) {
@@ -550,6 +579,37 @@ function makeDfaTransitionEditor(def) {
   return `<table class="automata-table automata-editable-table"><thead><tr>${["状態", ...def.alphabet]
     .map((header) => `<th>${escapeHtml(header)}</th>`)
     .join("")}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function formatTargetList(targets) {
+  return targets.join(", ");
+}
+
+function makeNfaTransitionEditor(def) {
+  const headers = ["状態", ...def.alphabet, "ε"];
+  const rows = def.states
+    .map((state) => {
+      const cells = def.alphabet
+        .map((symbol) => {
+          const value = formatTargetList(def.transition[state]?.[symbol] || []);
+          return `<td><input class="automata-transition-input" data-nfa-state="${escapeHtml(state)}" data-nfa-symbol="${escapeHtml(symbol)}" value="${escapeHtml(value)}" aria-label="${escapeHtml(`${state} で ${symbol} を読んだ到達先集合`)}" placeholder="∅" /></td>`;
+        })
+        .join("");
+      const epsilonValue = formatTargetList(def.epsilon[state] || []);
+      return `<tr><td>${makePill(state, def.accept.includes(state) ? "accept" : state === def.start ? "start" : "")}</td>${cells}<td><input class="automata-transition-input" data-nfa-state="${escapeHtml(state)}" data-nfa-epsilon="true" value="${escapeHtml(epsilonValue)}" aria-label="${escapeHtml(`${state} からのε遷移先集合`)}" placeholder="∅" /></td></tr>`;
+    })
+    .join("");
+  return `<table class="automata-table automata-editable-table"><thead><tr>${headers
+    .map((header) => `<th>${escapeHtml(header)}</th>`)
+    .join("")}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function parseNfaTargetList(value, states) {
+  const normalized = value.trim().replace(/^\{|\}$/g, "").trim();
+  if (!normalized || normalized === "∅") return [];
+  const targets = normalized.split(/[,\s]+/).filter(Boolean);
+  if (targets.some((target) => !states.includes(target))) return null;
+  return [...new Set(targets)];
 }
 
 function regexSamples(id) {
@@ -955,20 +1015,26 @@ function renderRegex(page, example, input) {
 }
 
 function renderNfa(page, example, input) {
-  const def = nfaDefinitions(example.id);
+  const def = getEditableNfaDefinition(example);
   const sim = simulateNfa(def, input);
-  const headers = ["状態", ...def.alphabet, "ε"];
-  const rows = def.states.map((state) => [
-    makePill(state, def.accept.includes(state) ? "accept" : state === def.start ? "start" : ""),
-    ...def.alphabet.map((symbol) => formatStateSet(new Set(def.transition[state]?.[symbol] || []))),
-    formatStateSet(new Set(def.epsilon[state] || [])),
-  ]);
+  const reachedAccepts = def.accept.filter((state) => sim.states.has(state));
+  const accepts = reachedAccepts.map((state) => makePill(state, "accept")).join(" ");
   setHtml("automataPrimaryStage", `
-    ${renderTransitionGraph({ states: def.states, start: def.start, accept: def.accept, edges: nfaEdges(def), title: "状態遷移図" })}
-    ${makeTable(headers, rows)}
-    <div class="automata-result ${sim.accepted ? "is-accepted" : "is-rejected"}">${sim.accepted ? "どれかの経路が受理状態へ到達" : "受理状態へ到達する経路なし"}</div>
+    <div class="automata-definition-grid">
+      ${makePill(`Q = {${def.states.join(", ")}}`)}
+      ${makePill(`Σ = {${def.alphabet.join(", ")}}`, "start")}
+      ${makePill(`q0 = ${def.start}`, "start")}
+      ${makePill(`F = {${def.accept.join(", ")}}`, "accept")}
+    </div>
+    ${renderTransitionGraph({ states: def.states, start: def.start, accept: def.accept, edges: nfaEdges(def), title: "NFAの状態遷移図" })}
+    ${makeNfaTransitionEditor(def)}
+    <div class="automata-result ${sim.accepted ? "is-accepted" : "is-rejected"}">
+      入力 ${escapeHtml(input || "ε")} は ${sim.accepted ? "受理" : "不受理"}:
+      最終到達集合 ${formatStateSet(sim.states)}
+      ${sim.accepted ? ` が受理状態 ${accepts} を含む` : " は受理状態を含まない"}
+    </div>
   `);
-  setHtml("automataTraceStage", makeTable(["操作", "入力", "到達可能状態"], sim.rows));
+  setHtml("automataTraceStage", makeTable(["操作", "入力", "到達可能状態集合"], sim.rows));
 }
 
 function renderNfaToDfa(page, example, input) {
@@ -1077,16 +1143,58 @@ function renderAutomataPage() {
   });
   input.addEventListener("input", update);
   byId("automataRun")?.addEventListener("click", update);
-  byId("automataPrimaryStage")?.addEventListener("change", (event) => {
-    const control = event.target;
-    if (pageId !== "dfa_language" || !control.matches?.("[data-dfa-state][data-dfa-symbol]")) return;
+  function applyTransitionEdit(control) {
+    if (!control?.matches?.("[data-dfa-state][data-dfa-symbol], [data-nfa-state]")) return;
     const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
-    const def = getEditableDfaDefinition(example);
-    const state = control.dataset.dfaState;
-    const symbol = control.dataset.dfaSymbol;
-    if (def.transition[state] && def.alphabet.includes(symbol) && def.states.includes(control.value)) {
-      def.transition[state][symbol] = control.value;
+    if (pageId === "dfa_language" && control.matches?.("[data-dfa-state][data-dfa-symbol]")) {
+      const def = getEditableDfaDefinition(example);
+      const state = control.dataset.dfaState;
+      const symbol = control.dataset.dfaSymbol;
+      if (def.transition[state] && def.alphabet.includes(symbol) && def.states.includes(control.value)) {
+        def.transition[state][symbol] = control.value;
+        update();
+      }
+      return;
+    }
+    if (pageId === "nfa_language" && control.matches?.("[data-nfa-state]")) {
+      const def = getEditableNfaDefinition(example);
+      const state = control.dataset.nfaState;
+      const targets = parseNfaTargetList(control.value, def.states);
+      if (!targets) {
+        control.setCustomValidity(`状態は ${def.states.join(", ")} から選んでください。`);
+        control.reportValidity();
+        return;
+      }
+      control.setCustomValidity("");
+      if (control.dataset.nfaEpsilon === "true") {
+        def.epsilon[state] = targets;
+      } else {
+        const symbol = control.dataset.nfaSymbol;
+        if (!def.transition[state]) def.transition[state] = {};
+        if (!def.alphabet.includes(symbol)) return;
+        def.transition[state][symbol] = targets;
+      }
       update();
+    }
+  }
+
+  const primaryStage = byId("automataPrimaryStage");
+  let nfaEditTimer = null;
+  primaryStage?.addEventListener("change", (event) => applyTransitionEdit(event.target));
+  primaryStage?.addEventListener("input", (event) => {
+    if (pageId !== "nfa_language" || !event.target?.matches?.("[data-nfa-state]")) return;
+    window.clearTimeout(nfaEditTimer);
+    const control = event.target;
+    nfaEditTimer = window.setTimeout(() => applyTransitionEdit(control), 250);
+  });
+  primaryStage?.addEventListener("focusout", (event) => {
+    window.clearTimeout(nfaEditTimer);
+    applyTransitionEdit(event.target);
+  });
+  primaryStage?.addEventListener("keydown", (event) => {
+    if (pageId === "nfa_language" && event.key === "Enter" && event.target?.matches?.("[data-nfa-state]")) {
+      event.preventDefault();
+      event.target.blur();
     }
   });
   input.value = page.examples[0].input || page.examples[0].word || "";
@@ -1114,9 +1222,10 @@ function renderNotes(pageId) {
       ["閉包 *", "R* は R の語を0個以上連接した語です。"],
     ],
     nfa_language: [
-      ["NFA", "次状態が複数あってよい有限オートマトンです。"],
-      ["ε遷移", "入力を読まずに状態を移れます。"],
-      ["受理", "可能な経路のうち1つでも受理状態へ到達すれば受理です。"],
+      ["NFA", "状態、入力アルファベット、受理状態、初期状態、遷移関係の五つ組です。"],
+      ["受理言語 L(M)", "初期状態から入力を読み、どれか1つの経路が最後に受理状態へ到達する語の集合です。"],
+      ["非決定性", "状態と入力記号を決めても次状態が0個、1個、または複数個ありえます。"],
+      ["ε遷移", "入力を読まずに状態を移れます。到達可能状態集合にはε遷移で進める状態も含めます。"],
     ],
     nfa_to_dfa: [
       ["等価性", "DFAとNFAが受理できる言語の範囲は同じです。"],
