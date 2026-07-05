@@ -2832,6 +2832,17 @@ select:focus-visible {
   grid-template-columns: minmax(220px, 340px) minmax(260px, 1fr) minmax(120px, auto);
 }
 
+body[data-automata-page="regular_expression"] .automata-controls {
+  grid-template-columns: minmax(180px, 280px) minmax(220px, 1fr) minmax(160px, 260px) auto minmax(100px, auto);
+}
+
+.epsilon-insert-button {
+  min-width: 44px;
+  padding-inline: 14px;
+  font-size: 1.08rem;
+  font-weight: 950;
+}
+
 .automata-grid {
   align-items: start;
 }

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>正規表現とその生成言語</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+    <link rel="stylesheet" href="./styles.css?v=20260705c" />
   </head>
   <body data-topic="discrete-math" data-automata-page="regular_expression">
     <main class="app-shell">
@@ -15,8 +15,10 @@
           <div class="status-strip" aria-live="polite"><a class="home-link" href="./future_index.html">一覧へ</a><span>6章</span><span id="automataBadge"></span></div>
         </header>
         <section class="control-band automata-controls" aria-label="設定">
-          <div class="control-group"><label for="automataExample">正規表現</label><select id="automataExample"></select></div>
-          <div class="control-group"><label for="automataInput">判定する語</label><input id="automataInput" type="text" autocomplete="off" /></div>
+          <div class="control-group"><label for="automataExample">サンプル</label><select id="automataExample"></select></div>
+          <div class="control-group"><label for="automataRegex">正規表現</label><input id="automataRegex" type="text" autocomplete="off" spellcheck="false" /></div>
+          <div class="control-group"><label for="automataInput">判定する語</label><input id="automataInput" type="text" autocomplete="off" placeholder="ε" /></div>
+          <button id="automataInsertEpsilon" class="secondary epsilon-insert-button" type="button" title="εを入力">ε</button>
           <button id="automataRun" class="primary" type="button">判定</button>
         </section>
         <section class="message" role="status"><span id="automataSubtitle"></span></section>
@@ -27,7 +29,7 @@
         <section class="table-page-panel automata-trace-panel"><header class="table-page-header"><div><h2>正規言語</h2><span>有限オートマトンとの対応</span></div></header><div id="automataTraceStage" class="table-page-stage automata-stage"></div></section>
       </section>
     </main>
-    <script src="./automata_topics.js?v=20260701a"></script>
+    <script src="./automata_topics.js?v=20260705c"></script>
     <script src="./math_format.js?v=20260619a"></script>
   </body>
 </html>

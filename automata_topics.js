@@ -645,6 +645,103 @@ function regexSamples(id) {
   return data[id];
 }
 
+function parseTeachingRegex(expression) {
+  const source = expression.replace(/\s+/g, "");
+  if (!source) throw new Error("正規表現を入力してください。");
+  let index = 0;
+
+  function parseUnion() {
+    let node = parseConcat();
+    while (source[index] === "|") {
+      index += 1;
+      node = { type: "union", left: node, right: parseConcat() };
+    }
+    return node;
+  }
+
+  function parseConcat() {
+    const parts = [];
+    while (index < source.length && source[index] !== ")" && source[index] !== "|") {
+      parts.push(parseRepeat());
+    }
+    if (!parts.length) return { type: "epsilon" };
+    return parts.reduce((left, right) => ({ type: "concat", left, right }));
+  }
+
+  function parseRepeat() {
+    let node = parseAtom();
+    while (source[index] === "*") {
+      index += 1;
+      node = { type: "star", child: node };
+    }
+    return node;
+  }
+
+  function parseAtom() {
+    const token = source[index];
+    if (token === "(") {
+      index += 1;
+      const node = parseUnion();
+      if (source[index] !== ")") throw new Error("閉じ括弧 ) が不足しています。");
+      index += 1;
+      return node;
+    }
+    if (token === "ε") {
+      index += 1;
+      return { type: "epsilon" };
+    }
+    if (/^[a-z0-9]$/i.test(token || "")) {
+      index += 1;
+      return { type: "literal", value: token };
+    }
+    throw new Error(`使えない記号 ${token || "末尾"} があります。`);
+  }
+
+  const ast = parseUnion();
+  if (index !== source.length) throw new Error(`位置 ${index + 1} で解析できません。`);
+  return ast;
+}
+
+function regexAstToSource(node) {
+  if (node.type === "epsilon") return "";
+  if (node.type === "literal") return node.value.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  if (node.type === "concat") return `${regexAstToSource(node.left)}${regexAstToSource(node.right)}`;
+  if (node.type === "union") return `(?:${regexAstToSource(node.left)}|${regexAstToSource(node.right)})`;
+  if (node.type === "star") return `(?:${regexAstToSource(node.child)})*`;
+  return "";
+}
+
+function regexAlphabet(expression) {
+  return [...new Set([...expression.replace(/\s+/g, "")].filter((char) => /^[a-z0-9]$/i.test(char)))].sort();
+}
+
+function generateRegexSamples(test, alphabet, maxLength = 4, limit = 18) {
+  const samples = [];
+  const chars = alphabet.length ? alphabet : ["a", "b"];
+  for (let length = 0; length <= maxLength && samples.length < limit; length += 1) {
+    for (const word of wordPower(chars, length)) {
+      const actual = word === "ε" ? "" : word;
+      if (test(actual)) samples.push(displayWord(actual));
+      if (samples.length >= limit) break;
+    }
+  }
+  return samples.length ? samples : ["該当する短い語なし"];
+}
+
+function makeEditableRegexData(expression) {
+  const ast = parseTeachingRegex(expression);
+  const alphabet = regexAlphabet(expression);
+  const matcher = new RegExp(`^(?:${regexAstToSource(ast)})$`);
+  const test = (word) => matcher.test(word);
+  return {
+    expression,
+    alphabet,
+    description: "入力した正規表現から短い語を列挙して、判定する語が生成言語 L(R) に含まれるかを調べます。",
+    samples: generateRegexSamples(test, alphabet),
+    test,
+  };
+}
+
 function epsilonClosure(states, epsilonTransitions) {
   const stack = [...states];
   const closure = new Set(states);
@@ -1156,13 +1253,32 @@ function renderDfa(page, example, input) {
 }
 
 function renderRegex(page, example, input) {
-  const data = regexSamples(example.id);
-  const accepted = data.test(input);
+  const expression = byId("automataRegex")?.value.trim() || regexSamples(example.id).expression;
+  const word = input === "ε" ? "" : input;
+  const displayInput = input === "ε" ? "ε" : displayWord(input);
+  let data;
+  try {
+    data = makeEditableRegexData(expression);
+  } catch (error) {
+    setHtml("automataPrimaryStage", `
+      <div class="automata-expression">${escapeHtml(expression || "未入力")}</div>
+      <div class="automata-result is-rejected">${escapeHtml(error.message)}</div>
+    `);
+    setHtml("automataTraceStage", `<p>使える記号は英数字、ε、括弧、和集合 |、閉包 * です。連結は記号を続けて書きます。</p>`);
+    return;
+  }
+  const accepted = data.test(word);
   setHtml("automataPrimaryStage", `
     <div class="automata-expression">${escapeHtml(data.expression)}</div>
+    <div class="automata-definition-grid">
+      ${makePill(`Σ = {${data.alphabet.join(", ") || "ε"}}`, "start")}
+      ${makePill("和集合 |")}
+      ${makePill("連結")}
+      ${makePill("閉包 *")}
+    </div>
     <p>${escapeHtml(data.description)}</p>
     <div class="automata-word-list">${data.samples.map((sample) => makePill(sample)).join("")}</div>
-    <div class="automata-result ${accepted ? "is-accepted" : "is-rejected"}">${escapeHtml(input || "ε")} は ${accepted ? "L(R) に含まれる" : "L(R) に含まれない"}</div>
+    <div class="automata-result ${accepted ? "is-accepted" : "is-rejected"}">${escapeHtml(displayInput)} は ${accepted ? "L(R) に含まれる" : "L(R) に含まれない"}</div>
   `);
   setHtml("automataTraceStage", `<p>正規表現で表せる言語は、有限オートマトンで受理できる言語と一致します。</p>`);
 }
@@ -1320,6 +1436,8 @@ function renderAutomataPage() {
 
   const select = byId("automataExample");
   const input = byId("automataInput");
+  const regexInput = byId("automataRegex");
+  const epsilonButton = byId("automataInsertEpsilon");
   const badge = byId("automataBadge");
   const title = byId("automataTitle");
   const subtitle = byId("automataSubtitle");
@@ -1330,6 +1448,9 @@ function renderAutomataPage() {
   if (subtitle) subtitle.textContent = page.subtitle;
 
   select.innerHTML = page.examples.map((example) => `<option value="${example.id}">${escapeHtml(example.label)}</option>`).join("");
+  if (pageId === "regular_expression" && regexInput) {
+    regexInput.value = regexSamples(page.examples[0].id).expression;
+  }
 
   function update() {
     const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
@@ -1342,9 +1463,26 @@ function renderAutomataPage() {
   select.addEventListener("change", () => {
     const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
     input.value = example.input || example.word || "";
+    if (pageId === "regular_expression" && regexInput) regexInput.value = regexSamples(example.id).expression;
     update();
   });
   input.addEventListener("input", update);
+  regexInput?.addEventListener("input", update);
+  let regexTargetInput = input;
+  [regexInput, input].forEach((control) => {
+    control?.addEventListener("focus", () => {
+      regexTargetInput = control;
+    });
+  });
+  epsilonButton?.addEventListener("click", () => {
+    const target = regexTargetInput || input;
+    const start = target.selectionStart ?? target.value.length;
+    const end = target.selectionEnd ?? target.value.length;
+    target.value = `${target.value.slice(0, start)}ε${target.value.slice(end)}`;
+    target.focus();
+    target.setSelectionRange(start + 1, start + 1);
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   byId("automataRun")?.addEventListener("click", update);
   function applyTransitionEdit(control) {
     if (!control?.matches?.("[data-dfa-state][data-dfa-symbol], [data-nfa-state]")) return;
