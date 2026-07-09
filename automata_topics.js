@@ -85,6 +85,10 @@ const automataPages = {
   },
 };
 
+const automataRuntime = {
+  generatedNfaToDfa: null,
+};
+
 function byId(id) {
   return document.getElementById(id);
 }
@@ -789,12 +793,79 @@ function nfaDefinitions(id) {
   };
 }
 
+function randomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+function takeRandomSubset(items, maxCount) {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, randomInt(maxCount + 1)).sort();
+}
+
+function buildRandomNfaToDfaDefinition() {
+  const stateCount = 2 + randomInt(3);
+  const symbolCount = 2 + randomInt(2);
+  const states = ["S", "A", "B", "C"].slice(0, stateCount);
+  const alphabet = ["a", "b", "c"].slice(0, symbolCount);
+  const transition = Object.fromEntries(states.map((state) => [state, {}]));
+  const epsilon = {};
+
+  states.forEach((state) => {
+    alphabet.forEach((symbol) => {
+      const targets = takeRandomSubset(states, 2);
+      if (targets.length) transition[state][symbol] = targets;
+    });
+    const epsilonTargets = takeRandomSubset(states.filter((target) => target !== state), 1);
+    if (epsilonTargets.length && Math.random() < 0.45) epsilon[state] = epsilonTargets;
+  });
+
+  if (!Object.values(transition).some((bySymbol) => Object.keys(bySymbol).length)) {
+    transition.S[alphabet[0]] = [states[1] || states[0]];
+  }
+
+  const accept = states.filter(() => Math.random() < 0.45);
+  if (!accept.length) accept.push(states[states.length - 1]);
+
+  return {
+    states,
+    start: "S",
+    accept,
+    alphabet,
+    epsilon,
+    transition,
+    generated: true,
+  };
+}
+
+function generateRandomNfaToDfaDefinition() {
+  let fallback = null;
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const def = buildRandomNfaToDfaDefinition();
+    const convertedStateCount = subsetDfaDefinition(def).states.length;
+    const constructionStepCount = subsetConstructionSteps(def).length;
+    def.convertedStateCount = convertedStateCount;
+    def.constructionStepCount = constructionStepCount;
+    fallback = def;
+    if (convertedStateCount <= 10 && constructionStepCount <= 31) return def;
+  }
+  return fallback;
+}
+
+function sampleWordForNfa(def, maxLength = 4) {
+  const length = 1 + randomInt(maxLength);
+  return Array.from({ length }, () => def.alphabet[randomInt(def.alphabet.length)]).join("");
+}
+
 function moveNfa(def, states, symbol) {
+  return epsilonClosure(moveNfaRaw(def, states, symbol), def.epsilon);
+}
+
+function moveNfaRaw(def, states, symbol) {
   const next = new Set();
   for (const state of states) {
     for (const target of def.transition[state]?.[symbol] || []) next.add(target);
   }
-  return epsilonClosure(next, def.epsilon);
+  return next;
 }
 
 function simulateNfa(def, input) {
@@ -838,6 +909,43 @@ function subsetConstruction(def) {
   return rows;
 }
 
+function subsetConstructionSteps(def) {
+  const start = epsilonClosure([def.start], def.epsilon);
+  const seen = new Map();
+  const queue = [start];
+  const keyOf = (set) => [...set].sort().join(",");
+  seen.set(keyOf(start), start);
+  const steps = [{
+    kind: "start",
+    stateSet: start,
+    message: `初期状態 ${def.start} のε閉包をDFAの開始状態にします。`,
+  }];
+
+  while (queue.length) {
+    const current = queue.shift();
+    for (const symbol of def.alphabet) {
+      const moved = moveNfaRaw(def, current, symbol);
+      const next = epsilonClosure(moved, def.epsilon);
+      const key = keyOf(next);
+      const isNew = !seen.has(key);
+      if (isNew) {
+        seen.set(key, next);
+        queue.push(next);
+      }
+      steps.push({
+        kind: "transition",
+        stateSet: current,
+        symbol,
+        moved,
+        next,
+        isNew,
+        message: `${formatSetLabel(current)} で ${symbol} を読む遷移をDFAの1本の矢印にします。`,
+      });
+    }
+  }
+  return steps;
+}
+
 function subsetDfaDefinition(def) {
   const start = epsilonClosure([def.start], def.epsilon);
   const keyOf = (set) => [...set].sort().join(",");
@@ -871,6 +979,53 @@ function subsetDfaDefinition(def) {
     alphabet: def.alphabet,
     transition,
   };
+}
+
+function formatSetLabel(states) {
+  const list = [...states].sort();
+  return `{${list.join(", ") || "∅"}}`;
+}
+
+function makeNfaTransitionTable(def) {
+  const headers = ["NFA状態", ...def.alphabet, "ε"];
+  const rows = def.states.map((state) => {
+    const cells = def.alphabet.map((symbol) => escapeHtml(formatSetLabel(new Set(def.transition[state]?.[symbol] || []))));
+    const epsilonTargets = escapeHtml(formatSetLabel(new Set(def.epsilon[state] || [])));
+    const tone = def.accept.includes(state) ? "accept" : state === def.start ? "start" : "";
+    return [makePill(state, tone), ...cells, epsilonTargets];
+  });
+  return makeTable(headers, rows);
+}
+
+function renderSubsetConstructionAnimation(def, steps) {
+  const duration = Math.max(steps.length * 1.25, 5);
+  return `
+    <div class="subset-animation" aria-label="NFAからDFAへの変換過程" style="--subset-cycle: ${duration}s">
+      ${steps.map((step, index) => `
+        <article class="subset-step-card" style="--subset-step: ${index}; --subset-count: ${steps.length}">
+          <span class="subset-step-index">Step ${index + 1}</span>
+          <h3>${step.kind === "start" ? "開始状態を作る" : `${escapeHtml(step.symbol)} の遷移を作る`}</h3>
+          <p>${escapeHtml(step.message)}</p>
+          ${step.kind === "start" ? `
+            <div class="subset-flow">
+              ${makePill(`q0 = ${def.start}`, "start")}
+              <span class="subset-arrow">=&gt;</span>
+              ${makePill(`ε-closure(${def.start}) = ${formatSetLabel(step.stateSet)}`, "start")}
+            </div>
+          ` : `
+            <div class="subset-flow">
+              ${makePill(`DFA状態 ${formatSetLabel(step.stateSet)}`, "start")}
+              <span class="subset-arrow">-- ${escapeHtml(step.symbol)} --&gt;</span>
+              ${makePill(`move = ${formatSetLabel(step.moved)}`)}
+              <span class="subset-arrow">ε閉包</span>
+              ${makePill(formatSetLabel(step.next), step.isNew ? "accept" : "")}
+            </div>
+            <p class="subset-step-note">${step.isNew ? "新しいDFA状態として追加します。" : "既にあるDFA状態への遷移として記録します。"}</p>
+          `}
+        </article>
+      `).join("")}
+    </div>
+  `;
 }
 
 function cfgDefinitions(id) {
@@ -1309,7 +1464,7 @@ function renderNfa(page, example, input) {
 }
 
 function renderNfaToDfa(page, example, input) {
-  const def = example.id === "choice"
+  const def = automataRuntime.generatedNfaToDfa || (example.id === "choice"
     ? {
         states: ["S", "A", "B", "F"],
         start: "S",
@@ -1318,14 +1473,27 @@ function renderNfaToDfa(page, example, input) {
         epsilon: { S: ["A", "B"] },
         transition: { A: { a: ["A"], b: ["F"] }, B: { a: ["A"], c: ["F"] }, F: {} },
       }
-    : nfaDefinitions("a_or_abstarc");
+    : nfaDefinitions("a_or_abstarc"));
   const sim = simulateNfa(def, input);
   const rows = subsetConstruction(def);
+  const constructionSteps = subsetConstructionSteps(def);
   const converted = subsetDfaDefinition(def);
   setHtml("automataPrimaryStage", `
-    ${renderTransitionGraph({ states: def.states, start: def.start, accept: def.accept, edges: nfaEdges(def), title: "元のNFAの状態遷移図" })}
-    ${renderTransitionGraph({ states: converted.states, start: converted.start, accept: converted.accept, edges: dfaEdges(converted), title: "変換後DFAの状態遷移図" })}
-    ${makeTable(["DFA状態", ...def.alphabet, "受理"], rows)}
+    <section class="subset-section">
+      <h3>変換前のNFA</h3>
+      ${def.generated ? `<p>自動生成したNFAです。状態数は${def.states.length}、入力記号数は${def.alphabet.length}です。変換後DFAは${converted.states.length}状態、変換ステップは${constructionSteps.length}件です。</p>` : ""}
+      ${renderTransitionGraph({ states: def.states, start: def.start, accept: def.accept, edges: nfaEdges(def), title: "元のNFAの状態遷移図" })}
+      ${makeNfaTransitionTable(def)}
+    </section>
+    <section class="subset-section">
+      <h3>部分集合構成の変換過程</h3>
+      ${renderSubsetConstructionAnimation(def, constructionSteps)}
+    </section>
+    <section class="subset-section">
+      <h3>変換後のDFA</h3>
+      ${renderTransitionGraph({ states: converted.states, start: converted.start, accept: converted.accept, edges: dfaEdges(converted), title: "変換後DFAの状態遷移図" })}
+      ${makeTable(["DFA状態", ...def.alphabet, "受理"], rows)}
+    </section>
     <div class="automata-result ${sim.accepted ? "is-accepted" : "is-rejected"}">入力 ${escapeHtml(input || "ε")} は ${sim.accepted ? "受理" : "不受理"}</div>
   `);
   setHtml("automataTraceStage", makeTable(["操作", "入力", "NFAでの到達可能状態"], sim.rows));
@@ -1440,6 +1608,7 @@ function renderAutomataPage() {
   const input = byId("automataInput");
   const regexInput = byId("automataRegex");
   const epsilonButton = byId("automataInsertEpsilon");
+  const generateNfaButton = byId("generateNfa");
   const badge = byId("automataBadge");
   const title = byId("automataTitle");
   const subtitle = byId("automataSubtitle");
@@ -1464,8 +1633,15 @@ function renderAutomataPage() {
 
   select.addEventListener("change", () => {
     const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
+    if (pageId === "nfa_to_dfa") automataRuntime.generatedNfaToDfa = null;
     input.value = example.input || example.word || "";
     if (pageId === "regular_expression" && regexInput) regexInput.value = regexSamples(example.id).expression;
+    update();
+  });
+  generateNfaButton?.addEventListener("click", () => {
+    if (pageId !== "nfa_to_dfa") return;
+    automataRuntime.generatedNfaToDfa = generateRandomNfaToDfaDefinition();
+    input.value = sampleWordForNfa(automataRuntime.generatedNfaToDfa);
     update();
   });
   input.addEventListener("input", update);

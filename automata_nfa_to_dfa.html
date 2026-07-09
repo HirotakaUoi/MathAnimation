@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>決定性オートマトンと非決定性オートマトンの等価性と変換</title>
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260701a" />
+    <link rel="stylesheet" href="./styles.css?v=20260709c" />
   </head>
   <body data-topic="discrete-math" data-automata-page="nfa_to_dfa">
     <main class="app-shell">
@@ -17,17 +17,18 @@
         <section class="control-band automata-controls" aria-label="設定">
           <div class="control-group"><label for="automataExample">NFA</label><select id="automataExample"></select></div>
           <div class="control-group"><label for="automataInput">入力語</label><input id="automataInput" type="text" autocomplete="off" /></div>
+          <button id="generateNfa" class="secondary" type="button">NFAを自動生成</button>
           <button id="automataRun" class="primary" type="button">変換</button>
         </section>
         <section class="message" role="status"><span id="automataSubtitle"></span></section>
         <section class="table-page-grid automata-grid" aria-label="変換">
-          <article class="table-page-panel"><header class="table-page-header"><div><h2>変換後のDFA</h2><span>NFAの状態集合をDFAの状態にする</span></div></header><div id="automataPrimaryStage" class="table-page-stage automata-stage"></div></article>
+          <article class="table-page-panel"><header class="table-page-header"><div><h2>NFAからDFAへの変換</h2><span>遷移表と状態遷移図からDFAを作る</span></div></header><div id="automataPrimaryStage" class="table-page-stage automata-stage"></div></article>
           <aside class="table-page-panel"><header class="table-page-header"><div><h2>要点</h2><span>DFAとNFAの等価性</span></div></header><div id="automataNotes" class="table-page-notes"></div></aside>
         </section>
         <section class="table-page-panel automata-trace-panel"><header class="table-page-header"><div><h2>NFAでの実行</h2><span>同じ入力を集合で追跡</span></div></header><div id="automataTraceStage" class="table-page-stage automata-stage"></div></section>
       </section>
     </main>
-    <script src="./automata_topics.js?v=20260701a"></script>
+    <script src="./automata_topics.js?v=20260709c"></script>
     <script src="./math_format.js?v=20260619a"></script>
   </body>
 </html>
