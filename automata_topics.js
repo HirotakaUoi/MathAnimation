@@ -1253,9 +1253,11 @@ function renderDfa(page, example, input) {
 }
 
 function renderRegex(page, example, input) {
-  const expression = byId("automataRegex")?.value.trim() || regexSamples(example.id).expression;
-  const word = input === "ε" ? "" : input;
-  const displayInput = input === "ε" ? "ε" : displayWord(input);
+  const regexControl = byId("automataRegex");
+  const expression = regexControl ? regexControl.value.trim() : regexSamples(example.id).expression;
+  const normalizedInput = input.trim();
+  const word = normalizedInput === "ε" ? "" : normalizedInput;
+  const displayInput = normalizedInput === "ε" ? "ε" : displayWord(normalizedInput);
   let data;
   try {
     data = makeEditableRegexData(expression);
@@ -1454,7 +1456,7 @@ function renderAutomataPage() {
 
   function update() {
     const example = page.examples.find((item) => item.id === select.value) || page.examples[0];
-    if (!input.value && example.input) input.value = example.input;
+    if (pageId !== "regular_expression" && !input.value && example.input) input.value = example.input;
     if (pageId === "formal_language") input.value = input.value || example.word;
     renderers[pageId](page, example, input.value.trim());
     if (notes) notes.innerHTML = renderNotes(pageId);

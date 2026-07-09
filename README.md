@@ -63,6 +63,10 @@ http://localhost:8100/future_index.html
 - `discrete_propositional_truth_tables.html` - 命題論理の真理値表
 - `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
 - `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
+- `automata_formal_language.html` - 形式言語
+- `automata_dfa_language.html` - (決定性)有限オートマトンとその受理言語
+- `automata_regular_expression.html` - 正規表現とその生成言語
+- `automata_nfa_language.html` - 非決定性有限オートマトンとその受理言語
 
 ### 追加ページ
 
