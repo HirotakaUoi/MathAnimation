@@ -63,6 +63,7 @@ http://localhost:8100/future_index.html
 - `discrete_propositional_truth_tables.html` - 命題論理の真理値表
 - `discrete_boolean_algebra_tables.html` - ブール代数 4桁の対応表
 - `discrete_logic_circuit_visualizer.html` - 論理回路の基礎
+- `discrete_logic_puzzles.html` - 論理パズルを命題論理で解く
 - `automata_formal_language.html` - 形式言語
 - `automata_dfa_language.html` - (決定性)有限オートマトンとその受理言語
 - `automata_regular_expression.html` - 正規表現とその生成言語
@@ -76,7 +77,6 @@ http://localhost:8100/future_index.html
 
 - `discrete_logic_simplification.html` - 論理回路の簡略化
 - `discrete_logic_circuit_samples.html` - 論理回路のサンプル（フリップフロップ、半加算器・全加算器、レジスタ、4ビット連続加算器）
-- `discrete_logic_puzzles.html` - 論理パズルを命題論理で解く
 - `vector_cross.html` - ベクトルの外積
 - `quaternion_vector.html` - クオータニオンとベクトル
 
