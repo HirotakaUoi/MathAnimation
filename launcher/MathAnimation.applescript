@@ -1,7 +1,10 @@
 on run
     try
-        set appPath to POSIX path of (path to me)
-        set projectPath to do shell script "/usr/bin/dirname " & quoted form of appPath
+        set projectPath to "/Users/Shared/Dropbox/MyProjects/Claude/MathAnimation"
+        if not my isProjectFolder(projectPath) then
+            set appPath to POSIX path of (path to me)
+            set projectPath to do shell script "/usr/bin/dirname " & quoted form of appPath
+        end if
         if not my isProjectFolder(projectPath) then
             try
                 set projectPath to do shell script "/usr/bin/defaults read jp.mathanimation.launcher ProjectPath"
